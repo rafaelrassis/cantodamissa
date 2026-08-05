@@ -1,199 +1,299 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronLeft, Moon, Pause, Play, Sun, Video } from 'lucide-react';
 import type { Musica } from '../types/musica';
-import { transposeContent } from '../lib/chordpro';
+import {
+  extractChordsUsed,
+  parseContentToStructuredLines,
+  transposeChord,
+  transposeContent,
+} from '../lib/chordpro';
 import { useAutoScroll } from '../lib/useAutoScroll';
 import { useKeepAwake } from '../lib/useKeepAwake';
+import { loadReaderState, saveReaderState } from '../lib/readerState';
+import { REPERTORIO_ATUAL } from '../lib/mockRepertorio';
+import { LABEL_MOMENTO, LABEL_TEMPO } from '../lib/labels';
+import type { Theme } from '../lib/useTheme';
 import { ChordLine } from './ChordLine';
+import { CifraToolsSidebar } from './CifraToolsSidebar';
+import { ChordDictionary } from './ChordDictionary';
+import { CifraBottomBar } from './CifraBottomBar';
+import { CifraBottomSheet } from './CifraBottomSheet';
 
-const MIN_FONT = 14;
-const MAX_FONT = 32;
-const DEFAULT_FONT = 20;
+const MIN_FONT = 15;
 
 interface Props {
   musica: Musica;
   onClose?: () => void;
+  theme: Theme;
+  onToggleTheme: () => void;
+  fontSize: number;
+  onIncFont: () => void;
+  onDecFont: () => void;
 }
 
-export function CifraReader({ musica, onClose }: Props) {
+export function CifraReader({
+  musica,
+  onClose,
+  theme,
+  onToggleTheme,
+  fontSize,
+  onIncFont,
+  onDecFont,
+}: Props) {
   const [semitones, setSemitones] = useState(0);
-  const [fontSize, setFontSize] = useState(DEFAULT_FONT);
+  const [capo, setCapo] = useState(musica.capo);
   const [useFlats, setUseFlats] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [showDiagrams, setShowDiagrams] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoScroll = useAutoScroll(scrollRef);
   const keepAwake = useKeepAwake();
 
-  const currentTone = useMemo(() => {
-    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const base = notes.indexOf(musica.originalTone);
-    if (base === -1) return musica.originalTone;
-    return notes[((base + semitones) % 12 + 12) % 12];
-  }, [musica.originalTone, semitones]);
+  // carrega estado salvo (tom/capo/grafia) desta música ao trocar de canção
+  useEffect(() => {
+    const saved = loadReaderState(musica.slug, { semitones: 0, capo: musica.capo, flats: false });
+    setSemitones(saved.semitones);
+    setCapo(saved.capo);
+    setUseFlats(saved.flats);
+    setSheetOpen(false);
+  }, [musica.slug, musica.capo]);
+
+  useEffect(() => {
+    saveReaderState(musica.slug, { semitones, capo, flats: useFlats });
+  }, [musica.slug, semitones, capo, useFlats]);
+
+  const currentTone = useMemo(
+    () => transposeChord(musica.originalTone, semitones, useFlats),
+    [musica.originalTone, semitones, useFlats]
+  );
 
   const transposedContent = useMemo(
     () => transposeContent(musica.chordsContent, semitones, useFlats),
     [musica.chordsContent, semitones, useFlats]
   );
 
-  const lines = transposedContent.split('\n');
+  const lines = useMemo(
+    () => parseContentToStructuredLines(transposedContent),
+    [transposedContent]
+  );
+  const chordsUsed = useMemo(() => extractChordsUsed(transposedContent), [transposedContent]);
+
+  const semitonesLabel = semitones === 0 ? '±0' : semitones > 0 ? `+${semitones}` : String(semitones);
+  const capoLabel = capo === 0 ? 'sem capo' : `${capo}ª casa`;
+  const tempoLabel = musica.tempoLiturgico[0] ? LABEL_TEMPO[musica.tempoLiturgico[0]] : '';
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans">
-      {/* Header: título, artista, tom */}
-      <header className="flex items-center justify-between gap-3 border-b border-neutral-200 bg-brand-green px-4 py-3 text-white">
-        <div className="min-w-0">
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="mb-1 text-xs text-white/70 hover:text-white"
-            >
-              ← voltar
-            </button>
-          )}
-          <h1 className="truncate text-lg font-semibold leading-tight">
-            {musica.title}
-          </h1>
-          {musica.artist && (
-            <p className="truncate text-sm text-white/80">{musica.artist}</p>
-          )}
+    <div className="flex min-h-screen flex-col bg-[var(--bg)] font-sans text-[var(--text)]">
+      {/* Header desktop */}
+      <header className="hidden items-center justify-between gap-4 bg-[var(--accent)] px-6 py-4 text-[var(--accent-fg)] lg:flex">
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            onClick={onClose}
+            className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[9px] bg-white/16"
+            aria-label="Voltar"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-extrabold tracking-tight">{musica.title}</h1>
+            <p className="truncate text-[13px] opacity-80">
+              {musica.artist}
+              {tempoLabel && ` · ${tempoLabel}`}
+            </p>
+          </div>
+          <div className="flex gap-1.5">
+            {musica.momento.slice(0, 2).map((m) => (
+              <span
+                key={m}
+                className="whitespace-nowrap rounded-full bg-white/16 px-3 py-1 text-xs font-semibold"
+              >
+                {LABEL_MOMENTO[m]}
+              </span>
+            ))}
+          </div>
         </div>
-        <div className="shrink-0 rounded-md bg-white/15 px-3 py-1 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-white/70">
-            tom
-          </div>
-          <div className="font-mono text-lg font-bold leading-none">
-            {currentTone}
-          </div>
+        <div className="flex shrink-0 gap-2">
+          <HeaderCard label="tom" value={currentTone} />
+          <HeaderCard label="capo" value={capo === 0 ? '—' : String(capo)} />
         </div>
       </header>
 
-      {/* Toolbar de controles: fixa, não cobre a área de leitura */}
-      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-neutral-200 bg-white/95 px-3 py-2 backdrop-blur">
-        {/* Transposição */}
-        <div className="flex items-center gap-1 rounded-lg border border-neutral-200 p-1">
-          <button
-            aria-label="Diminuir tom"
-            onClick={() => setSemitones((s) => s - 1)}
-            className="h-8 w-8 rounded-md text-lg font-bold text-brand-green hover:bg-brand-green-light"
-          >
-            −
-          </button>
-          <span className="w-10 text-center font-mono text-sm text-neutral-600">
-            {semitones > 0 ? `+${semitones}` : semitones}
-          </span>
-          <button
-            aria-label="Aumentar tom"
-            onClick={() => setSemitones((s) => s + 1)}
-            className="h-8 w-8 rounded-md text-lg font-bold text-brand-green hover:bg-brand-green-light"
-          >
-            +
-          </button>
-        </div>
-
-        <button
-          onClick={() => setUseFlats((f) => !f)}
-          className="rounded-lg border border-neutral-200 px-2 py-1.5 font-mono text-xs text-neutral-600 hover:bg-neutral-50"
-          title="Alternar sustenido/bemol"
-        >
-          {useFlats ? '♭ bemol' : '♯ sustenido'}
+      {/* Header mobile */}
+      <header className="bg-[var(--accent)] px-4 pb-3 pt-4 text-[var(--accent-fg)] lg:hidden">
+        <button onClick={onClose} className="mb-1 text-xs opacity-80">
+          ← Repertório · {REPERTORIO_ATUAL.nome}
         </button>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-extrabold">{musica.title}</h1>
+            <p className="truncate text-sm opacity-80">{musica.artist}</p>
+          </div>
+          <HeaderCard label="tom" value={currentTone} />
+        </div>
+      </header>
 
-        {/* Fonte */}
-        <div className="flex items-center gap-1 rounded-lg border border-neutral-200 p-1">
-          <button
-            aria-label="Diminuir fonte"
-            onClick={() => setFontSize((f) => Math.max(MIN_FONT, f - 2))}
-            className="h-8 w-8 rounded-md text-sm text-neutral-600 hover:bg-neutral-50"
+      <div className="flex min-h-0 flex-1">
+        <CifraToolsSidebar
+          currentTone={currentTone}
+          semitonesLabel={semitonesLabel}
+          onIncTone={() => setSemitones((s) => Math.min(11, s + 1))}
+          onDecTone={() => setSemitones((s) => Math.max(-11, s - 1))}
+          onResetTone={() => setSemitones(0)}
+          flats={useFlats}
+          onToggleFlats={() => setUseFlats((f) => !f)}
+          capoLabel={capoLabel}
+          onIncCapo={() => setCapo((c) => Math.min(7, c + 1))}
+          onDecCapo={() => setCapo((c) => Math.max(0, c - 1))}
+          playing={autoScroll.playing}
+          onTogglePlay={autoScroll.toggle}
+          speed={autoScroll.speed}
+          onSpeedChange={autoScroll.setSpeed}
+          fontSize={fontSize}
+          onIncFont={onIncFont}
+          onDecFont={onDecFont}
+          currentTitle={musica.title}
+        />
+
+        <div className="flex min-h-0 flex-1 flex-col">
+          {/* Toolbar desktop */}
+          <div className="hidden items-center gap-2.5 border-b border-[var(--border)] bg-[var(--surface)] px-5 py-2.5 lg:flex">
+            <button
+              onClick={autoScroll.toggle}
+              aria-label="Alternar rolagem automática"
+              className={`flex h-[34px] items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold ${
+                autoScroll.playing
+                  ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+                  : 'border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]'
+              }`}
+            >
+              {autoScroll.playing ? <Pause size={14} /> : <Play size={14} />}
+            </button>
+            <div className="h-6 w-px bg-[var(--border)]" />
+            <ToolbarToggle
+              active={showDiagrams}
+              onClick={() => setShowDiagrams((v) => !v)}
+              ariaLabel="Alternar diagramas de acorde"
+            >
+              {showDiagrams ? 'acordes visíveis' : 'acordes ocultos'}
+            </ToolbarToggle>
+            <ToolbarToggle active={theme === 'dark'} onClick={onToggleTheme} ariaLabel="Alternar tema">
+              {theme === 'dark' ? <Moon size={14} /> : <Sun size={14} />}
+            </ToolbarToggle>
+            {musica.youtubeUrl && (
+              <ToolbarToggle
+                active={showVideo}
+                onClick={() => setShowVideo((v) => !v)}
+                ariaLabel="Alternar vídeo"
+              >
+                <Video size={14} />
+              </ToolbarToggle>
+            )}
+            <div className="flex-1" />
+            <span className="text-xs font-medium text-[var(--muted)]">
+              {musica.viewsCount.toLocaleString('pt-BR')} acessos
+            </span>
+          </div>
+
+          {showVideo && musica.youtubeUrl && (
+            <div className="aspect-video w-full border-b border-[var(--border)] bg-black">
+              <iframe
+                className="h-full w-full"
+                src={toYoutubeEmbed(musica.youtubeUrl)}
+                title="Vídeo de referência"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+              />
+            </div>
+          )}
+
+          <div
+            ref={scrollRef}
+            className="cifra-content min-h-0 flex-1 overflow-y-auto px-5 pb-24 pt-8 font-mono lg:px-10"
+            style={
+              {
+                lineHeight: 2.35,
+                '--font-cifra': `${fontSize}px`,
+                '--font-cifra-mobile': `${Math.max(MIN_FONT, fontSize - 3)}px`,
+              } as React.CSSProperties
+            }
           >
-            A-
-          </button>
-          <button
-            aria-label="Aumentar fonte"
-            onClick={() => setFontSize((f) => Math.min(MAX_FONT, f + 2))}
-            className="h-8 w-8 rounded-md text-base text-neutral-600 hover:bg-neutral-50"
-          >
-            A+
-          </button>
+            <div className="mx-auto max-w-[840px]">
+              {lines.map((line, i) => (
+                <ChordLine key={i} line={line} />
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Auto-scroll */}
-        <div className="flex items-center gap-1 rounded-lg border border-neutral-200 p-1">
-          <button
-            onClick={autoScroll.toggle}
-            className={`h-8 rounded-md px-3 text-sm font-medium ${
-              autoScroll.playing
-                ? 'bg-brand-green text-white'
-                : 'text-neutral-600 hover:bg-neutral-50'
-            }`}
-          >
-            {autoScroll.playing ? '⏸ pausar' : '▶ rolar'}
-          </button>
-          <button
-            aria-label="Diminuir velocidade"
-            onClick={autoScroll.decreaseSpeed}
-            className="h-8 w-7 rounded-md text-neutral-500 hover:bg-neutral-50"
-          >
-            −
-          </button>
-          <span className="w-4 text-center text-xs text-neutral-500">
-            {autoScroll.speed}
-          </span>
-          <button
-            aria-label="Aumentar velocidade"
-            onClick={autoScroll.increaseSpeed}
-            className="h-8 w-7 rounded-md text-neutral-500 hover:bg-neutral-50"
-          >
-            +
-          </button>
-        </div>
-
-        {/* Keep awake */}
-        {keepAwake.supported && (
-          <button
-            onClick={keepAwake.toggle}
-            title="Manter tela acesa"
-            className={`h-8 rounded-lg border px-2 text-sm ${
-              keepAwake.active
-                ? 'border-brand-green bg-brand-green-light text-brand-green'
-                : 'border-neutral-200 text-neutral-500 hover:bg-neutral-50'
-            }`}
-          >
-            {keepAwake.active ? '🔆 tela acesa' : '🔅 tela'}
-          </button>
-        )}
-
-        {musica.youtubeUrl && (
-          <button
-            onClick={() => setShowVideo((v) => !v)}
-            className="ml-auto h-8 rounded-lg border border-neutral-200 px-2 text-sm text-neutral-500 hover:bg-neutral-50"
-          >
-            {showVideo ? 'ocultar vídeo' : '▶ vídeo'}
-          </button>
-        )}
+        {showDiagrams && <ChordDictionary chords={chordsUsed} />}
       </div>
 
-      {showVideo && musica.youtubeUrl && (
-        <div className="aspect-video w-full border-b border-neutral-200 bg-black">
-          <iframe
-            className="h-full w-full"
-            src={toYoutubeEmbed(musica.youtubeUrl)}
-            title="Vídeo de referência"
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-          />
-        </div>
-      )}
-
-      {/* Área de leitura: rolagem automática + padding pra não ficar embaixo do slot de anúncio */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 pb-20">
-        {lines.map((line, i) => (
-          <ChordLine key={i} line={line} fontSize={fontSize} />
-        ))}
-      </div>
-
-      {/* Slot de anúncio: some no modo leitor pra não atrapalhar o auto-scroll */}
+      <CifraBottomBar
+        currentTone={currentTone}
+        onDecTone={() => setSemitones((s) => Math.max(-11, s - 1))}
+        onIncTone={() => setSemitones((s) => Math.min(11, s + 1))}
+        playing={autoScroll.playing}
+        onTogglePlay={autoScroll.toggle}
+        onDecFont={onDecFont}
+        onIncFont={onIncFont}
+        sheetOpen={sheetOpen}
+        onToggleSheet={() => setSheetOpen((s) => !s)}
+      />
+      <CifraBottomSheet
+        open={sheetOpen}
+        speed={autoScroll.speed}
+        onSpeedChange={autoScroll.setSpeed}
+        capoLabel={capoLabel}
+        onIncCapo={() => setCapo((c) => Math.min(7, c + 1))}
+        onDecCapo={() => setCapo((c) => Math.max(0, c - 1))}
+        diagrams={showDiagrams}
+        onToggleDiagrams={() => setShowDiagrams((v) => !v)}
+        theme={theme}
+        onToggleTheme={onToggleTheme}
+        awakeActive={keepAwake.active}
+        awakeSupported={keepAwake.supported}
+        onToggleAwake={keepAwake.toggle}
+      />
     </div>
+  );
+}
+
+function HeaderCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[10px] bg-white/16 px-3 py-1.5 text-center">
+      <div className="text-[9px] font-semibold uppercase tracking-[0.16em] opacity-75">
+        {label}
+      </div>
+      <div className="font-mono text-[22px] font-bold leading-none">{value}</div>
+    </div>
+  );
+}
+
+function ToolbarToggle({
+  active,
+  onClick,
+  children,
+  ariaLabel,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  ariaLabel?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className={`flex h-[34px] items-center gap-1.5 rounded-lg px-3.5 text-xs font-semibold ${
+        active
+          ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+          : 'border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]'
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 

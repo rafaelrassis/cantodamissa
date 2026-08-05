@@ -16,3 +16,53 @@
   --color-liturgico-comum: #186420;
   --color-liturgico-martir: #a3111d;
 }
+
+/*
+ * Tokens semânticos do design (claro/escuro). São custom properties "cruas"
+ * (não via @theme) porque precisam trocar de valor em runtime conforme
+ * data-theme — @theme só gera utilitários com valor fixo no build.
+ * Consumidos via Tailwind arbitrary values: bg-[var(--surface)] etc.
+ */
+:root {
+  --bg: #ffffff;
+  --surface: #f5faf5;
+  --surface2: #e9f3ea;
+  --border: #dbe8dc;
+  --text: #0f1c13;
+  --muted: #5d7562;
+  --accent: #186420;
+  --accent-soft: #e6f2e7;
+  --accent-fg: #ffffff;
+  --chord: #157a2a;
+  --shadow: 0 24px 60px rgba(15, 63, 20, 0.14);
+}
+
+:root[data-theme='dark'] {
+  --bg: #071008;
+  --surface: #0d1e11;
+  --surface2: #16301b;
+  --border: #1f4327;
+  --text: #eaf5eb;
+  --muted: #8fae95;
+  --accent: #25913a;
+  --accent-soft: #16301b;
+  --accent-fg: #f2fff4;
+  --chord: #6ee787;
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Fonte da cifra: desktop usa --font-cifra, mobile é 3px menor (mín. 15px). */
+.cifra-content {
+  font-size: var(--font-cifra-mobile);
+}
+
+@media (min-width: 1024px) {
+  .cifra-content {
+    font-size: var(--font-cifra);
+  }
+}

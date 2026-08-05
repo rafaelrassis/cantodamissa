@@ -1,33 +1,39 @@
-import { parseLineToTokens } from '../lib/chordpro';
+import type { StructuredLine } from '../lib/chordpro';
 
 interface Props {
-  line: string;
-  fontSize: number;
+  line: StructuredLine;
 }
 
-export function ChordLine({ line, fontSize }: Props) {
-  if (line.trim() === '') {
-    return <div style={{ height: fontSize * 1.4 }} />;
+/**
+ * Renderiza uma linha de cifra estruturada. O acorde é um span
+ * `position:absolute` ancorado sobre o token de texto — não duas linhas de
+ * texto separadas — pra cair exatamente sobre a sílaba certa mesmo depois
+ * de transpor. O tamanho da fonte vem do container pai (classe
+ * `cifra-content`, ver index.css), então tudo aqui usa unidades `em`.
+ */
+export function ChordLine({ line }: Props) {
+  if (line.type === 'section') {
+    return (
+      <div className="pt-[0.8em] font-sans text-[0.6em] font-bold uppercase tracking-[0.16em] text-[var(--muted)]">
+        {line.label}
+      </div>
+    );
   }
 
-  const tokens = parseLineToTokens(line);
+  if (line.type === 'blank' || line.tokens.length === 0) {
+    return <div>{' '}</div>;
+  }
 
   return (
-    <div
-      className="whitespace-pre font-mono leading-tight"
-      style={{ fontSize, paddingTop: fontSize * 1.15, marginBottom: fontSize * 0.3 }}
-    >
-      {tokens.map((token, i) => (
+    <div className="relative whitespace-pre">
+      {line.tokens.map((token, i) => (
         <span key={i} className="relative inline-block align-bottom">
           {token.chord && (
-            <span
-              className="absolute -top-[1.15em] left-0 font-bold text-brand-green"
-              style={{ fontSize: fontSize * 0.85 }}
-            >
+            <span className="absolute -top-[1.05em] left-0 text-[0.82em] font-bold text-[var(--chord)]">
               {token.chord}
             </span>
           )}
-          <span className="text-neutral-900">{token.text || '\u00A0'}</span>
+          <span>{token.text || ' '}</span>
         </span>
       ))}
     </div>

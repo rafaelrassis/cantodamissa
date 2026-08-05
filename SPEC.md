@@ -46,6 +46,12 @@ Aplicativo de cifras voltado para ministérios de música litúrgica católica. 
 
 Nome do produto: **Canto da Missa**.
 
+**Dark mode**: implementado via tokens semânticos em `src/index.css` (`--bg --surface --surface2
+--border --text --muted --accent --accent-soft --accent-fg --chord --shadow`), que trocam de valor
+por `:root[data-theme="dark"]`. Tema global, alternado pelo hook `src/lib/useTheme.ts`, persistido
+em `localStorage` e respeitando `prefers-color-scheme` no primeiro load. Paleta estritamente
+branco + verde em ambos os modos.
+
 ## 5. Modelo de Dados (Supabase/Postgres)
 
 Ver migration completa em `supabase/migrations/0001_init.sql` (anexo/já escrita). Resumo das entidades:
@@ -91,7 +97,7 @@ Formato de armazenamento: **ChordPro** — `"[G]Como são belos os [Em]pés..."`
 3. **Cadastro de músicas**: usuários comuns podem **sugerir** música nova ou correção (tabela `submissoes`). Só admin publica de fato. Colaboradores que ajudaram em correções recebem crédito visível na música.
 4. **Calendário litúrgico**: calculado automaticamente por algoritmo (não manual). Terá tela pública de calendário anual navegável (mês a mês, mostrando tempo/ciclo/cor de cada domingo) — não fica restrito só à busca de música.
 5. **Seed inicial de músicas**: sem número fixo definido. Cliente tem cifras em PDF/Word para fornecer — vai exigir pipeline de extração (parser de texto e/ou OCR conforme o formato dos arquivos, a definir após ver amostras).
-6. **Diagrama de acordes**: dataset estático (JSON com posições de casas/dedos) cobrindo acordes comuns em tom de igreja (C, D, E, F, G, A, B + variações m/7/sus). Fallback "diagrama não disponível" pros raros. Sem geração dinâmica.
+6. **Diagrama de acordes**: ~~dataset estático~~ **decisão revista**: geração algorítmica (`src/lib/chordShapes.ts`), portada do handoff de design. Cobre os acordes abertos comuns via dicionário (`OPEN`) e gera pestanas (barre) a partir das formas de E/A pra qualquer outro acorde/transposição — sem dataset a manter, sem fallback "não disponível".
 7. **Monetização**: banner fixo no rodapé (Google AdSense na Fase 1 web; troca para AdMob nativo na Fase 2 Android). Proibido interstitial/pop-up ou vídeo com som automático — uso em celebração ao vivo. Layout já reserva `<div id="ad-slot">` mesmo sem anúncio real ativo ainda. Falha de carregamento (ex: offline) deve esconder o slot graciosamente, sem erro visível. Opção de remover anúncio via assinatura/pagamento único — estado "Pro" tem que validar contra Supabase quando online (não só LocalStorage/Dexie, que é cache, não fonte de verdade).
 8. **LGPD/Termos**: rascunho de Política de Privacidade e Termos de Uso fica pra antes da publicação (não bloqueia desenvolvimento agora).
 

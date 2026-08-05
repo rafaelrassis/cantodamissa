@@ -9,10 +9,10 @@
 
 const CHORD_REGEX = /\[([^\]]+)\]/g;
 
-const CHROMATIC_SHARP = [
+export const CHROMATIC_SHARP = [
   'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
 ];
-const CHROMATIC_FLAT = [
+export const CHROMATIC_FLAT = [
   'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B',
 ];
 
@@ -23,11 +23,6 @@ CHROMATIC_FLAT.forEach((n, i) => (NOTE_TO_INDEX[n] = i));
 // captura a nota raiz de um acorde: "C#m7(9)" -> raiz "C#", resto "m7(9)"
 // e opcionalmente baixo invertido: "C/E" -> raiz "C", resto "", baixo "E"
 const CHORD_PARTS_REGEX = /^([A-G][#b]?)([^/]*)(?:\/([A-G][#b]?))?$/;
-
-interface ParsedLine {
-  type: 'chord-lyric' | 'section' | 'blank';
-  content: string;
-}
 
 /**
  * Extrai a letra pura (sem marcações de acorde), útil pra busca full-text.
@@ -141,13 +136,25 @@ export function parseLineToTokens(line: string): ChordToken[] {
   return tokens;
 }
 
-export function parseContentToLines(chordsContent: string): ParsedLine[] {
-  return chordsContent.split('\n').map((line) => {
-    const trimmed = line.trim();
-    if (!trimmed) return { type: 'blank', content: line };
-    if (/^\[.*\]$/.test(trimmed) === false && /^\[[A-Za-z].*\]$/.test(trimmed)) {
-      // linha tipo "[Refrão]" sem acorde real — heurística simples de seção
+export interface StructuredLine {
+  type: 'section' | 'chord-lyric' | 'blank';
+  label: string;
+  tokens: ChordToken[];
+}
+
+/**
+ * Parseia o chordsContent inteiro em linhas estruturadas, distinguindo
+ * marcadores de seção (linha iniciada por "#", ex: "#Refrão") de linhas de
+ * cifra normais e linhas em branco (espaçamento entre blocos).
+ */
+export function parseContentToStructuredLines(chordsContent: string): StructuredLine[] {
+  return chordsContent.split('\n').map((raw) => {
+    if (raw.startsWith('#')) {
+      return { type: 'section', label: raw.slice(1).trim(), tokens: [] };
     }
-    return { type: 'chord-lyric', content: line };
+    if (!raw.trim()) {
+      return { type: 'blank', label: '', tokens: [] };
+    }
+    return { type: 'chord-lyric', label: '', tokens: parseLineToTokens(raw) };
   });
 }

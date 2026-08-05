@@ -41,6 +41,10 @@ export function useAutoScroll(containerRef: React.RefObject<HTMLElement | null>)
     () => setSpeed((s) => Math.max(MIN_SPEED, s - 1)),
     []
   );
+  const setSpeedClamped = useCallback(
+    (value: number) => setSpeed(Math.min(MAX_SPEED, Math.max(MIN_SPEED, value))),
+    []
+  );
 
-  return { playing, speed, toggle, increaseSpeed, decreaseSpeed };
+  return { playing, speed, toggle, increaseSpeed, decreaseSpeed, setSpeed: setSpeedClamped };
 }
