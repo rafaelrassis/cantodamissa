@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Home as HomeIcon, ListMusic, Music2, Search, User, X } from 'lucide-react';
+import { CalendarDays, Home as HomeIcon, ListMusic, Music2, Search, X } from 'lucide-react';
 import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
 import { getMusicaById, getTop50, searchMusicas } from '../lib/musicasApi';
 import { domingoMaisProximo } from '../lib/liturgicalCalendar';
@@ -9,6 +9,8 @@ import { MusicaCard } from './MusicaCard';
 
 interface Props {
   onSelectMusica: (musica: Musica, repertorioId?: string) => void;
+  filtroInicial?: TempoLiturgico;
+  onAbrirCalendario?: () => void;
 }
 
 const TEMPOS: TempoLiturgico[] = ['Advento', 'Natal', 'Quaresma', 'Pascoa', 'TempoComum'];
@@ -26,9 +28,9 @@ const MOMENTOS: MomentoMissa[] = [
   'Envio',
 ];
 
-export function Home({ onSelectMusica }: Props) {
+export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario }: Props) {
   const [query, setQuery] = useState('');
-  const [tempo, setTempo] = useState<TempoLiturgico | undefined>();
+  const [tempo, setTempo] = useState<TempoLiturgico | undefined>(filtroInicial);
   const [momento, setMomento] = useState<MomentoMissa | undefined>();
   const [resultados, setResultados] = useState<Musica[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -98,7 +100,9 @@ export function Home({ onSelectMusica }: Props) {
             </div>
             <nav className="flex items-center gap-6 text-sm font-medium opacity-90">
               <span>Músicas</span>
-              <span>Calendário</span>
+              <button onClick={onAbrirCalendario} className="hover:opacity-100">
+                Calendário
+              </button>
               <span>Repertórios</span>
             </nav>
           </div>
@@ -320,7 +324,7 @@ export function Home({ onSelectMusica }: Props) {
         <TabItem icon={<HomeIcon size={18} />} label="Início" active />
         <TabItem icon={<Search size={18} />} label="Buscar" />
         <TabItem icon={<ListMusic size={18} />} label="Repertórios" />
-        <TabItem icon={<User size={18} />} label="Perfil" />
+        <TabItem icon={<CalendarDays size={18} />} label="Calendário" onClick={onAbrirCalendario} />
       </nav>
     </div>
   );
@@ -357,19 +361,22 @@ function TabItem({
   icon,
   label,
   active,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   active?: boolean;
+  onClick?: () => void;
 }) {
   return (
-    <div
+    <button
+      onClick={onClick}
       className={`flex min-w-16 flex-col items-center gap-1 py-1.5 ${
         active ? 'text-[var(--accent)]' : 'text-[var(--muted)]'
       }`}
     >
       {icon}
       <span className="text-[10px] font-semibold">{label}</span>
-    </div>
+    </button>
   );
 }
