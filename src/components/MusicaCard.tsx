@@ -1,16 +1,33 @@
 import type { Musica } from '../types/musica';
 import { LABEL_MOMENTO } from '../lib/labels';
+import type { Repertorio } from '../lib/repertorios';
+import { AddToRepertorioMenu } from './AddToRepertorioMenu';
 
 interface Props {
   musica: Musica;
   posicao?: number;
   onClick: () => void;
+  repertorios?: Repertorio[];
+  onAddToRepertorio?: (repertorioId: string) => void;
+  onCreateRepertorioAndAdd?: (nome: string) => void;
 }
 
-export function MusicaCard({ musica, posicao, onClick }: Props) {
+export function MusicaCard({
+  musica,
+  posicao,
+  onClick,
+  repertorios,
+  onAddToRepertorio,
+  onCreateRepertorioAndAdd,
+}: Props) {
+  const mostrarMenu = repertorios !== undefined && onAddToRepertorio && onCreateRepertorioAndAdd;
+
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => e.key === 'Enter' && onClick()}
       className="flex w-full items-center gap-3 border-b border-[var(--border)] px-4 py-3 text-left transition-colors hover:bg-[var(--surface)]"
     >
       {posicao !== undefined && (
@@ -31,9 +48,17 @@ export function MusicaCard({ musica, posicao, onClick }: Props) {
         {musica.originalTone}
       </span>
 
-      <span className="w-14 shrink-0 text-right font-mono text-xs text-[var(--muted)]">
+      <span className="hidden w-14 shrink-0 text-right font-mono text-xs text-[var(--muted)] sm:block">
         {musica.viewsCount.toLocaleString('pt-BR')}
       </span>
-    </button>
+
+      {mostrarMenu && (
+        <AddToRepertorioMenu
+          repertorios={repertorios}
+          onAdd={onAddToRepertorio}
+          onCreateAndAdd={onCreateRepertorioAndAdd}
+        />
+      )}
+    </div>
   );
 }

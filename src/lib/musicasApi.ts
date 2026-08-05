@@ -20,6 +20,10 @@ function normalizar(texto: string): string {
     .replace(/[\u0300-\u036f]/g, ''); // remove acentos
 }
 
+export async function getMusicaById(id: string): Promise<Musica | null> {
+  return mockMusicas.find((m) => m.id === id) ?? null;
+}
+
 export async function getTop50(filtro: FiltroMusicas = {}): Promise<Musica[]> {
   let lista = [...mockMusicas];
   if (filtro.tempo) lista = lista.filter((m) => m.tempoLiturgico.includes(filtro.tempo!));

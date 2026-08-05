@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Home as HomeIcon, ListMusic, Music2, Search, User } from 'lucide-react';
+import { Home as HomeIcon, ListMusic, Music2, Search, User, X } from 'lucide-react';
 import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
-import { getTop50, searchMusicas } from '../lib/musicasApi';
+import { getMusicaById, getTop50, searchMusicas } from '../lib/musicasApi';
 import { domingoMaisProximo } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
-import { MOCK_PLAYLISTS } from '../lib/mockRepertorio';
+import { useRepertorios } from '../lib/useRepertorios';
 import { MusicaCard } from './MusicaCard';
 
 interface Props {
@@ -36,6 +36,25 @@ export function Home({ onSelectMusica }: Props) {
   const searchRef = useRef<HTMLInputElement>(null);
   const domingoAtual = useMemo(() => domingoMaisProximo(new Date()), []);
   const buscando = query.trim().length > 0;
+
+  const { repertorios, criar, remover, adicionarMusica, removerMusica } = useRepertorios();
+  const [repertorioAberto, setRepertorioAberto] = useState<string | null>(null);
+  const [novoNome, setNovoNome] = useState('');
+
+  function adicionar(repertorioId: string, musica: Musica) {
+    adicionarMusica(repertorioId, {
+      musicaId: musica.id,
+      title: musica.title,
+      artist: musica.artist,
+      tone: musica.originalTone,
+      momento: musica.momento[0] ?? null,
+    });
+  }
+
+  function criarECriarAdicionar(nome: string, musica: Musica) {
+    const novo = criar(nome);
+    adicionar(novo.id, musica);
+  }
 
   useEffect(() => {
     let cancelado = false;
@@ -173,6 +192,9 @@ export function Home({ onSelectMusica }: Props) {
                 musica={musica}
                 posicao={buscando ? undefined : i + 1}
                 onClick={() => onSelectMusica(musica)}
+                repertorios={repertorios}
+                onAddToRepertorio={(repertorioId) => adicionar(repertorioId, musica)}
+                onCreateRepertorioAndAdd={(nome) => criarECriarAdicionar(nome, musica)}
               />
             ))}
           </div>
@@ -181,23 +203,104 @@ export function Home({ onSelectMusica }: Props) {
         {/* Meus repertórios (desktop) */}
         <aside className="hidden w-[340px] shrink-0 flex-col gap-3 lg:flex">
           <h2 className="text-sm font-semibold text-[var(--muted)]">Meus repertórios</h2>
-          {MOCK_PLAYLISTS.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center gap-3 rounded-xl border border-[var(--border)] p-3"
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-soft)] font-mono text-sm font-bold text-[var(--accent)]">
-                {p.contador}
-              </span>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[var(--text)]">{p.nome}</p>
-                <p className="truncate text-xs text-[var(--muted)]">{p.meta}</p>
-              </div>
+
+          {repertorios.length === 0 && (
+            <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
+              Você ainda não tem repertórios. Crie um abaixo ou clique no ícone{' '}
+              <span className="font-semibold">+</span> ao lado de uma música.
             </div>
-          ))}
-          <button className="rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-medium text-[var(--muted)] hover:bg-[var(--surface)]">
-            + Novo repertório
-          </button>
+          )}
+
+          {repertorios.map((r) => {
+            const aberto = repertorioAberto === r.id;
+            return (
+              <div key={r.id} className="rounded-xl border border-[var(--border)]">
+                <button
+                  onClick={() => setRepertorioAberto(aberto ? null : r.id)}
+                  className="flex w-full items-center gap-3 p-3 text-left"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-soft)] font-mono text-sm font-bold text-[var(--accent)]">
+                    {r.itens.length}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-[var(--text)]">{r.nome}</p>
+                    <p className="truncate text-xs text-[var(--muted)]">
+                      {r.itens.length} música{r.itens.length === 1 ? '' : 's'}
+                    </p>
+                  </div>
+                </button>
+
+                {aberto && (
+                  <div className="border-t border-[var(--border)] p-2">
+                    {r.itens.length === 0 && (
+                      <p className="px-2 py-2 text-xs text-[var(--muted)]">
+                        Nenhuma música ainda — use o botão + nas músicas ao lado.
+                      </p>
+                    )}
+                    {r.itens.map((item) => (
+                      <div
+                        key={item.musicaId}
+                        className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[var(--surface)]"
+                      >
+                        <button
+                          onClick={async () => {
+                            const musica = await getMusicaById(item.musicaId);
+                            if (musica) onSelectMusica(musica);
+                          }}
+                          className="min-w-0 flex-1 truncate text-left text-sm text-[var(--text)]"
+                        >
+                          {item.title}
+                        </button>
+                        <span className="shrink-0 font-mono text-xs font-bold text-[var(--accent)]">
+                          {item.tone}
+                        </span>
+                        <button
+                          onClick={() => removerMusica(r.id, item.musicaId)}
+                          aria-label="Remover música do repertório"
+                          className="shrink-0 text-[var(--muted)] hover:text-[var(--text)]"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => {
+                        remover(r.id);
+                        setRepertorioAberto(null);
+                      }}
+                      className="mt-2 w-full rounded-lg py-1.5 text-center text-xs font-medium text-red-500 hover:bg-[var(--surface)]"
+                    >
+                      Excluir repertório
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!novoNome.trim()) return;
+              criar(novoNome);
+              setNovoNome('');
+            }}
+            className="flex gap-2"
+          >
+            <input
+              value={novoNome}
+              onChange={(e) => setNovoNome(e.target.value)}
+              placeholder="Nome do novo repertório"
+              className="w-full rounded-xl border border-dashed border-[var(--border)] px-3 py-2 text-sm text-[var(--text)] focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="shrink-0 rounded-xl bg-[var(--accent)] px-3 text-sm font-semibold text-[var(--accent-fg)]"
+            >
+              Criar
+            </button>
+          </form>
+
           <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
             Monte o repertório da missa e compartilhe com o ministério.
           </div>
