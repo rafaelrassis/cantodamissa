@@ -40,6 +40,10 @@ export function listarRepertorios(): Repertorio[] {
   return ler().sort((a, b) => b.criadoEm.localeCompare(a.criadoEm));
 }
 
+export function obterRepertorio(id: string): Repertorio | null {
+  return ler().find((r) => r.id === id) ?? null;
+}
+
 export function criarRepertorio(nome: string): Repertorio {
   const novo: Repertorio = {
     id: gerarId(),

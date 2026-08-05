@@ -1,5 +1,5 @@
 import { Minus, Pause, Play, Plus } from 'lucide-react';
-import { REPERTORIO_ATUAL } from '../lib/mockRepertorio';
+import type { Repertorio } from '../lib/repertorios';
 
 interface Props {
   currentTone: string;
@@ -19,7 +19,9 @@ interface Props {
   fontSize: number;
   onIncFont: () => void;
   onDecFont: () => void;
-  currentTitle: string;
+  currentMusicaId: string;
+  repertorio: Repertorio | null;
+  onSelectRepertorioItem: (musicaId: string) => void;
 }
 
 export function CifraToolsSidebar(props: Props) {
@@ -106,35 +108,38 @@ export function CifraToolsSidebar(props: Props) {
 
       <div className="h-px bg-[var(--border)]" />
 
-      <ToolSection label={`Repertório · ${REPERTORIO_ATUAL.nome}`}>
-        <div className="flex flex-col gap-1.5">
-          {REPERTORIO_ATUAL.itens.map((item) => {
-            const active = item.title === props.currentTitle;
-            return (
-              <div
-                key={item.title}
-                className={`flex items-center justify-between gap-2 rounded-[10px] border px-3 py-2 ${
-                  active
-                    ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
-                    : 'border-transparent bg-[var(--bg)]'
-                }`}
-              >
-                <div className="min-w-0">
-                  <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted)]">
-                    {item.momento}
-                  </p>
-                  <p className="truncate text-[13px] font-semibold text-[var(--text)]">
-                    {item.title}
-                  </p>
-                </div>
-                <span className="shrink-0 font-mono text-xs font-bold text-[var(--accent)]">
-                  {item.tone}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </ToolSection>
+      {props.repertorio && props.repertorio.itens.length > 0 && (
+        <ToolSection label={`Repertório · ${props.repertorio.nome}`}>
+          <div className="flex flex-col gap-1.5">
+            {props.repertorio.itens.map((item) => {
+              const active = item.musicaId === props.currentMusicaId;
+              return (
+                <button
+                  key={item.musicaId}
+                  onClick={() => props.onSelectRepertorioItem(item.musicaId)}
+                  className={`flex items-center justify-between gap-2 rounded-[10px] border px-3 py-2 text-left ${
+                    active
+                      ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                      : 'border-transparent bg-[var(--bg)] hover:bg-[var(--surface2)]'
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                      {item.momento ?? '—'}
+                    </p>
+                    <p className="truncate text-[13px] font-semibold text-[var(--text)]">
+                      {item.title}
+                    </p>
+                  </div>
+                  <span className="shrink-0 font-mono text-xs font-bold text-[var(--accent)]">
+                    {item.tone}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </ToolSection>
+      )}
     </aside>
   );
 }

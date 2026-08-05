@@ -8,7 +8,7 @@ import { useRepertorios } from '../lib/useRepertorios';
 import { MusicaCard } from './MusicaCard';
 
 interface Props {
-  onSelectMusica: (musica: Musica) => void;
+  onSelectMusica: (musica: Musica, repertorioId?: string) => void;
 }
 
 const TEMPOS: TempoLiturgico[] = ['Advento', 'Natal', 'Quaresma', 'Pascoa', 'TempoComum'];
@@ -245,7 +245,7 @@ export function Home({ onSelectMusica }: Props) {
                         <button
                           onClick={async () => {
                             const musica = await getMusicaById(item.musicaId);
-                            if (musica) onSelectMusica(musica);
+                            if (musica) onSelectMusica(musica, r.id);
                           }}
                           className="min-w-0 flex-1 truncate text-left text-sm text-[var(--text)]"
                         >

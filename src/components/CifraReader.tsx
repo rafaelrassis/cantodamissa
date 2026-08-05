@@ -10,7 +10,8 @@ import {
 import { useAutoScroll } from '../lib/useAutoScroll';
 import { useKeepAwake } from '../lib/useKeepAwake';
 import { loadReaderState, saveReaderState } from '../lib/readerState';
-import { REPERTORIO_ATUAL } from '../lib/mockRepertorio';
+import { obterRepertorio, type Repertorio } from '../lib/repertorios';
+import { getMusicaById } from '../lib/musicasApi';
 import { LABEL_MOMENTO, LABEL_TEMPO } from '../lib/labels';
 import type { Theme } from '../lib/useTheme';
 import { ChordLine } from './ChordLine';
@@ -29,6 +30,8 @@ interface Props {
   fontSize: number;
   onIncFont: () => void;
   onDecFont: () => void;
+  repertorioId?: string | null;
+  onSelectMusica?: (musica: Musica) => void;
 }
 
 export function CifraReader({
@@ -39,6 +42,8 @@ export function CifraReader({
   fontSize,
   onIncFont,
   onDecFont,
+  repertorioId = null,
+  onSelectMusica,
 }: Props) {
   const [semitones, setSemitones] = useState(0);
   const [capo, setCapo] = useState(musica.capo);
@@ -46,10 +51,22 @@ export function CifraReader({
   const [showVideo, setShowVideo] = useState(false);
   const [showDiagrams, setShowDiagrams] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [repertorio, setRepertorio] = useState<Repertorio | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoScroll = useAutoScroll(scrollRef);
   const keepAwake = useKeepAwake();
+
+  // carrega o repertório real (se a música foi aberta a partir de um)
+  useEffect(() => {
+    setRepertorio(repertorioId ? obterRepertorio(repertorioId) : null);
+  }, [repertorioId, musica.id]);
+
+  async function trocarParaMusicaDoRepertorio(musicaId: string) {
+    if (!onSelectMusica) return;
+    const nova = await getMusicaById(musicaId);
+    if (nova) onSelectMusica(nova);
+  }
 
   // carrega estado salvo (tom/capo/grafia) desta música ao trocar de canção
   useEffect(() => {
@@ -123,7 +140,7 @@ export function CifraReader({
       {/* Header mobile */}
       <header className="bg-[var(--accent)] px-4 pb-3 pt-4 text-[var(--accent-fg)] lg:hidden">
         <button onClick={onClose} className="mb-1 text-xs opacity-80">
-          ← Repertório · {REPERTORIO_ATUAL.nome}
+          {repertorio ? `← Repertório · ${repertorio.nome}` : '← Voltar'}
         </button>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -153,7 +170,9 @@ export function CifraReader({
           fontSize={fontSize}
           onIncFont={onIncFont}
           onDecFont={onDecFont}
-          currentTitle={musica.title}
+          currentMusicaId={musica.id}
+          repertorio={repertorio}
+          onSelectRepertorioItem={trocarParaMusicaDoRepertorio}
         />
 
         <div className="flex min-h-0 flex-1 flex-col">

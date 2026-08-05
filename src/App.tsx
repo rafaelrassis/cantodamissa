@@ -10,8 +10,14 @@ const DEFAULT_FONT = 21;
 
 function App() {
   const [musicaAtual, setMusicaAtual] = useState<Musica | null>(null);
+  const [repertorioId, setRepertorioId] = useState<string | null>(null);
   const { theme, toggleTheme } = useTheme();
   const [fontSize, setFontSize] = useState(DEFAULT_FONT);
+
+  function abrirMusica(musica: Musica, deRepertorioId: string | null = null) {
+    setMusicaAtual(musica);
+    setRepertorioId(deRepertorioId);
+  }
 
   if (musicaAtual) {
     return (
@@ -23,11 +29,13 @@ function App() {
         fontSize={fontSize}
         onIncFont={() => setFontSize((f) => Math.min(MAX_FONT, f + 2))}
         onDecFont={() => setFontSize((f) => Math.max(MIN_FONT, f - 2))}
+        repertorioId={repertorioId}
+        onSelectMusica={(m) => abrirMusica(m, repertorioId)}
       />
     );
   }
 
-  return <Home onSelectMusica={setMusicaAtual} />;
+  return <Home onSelectMusica={(m, repId) => abrirMusica(m, repId ?? null)} />;
 }
 
 export default App;
