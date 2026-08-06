@@ -32,7 +32,7 @@ export function ChordDiagramStrip({ chords, onHide }: Props) {
           <EyeOff size={12} /> ocultar
         </button>
       </div>
-      <div className="flex gap-2 overflow-x-auto px-4 pb-2.5 pt-1">
+      <div className="flex gap-2 overflow-x-auto px-4 pb-2.5 pt-1 [overscroll-behavior-x:contain]">
         {diagramas.map((diagram) => (
           <div key={diagram.name} className="shrink-0">
             <ChordDiagramCard diagram={diagram} compact />

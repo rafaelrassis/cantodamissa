@@ -12,9 +12,29 @@ interface Props {
   onToggleSheet: () => void;
 }
 
+/**
+ * `fixed` (não `sticky`/fluxo normal) — fica presa na base da tela sempre,
+ * mesmo que algo no conteúdo acima quebre o cálculo de altura do layout.
+ * Durante a rolagem automática, esconde os outros controles e deixa só o
+ * botão de pausar visível (menos distração pra quem está no altar).
+ */
 export function CifraBottomBar(props: Props) {
+  if (props.playing) {
+    return (
+      <div className="fixed inset-x-0 bottom-0 z-30 flex justify-center border-t border-[var(--border)] bg-[var(--surface)] px-3 pb-[22px] pt-2 lg:hidden">
+        <button
+          onClick={props.onTogglePlay}
+          aria-label="Pausar rolagem automática"
+          className="flex h-12 w-32 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] text-sm font-semibold text-[var(--accent-fg)]"
+        >
+          <Pause size={18} /> Pausar
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center justify-between gap-1 border-t border-[var(--border)] bg-[var(--surface)] px-3 pb-[22px] pt-2 lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-1 border-t border-[var(--border)] bg-[var(--surface)] px-3 pb-[22px] pt-2 lg:hidden">
       <div className="flex items-center gap-1">
         <button
           onClick={props.onDecTone}
@@ -40,13 +60,8 @@ export function CifraBottomBar(props: Props) {
         </button>
       </div>
 
-      <BarraBotao
-        onClick={props.onTogglePlay}
-        label="Rolagem"
-        ariaLabel="Alternar rolagem automática"
-        destaque
-      >
-        {props.playing ? <Pause size={17} /> : <Play size={17} />}
+      <BarraBotao onClick={props.onTogglePlay} label="Rolagem" ariaLabel="Iniciar rolagem automática" destaque>
+        <Play size={17} />
       </BarraBotao>
 
       <div className="flex items-center gap-1">
