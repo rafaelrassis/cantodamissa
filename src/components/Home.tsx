@@ -22,6 +22,7 @@ interface Props {
   onAbrirModeracao?: () => void;
   onAbrirTopMusicas?: () => void;
   onAbrirTopArtistas?: () => void;
+  onAbrirRepertorio: (id: string) => void;
   onSelectArtista?: (artista: string) => void;
   buscaInicial?: string;
 }
@@ -49,6 +50,7 @@ export function Home({
   onAbrirTopArtistas,
   onSelectArtista,
   buscaInicial,
+  onAbrirRepertorio,
 }: Props) {
   const [query, setQuery] = useState(buscaInicial ?? '');
   const [artistas, setArtistas] = useState<ArtistaEmAlta[]>([]);
@@ -67,19 +69,8 @@ export function Home({
   const domingoAtual = useMemo(() => domingoMaisProximo(new Date()), []);
   const buscando = query.trim().length > 0;
 
-  const {
-    repertorios,
-    criar,
-    remover,
-    adicionarMusica,
-    removerMusica,
-    moverMusicaParaRito,
-    adicionarRito,
-    removerRito,
-  } = useRepertorios();
-  const [repertorioAberto, setRepertorioAberto] = useState<string | null>(null);
+  const { repertorios, criar, adicionarMusica } = useRepertorios();
   const [novoNome, setNovoNome] = useState('');
-  const [linkCopiadoId, setLinkCopiadoId] = useState<string | null>(null);
   const [repertorioCompartilhado, setRepertorioCompartilhado] = useState<RepertorioTipo | null>(
     null
   );
@@ -106,18 +97,6 @@ export function Home({
   async function criarECriarAdicionar(nome: string, musica: Musica) {
     const novo = await criar(nome);
     adicionar(novo.id, musica);
-  }
-
-  async function copiarLinkRepertorio(token: string) {
-    const url = `${window.location.origin}${window.location.pathname}?rep=${token}`;
-    try {
-      await navigator.clipboard.writeText(url);
-    } catch {
-      window.prompt('Copie o link:', url);
-    }
-    const idParaEfeito = repertorios.find((r) => r.shareToken === token)?.id ?? null;
-    setLinkCopiadoId(idParaEfeito);
-    setTimeout(() => setLinkCopiadoId(null), 2000);
   }
 
   useEffect(() => {
@@ -327,18 +306,10 @@ export function Home({
           <PainelRepertorios
             repertorios={repertorios}
             repertorioCompartilhado={repertorioCompartilhado}
-            repertorioAberto={repertorioAberto}
-            setRepertorioAberto={setRepertorioAberto}
             novoNome={novoNome}
             setNovoNome={setNovoNome}
             criar={criar}
-            remover={remover}
-            removerMusica={removerMusica}
-            moverMusicaParaRito={moverMusicaParaRito}
-            adicionarRito={adicionarRito}
-            removerRito={removerRito}
-            copiarLinkRepertorio={copiarLinkRepertorio}
-            linkCopiadoId={linkCopiadoId}
+            onAbrirRepertorio={onAbrirRepertorio}
             onSelectMusica={onSelectMusica}
           />
         </aside>
@@ -412,18 +383,10 @@ export function Home({
               <PainelRepertorios
                 repertorios={repertorios}
                 repertorioCompartilhado={repertorioCompartilhado}
-                repertorioAberto={repertorioAberto}
-                setRepertorioAberto={setRepertorioAberto}
                 novoNome={novoNome}
                 setNovoNome={setNovoNome}
                 criar={criar}
-                remover={remover}
-                removerMusica={removerMusica}
-                moverMusicaParaRito={moverMusicaParaRito}
-                adicionarRito={adicionarRito}
-                removerRito={removerRito}
-                copiarLinkRepertorio={copiarLinkRepertorio}
-                linkCopiadoId={linkCopiadoId}
+                onAbrirRepertorio={onAbrirRepertorio}
                 onSelectMusica={onSelectMusica}
               />
             </div>

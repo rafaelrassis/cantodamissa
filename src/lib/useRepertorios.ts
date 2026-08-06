@@ -86,6 +86,14 @@ export function useRepertorios() {
     [recarregar]
   );
 
+  const reordenarRitos = useCallback(
+    async (repertorioId: string, nomesOrdenados: string[]) => {
+      await api.reordenarRitos(repertorioId, nomesOrdenados);
+      await recarregar();
+    },
+    [recarregar]
+  );
+
   return {
     repertorios,
     carregando,
@@ -97,5 +105,6 @@ export function useRepertorios() {
     moverMusicaParaRito,
     adicionarRito,
     removerRito,
+    reordenarRitos,
   };
 }

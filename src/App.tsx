@@ -5,27 +5,40 @@ import { CalendarioLiturgico } from './components/CalendarioLiturgico';
 import { ModeracaoSubmissoes } from './components/ModeracaoSubmissoes';
 import { TopMusicasTela } from './components/TopMusicasTela';
 import { TopArtistasTela } from './components/TopArtistasTela';
+import { RepertorioDetalheTela } from './components/RepertorioDetalheTela';
 import { useTheme } from './lib/useTheme';
+import { useRepertorios } from './lib/useRepertorios';
 import type { Musica, TempoLiturgico } from './types/musica';
 
 const MIN_FONT = 15;
 const MAX_FONT = 34;
 const DEFAULT_FONT = 21;
 
-type Tela = 'home' | 'calendario' | 'moderacao' | 'top-musicas' | 'top-artistas';
+type Tela =
+  | 'home'
+  | 'calendario'
+  | 'moderacao'
+  | 'top-musicas'
+  | 'top-artistas'
+  | 'repertorio-detalhe';
 
 function App() {
   const [tela, setTela] = useState<Tela>('home');
   const [musicaAtual, setMusicaAtual] = useState<Musica | null>(null);
   const [repertorioId, setRepertorioId] = useState<string | null>(null);
+  const [tomForcado, setTomForcado] = useState<string | null>(null);
   const [filtroTempo, setFiltroTempo] = useState<TempoLiturgico | undefined>();
   const [buscaArtista, setBuscaArtista] = useState<string | undefined>();
   const { theme, toggleTheme } = useTheme();
   const [fontSize, setFontSize] = useState(DEFAULT_FONT);
 
-  function abrirMusica(musica: Musica, deRepertorioId: string | null = null) {
+  const repertoriosApi = useRepertorios();
+  const repertorioAtual = repertoriosApi.repertorios.find((r) => r.id === repertorioId) ?? null;
+
+  function abrirMusica(musica: Musica, deRepertorioId: string | null = null, tom: string | null = null) {
     setMusicaAtual(musica);
     setRepertorioId(deRepertorioId);
+    setTomForcado(tom);
   }
 
   function irParaHomeComFiltro(tempo: TempoLiturgico) {
@@ -49,6 +62,7 @@ function App() {
         onIncFont={() => setFontSize((f) => Math.min(MAX_FONT, f + 2))}
         onDecFont={() => setFontSize((f) => Math.max(MIN_FONT, f - 2))}
         repertorioId={repertorioId}
+        tomForcado={tomForcado}
         onSelectMusica={(m) => abrirMusica(m, repertorioId)}
       />
     );
@@ -76,6 +90,21 @@ function App() {
     );
   }
 
+  if (tela === 'repertorio-detalhe' && repertorioAtual) {
+    return (
+      <RepertorioDetalheTela
+        repertorio={repertorioAtual}
+        onBack={() => setTela('home')}
+        onSelectMusica={(m, tom) => abrirMusica(m, repertorioAtual.id, tom)}
+        removerMusica={repertoriosApi.removerMusica}
+        moverMusicaParaRito={repertoriosApi.moverMusicaParaRito}
+        adicionarRito={repertoriosApi.adicionarRito}
+        removerRito={repertoriosApi.removerRito}
+        reordenarRitos={repertoriosApi.reordenarRitos}
+      />
+    );
+  }
+
   return (
     <Home
       onSelectMusica={(m, repId) => abrirMusica(m, repId ?? null)}
@@ -86,6 +115,10 @@ function App() {
       onAbrirTopMusicas={() => setTela('top-musicas')}
       onAbrirTopArtistas={() => setTela('top-artistas')}
       onSelectArtista={irParaHomeComArtista}
+      onAbrirRepertorio={(id) => {
+        setRepertorioId(id);
+        setTela('repertorio-detalhe');
+      }}
     />
   );
 }

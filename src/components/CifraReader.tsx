@@ -4,6 +4,7 @@ import type { Musica } from '../types/musica';
 import {
   extractChordsUsed,
   parseContentToStructuredLines,
+  semitonesBetween,
   transposeChord,
   transposeContent,
 } from '../lib/chordpro';
@@ -36,6 +37,7 @@ interface Props {
   onDecFont: () => void;
   repertorioId?: string | null;
   onSelectMusica?: (musica: Musica) => void;
+  tomForcado?: string | null;
 }
 
 export function CifraReader({
@@ -48,6 +50,7 @@ export function CifraReader({
   onDecFont,
   repertorioId = null,
   onSelectMusica,
+  tomForcado = null,
 }: Props) {
   const [semitones, setSemitones] = useState(0);
   const [capo, setCapo] = useState(musica.capo);
@@ -79,13 +82,22 @@ export function CifraReader({
   }
 
   // carrega estado salvo (tom/capo/grafia) desta música ao trocar de canção
+  // — exceto se veio um `tomForcado` (o organizador do repertório escolheu
+  // um tom específico pra essa missa), que sempre tem prioridade
   useEffect(() => {
+    if (tomForcado) {
+      setSemitones(semitonesBetween(musica.originalTone, tomForcado));
+      setCapo(musica.capo);
+      setUseFlats(tomForcado.includes('b'));
+      setSheetOpen(false);
+      return;
+    }
     const saved = loadReaderState(musica.slug, { semitones: 0, capo: musica.capo, flats: false });
     setSemitones(saved.semitones);
     setCapo(saved.capo);
     setUseFlats(saved.flats);
     setSheetOpen(false);
-  }, [musica.slug, musica.capo]);
+  }, [musica.slug, musica.capo, musica.originalTone, tomForcado]);
 
   useEffect(() => {
     saveReaderState(musica.slug, { semitones, capo, flats: useFlats });

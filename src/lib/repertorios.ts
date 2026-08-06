@@ -289,6 +289,28 @@ export async function removerRito(repertorioId: string, nome: string): Promise<v
   if (error) console.error('removerRito:', error.message);
 }
 
+/** Reordena os ritos de um repertório pra bater com a ordem do array dado. */
+export async function reordenarRitos(repertorioId: string, nomesOrdenados: string[]): Promise<void> {
+  if (!isSupabaseConfigured) {
+    salvarMock(
+      lerMock().map((r) => (r.id === repertorioId ? { ...r, ritos: nomesOrdenados } : r))
+    );
+    return;
+  }
+
+  // atualiza a `ordem` de cada rito uma a uma (poucos itens, sem necessidade
+  // de query em lote)
+  await Promise.all(
+    nomesOrdenados.map((nome, ordem) =>
+      supabase
+        .from('repertorio_ritos')
+        .update({ ordem })
+        .eq('repertorio_id', repertorioId)
+        .eq('nome', nome)
+    )
+  );
+}
+
 // ---------- Músicas dentro do repertório ----------
 
 export async function adicionarMusica(repertorioId: string, item: ItemRepertorio): Promise<void> {
