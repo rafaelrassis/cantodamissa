@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarDays, Home as HomeIcon, ListMusic, Music2, Search, X } from 'lucide-react';
+import { CalendarDays, Home as HomeIcon, ListMusic, Music2, Plus, Search, X } from 'lucide-react';
 import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
 import { getMusicaById, getTop50, searchMusicas } from '../lib/musicasApi';
 import { domingoMaisProximo } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
 import { useRepertorios } from '../lib/useRepertorios';
+import { useSubmissoes } from '../lib/useSubmissoes';
 import { MusicaCard } from './MusicaCard';
+import { SubmissaoForm } from './SubmissaoForm';
 
 interface Props {
   onSelectMusica: (musica: Musica, repertorioId?: string) => void;
   filtroInicial?: TempoLiturgico;
   onAbrirCalendario?: () => void;
+  onAbrirModeracao?: () => void;
 }
 
 const TEMPOS: TempoLiturgico[] = ['Advento', 'Natal', 'Quaresma', 'Pascoa', 'TempoComum'];
@@ -28,7 +31,7 @@ const MOMENTOS: MomentoMissa[] = [
   'Envio',
 ];
 
-export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario }: Props) {
+export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrirModeracao }: Props) {
   const [query, setQuery] = useState('');
   const [tempo, setTempo] = useState<TempoLiturgico | undefined>(filtroInicial);
   const [momento, setMomento] = useState<MomentoMissa | undefined>();
@@ -42,6 +45,8 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario }: Props
   const { repertorios, criar, remover, adicionarMusica, removerMusica } = useRepertorios();
   const [repertorioAberto, setRepertorioAberto] = useState<string | null>(null);
   const [novoNome, setNovoNome] = useState('');
+  const { criar: criarSubmissao } = useSubmissoes();
+  const [formularioAberto, setFormularioAberto] = useState(false);
 
   function adicionar(repertorioId: string, musica: Musica) {
     adicionarMusica(repertorioId, {
@@ -106,9 +111,17 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario }: Props
               <span>Repertórios</span>
             </nav>
           </div>
-          <span className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[var(--accent)]">
-            Entrar
-          </span>
+          <div className="flex shrink-0 items-center gap-3">
+            <button
+              onClick={() => setFormularioAberto(true)}
+              className="flex items-center gap-1.5 rounded-full bg-white/16 px-3.5 py-1.5 text-sm font-semibold"
+            >
+              <Plus size={15} /> Sugerir música
+            </button>
+            <span className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[var(--accent)]">
+              Entrar
+            </span>
+          </div>
         </div>
 
         <div className="px-4 pb-5 pt-4 lg:px-10 lg:pb-6">
@@ -319,13 +332,37 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario }: Props
         espaço reservado para anúncio
       </footer>
 
+      {onAbrirModeracao && (
+        <button
+          onClick={onAbrirModeracao}
+          className="border-t border-[var(--border)] py-2 text-center text-[11px] text-[var(--muted)] underline-offset-2 hover:underline"
+        >
+          Revisar sugestões da comunidade
+        </button>
+      )}
+
       {/* Bottom navigation (mobile) */}
+      <button
+        onClick={() => setFormularioAberto(true)}
+        aria-label="Sugerir música"
+        className="fixed bottom-20 right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)] lg:hidden"
+      >
+        <Plus size={22} />
+      </button>
       <nav className="sticky bottom-0 flex items-center justify-around border-t border-[var(--border)] bg-[var(--surface)] py-2 lg:hidden">
         <TabItem icon={<HomeIcon size={18} />} label="Início" active />
         <TabItem icon={<Search size={18} />} label="Buscar" />
         <TabItem icon={<ListMusic size={18} />} label="Repertórios" />
         <TabItem icon={<CalendarDays size={18} />} label="Calendário" onClick={onAbrirCalendario} />
       </nav>
+
+      {formularioAberto && (
+        <SubmissaoForm
+          modo="nova"
+          onClose={() => setFormularioAberto(false)}
+          onSubmit={(dados) => criarSubmissao({ ...dados, tipo: 'nova' })}
+        />
+      )}
     </div>
   );
 }

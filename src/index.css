@@ -66,3 +66,18 @@ body {
     font-size: var(--font-cifra);
   }
 }
+
+/* Campo de formulário padrão (usado em SubmissaoForm). */
+.input-field {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.input-field:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}

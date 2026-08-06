@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Home } from './components/Home';
 import { CifraReader } from './components/CifraReader';
 import { CalendarioLiturgico } from './components/CalendarioLiturgico';
+import { ModeracaoSubmissoes } from './components/ModeracaoSubmissoes';
 import { useTheme } from './lib/useTheme';
 import type { Musica, TempoLiturgico } from './types/musica';
 
@@ -9,7 +10,7 @@ const MIN_FONT = 15;
 const MAX_FONT = 34;
 const DEFAULT_FONT = 21;
 
-type Tela = 'home' | 'calendario';
+type Tela = 'home' | 'calendario' | 'moderacao';
 
 function App() {
   const [tela, setTela] = useState<Tela>('home');
@@ -51,11 +52,16 @@ function App() {
     );
   }
 
+  if (tela === 'moderacao') {
+    return <ModeracaoSubmissoes onBack={() => setTela('home')} />;
+  }
+
   return (
     <Home
       onSelectMusica={(m, repId) => abrirMusica(m, repId ?? null)}
       filtroInicial={filtroTempo}
       onAbrirCalendario={() => setTela('calendario')}
+      onAbrirModeracao={() => setTela('moderacao')}
     />
   );
 }

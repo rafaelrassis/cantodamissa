@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, Moon, Pause, Play, Sun, Video } from 'lucide-react';
+import { ChevronLeft, Flag, Moon, Pause, Play, Sun, Video } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import {
   extractChordsUsed,
@@ -12,6 +12,8 @@ import { useKeepAwake } from '../lib/useKeepAwake';
 import { loadReaderState, saveReaderState } from '../lib/readerState';
 import { obterRepertorio, type Repertorio } from '../lib/repertorios';
 import { getMusicaById } from '../lib/musicasApi';
+import { useSubmissoes } from '../lib/useSubmissoes';
+import { SubmissaoForm } from './SubmissaoForm';
 import { LABEL_MOMENTO, LABEL_TEMPO } from '../lib/labels';
 import type { Theme } from '../lib/useTheme';
 import { ChordLine } from './ChordLine';
@@ -52,6 +54,8 @@ export function CifraReader({
   const [showDiagrams, setShowDiagrams] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [repertorio, setRepertorio] = useState<Repertorio | null>(null);
+  const [formularioCorrecaoAberto, setFormularioCorrecaoAberto] = useState(false);
+  const { criar: criarSubmissao } = useSubmissoes();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoScroll = useAutoScroll(scrollRef);
@@ -210,6 +214,12 @@ export function CifraReader({
               </ToolbarToggle>
             )}
             <div className="flex-1" />
+            <button
+              onClick={() => setFormularioCorrecaoAberto(true)}
+              className="flex h-[34px] items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--surface2)]"
+            >
+              <Flag size={13} /> sugerir correção
+            </button>
             <span className="text-xs font-medium text-[var(--muted)]">
               {musica.viewsCount.toLocaleString('pt-BR')} acessos
             </span>
@@ -275,6 +285,17 @@ export function CifraReader({
         awakeSupported={keepAwake.supported}
         onToggleAwake={keepAwake.toggle}
       />
+
+      {formularioCorrecaoAberto && (
+        <SubmissaoForm
+          modo="correcao"
+          musicaBase={musica}
+          onClose={() => setFormularioCorrecaoAberto(false)}
+          onSubmit={(dados) =>
+            criarSubmissao({ ...dados, tipo: 'correcao', musicaOriginalId: musica.id })
+          }
+        />
+      )}
     </div>
   );
 }
