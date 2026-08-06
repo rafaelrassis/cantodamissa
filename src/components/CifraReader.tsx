@@ -112,7 +112,7 @@ export function CifraReader({
   const tempoLabel = musica.tempoLiturgico[0] ? LABEL_TEMPO[musica.tempoLiturgico[0]] : '';
 
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--bg)] font-sans text-[var(--text)]">
+    <div className="flex h-dvh flex-col overflow-hidden bg-[var(--bg)] font-sans text-[var(--text)]">
       {/* Header desktop */}
       <header className="hidden items-center justify-between gap-4 bg-[var(--accent)] px-6 py-4 text-[var(--accent-fg)] lg:flex">
         <div className="flex min-w-0 items-center gap-3">
