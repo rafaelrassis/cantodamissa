@@ -157,7 +157,7 @@ export function Home({
         <div className="hidden items-center justify-between px-10 py-4 lg:flex">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
-              <img src="/icon-192.png" alt="" className="h-8 w-8 rounded-lg" />
+              <img src="/logo-header.png" alt="" className="h-8 w-8" />
               Canto da Missa
             </div>
             <nav className="flex items-center gap-6 text-sm font-medium opacity-90">
@@ -188,7 +188,7 @@ export function Home({
           <span className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[var(--accent)]">
             Entrar
           </span>
-          <img src="/icon-192.png" alt="Canto da Missa" className="h-8 w-8 rounded-lg" />
+          <img src="/logo-header.png" alt="Canto da Missa" className="h-8 w-8" />
         </div>
 
         <div className="px-4 pb-5 pt-4 lg:px-10 lg:pb-6">
