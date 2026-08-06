@@ -62,6 +62,30 @@ export function useRepertorios() {
     [recarregar]
   );
 
+  const moverMusicaParaRito = useCallback(
+    async (repertorioId: string, musicaId: string, novoRito: string) => {
+      await api.moverMusicaParaRito(repertorioId, musicaId, novoRito);
+      await recarregar();
+    },
+    [recarregar]
+  );
+
+  const adicionarRito = useCallback(
+    async (repertorioId: string, nome: string) => {
+      await api.adicionarRito(repertorioId, nome);
+      await recarregar();
+    },
+    [recarregar]
+  );
+
+  const removerRito = useCallback(
+    async (repertorioId: string, nome: string) => {
+      await api.removerRito(repertorioId, nome);
+      await recarregar();
+    },
+    [recarregar]
+  );
+
   return {
     repertorios,
     carregando,
@@ -70,5 +94,8 @@ export function useRepertorios() {
     remover,
     adicionarMusica,
     removerMusica,
+    moverMusicaParaRito,
+    adicionarRito,
+    removerRito,
   };
 }

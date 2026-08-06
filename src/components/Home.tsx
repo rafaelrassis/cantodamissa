@@ -4,7 +4,11 @@ import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
 import { getTop50, searchMusicas } from '../lib/musicasApi';
 import { domingoMaisProximo } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
-import { obterRepertorioPorToken, type Repertorio as RepertorioTipo } from '../lib/repertorios';
+import {
+  obterRepertorioPorToken,
+  ritoSugeridoParaMomento,
+  type Repertorio as RepertorioTipo,
+} from '../lib/repertorios';
 import { useRepertorios } from '../lib/useRepertorios';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import { MusicaCard } from './MusicaCard';
@@ -44,7 +48,16 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
   const domingoAtual = useMemo(() => domingoMaisProximo(new Date()), []);
   const buscando = query.trim().length > 0;
 
-  const { repertorios, criar, remover, adicionarMusica, removerMusica } = useRepertorios();
+  const {
+    repertorios,
+    criar,
+    remover,
+    adicionarMusica,
+    removerMusica,
+    moverMusicaParaRito,
+    adicionarRito,
+    removerRito,
+  } = useRepertorios();
   const [repertorioAberto, setRepertorioAberto] = useState<string | null>(null);
   const [novoNome, setNovoNome] = useState('');
   const [linkCopiadoId, setLinkCopiadoId] = useState<string | null>(null);
@@ -67,7 +80,7 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
       title: musica.title,
       artist: musica.artist,
       tone: musica.originalTone,
-      momento: musica.momento[0] ?? null,
+      momento: ritoSugeridoParaMomento(musica.momento[0] ?? null),
     });
   }
 
@@ -257,6 +270,9 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
             criar={criar}
             remover={remover}
             removerMusica={removerMusica}
+            moverMusicaParaRito={moverMusicaParaRito}
+            adicionarRito={adicionarRito}
+            removerRito={removerRito}
             copiarLinkRepertorio={copiarLinkRepertorio}
             linkCopiadoId={linkCopiadoId}
             onSelectMusica={onSelectMusica}
@@ -339,6 +355,9 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
                 criar={criar}
                 remover={remover}
                 removerMusica={removerMusica}
+                moverMusicaParaRito={moverMusicaParaRito}
+                adicionarRito={adicionarRito}
+                removerRito={removerRito}
                 copiarLinkRepertorio={copiarLinkRepertorio}
                 linkCopiadoId={linkCopiadoId}
                 onSelectMusica={onSelectMusica}

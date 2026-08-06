@@ -1,6 +1,8 @@
-import { Share2, X } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, ChevronUp, Plus, Share2, X } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import type { Repertorio } from '../lib/repertorios';
+import { RITO_SEM_SECAO } from '../lib/repertorios';
 import { getMusicaById } from '../lib/musicasApi';
 
 interface Props {
@@ -13,6 +15,9 @@ interface Props {
   criar: (nome: string) => void;
   remover: (id: string) => void;
   removerMusica: (repertorioId: string, musicaId: string) => void;
+  moverMusicaParaRito: (repertorioId: string, musicaId: string, novoRito: string) => void;
+  adicionarRito: (repertorioId: string, nome: string) => void;
+  removerRito: (repertorioId: string, nome: string) => void;
   copiarLinkRepertorio: (token: string) => void;
   linkCopiadoId: string | null;
   onSelectMusica: (musica: Musica, repertorioId?: string) => void;
@@ -20,9 +25,11 @@ interface Props {
 
 /**
  * Conteúdo do painel "Meus repertórios" — reutilizado como sidebar fixa no
- * desktop (Home.tsx) e como tela cheia no mobile (a aside original era
- * `hidden lg:flex`, ou seja, sumia por completo em telas pequenas; esse
- * componente existe pra consertar isso).
+ * desktop (Home.tsx) e como tela cheia no mobile.
+ *
+ * Cada repertório é agrupado pelos seus ritos (seções da missa), na ordem
+ * cadastrada. Músicas sem rito reconhecido caem no grupo
+ * "Sem rito definido".
  */
 export function PainelRepertorios({
   repertorios,
@@ -34,6 +41,9 @@ export function PainelRepertorios({
   criar,
   remover,
   removerMusica,
+  moverMusicaParaRito,
+  adicionarRito,
+  removerRito,
   copiarLinkRepertorio,
   linkCopiadoId,
   onSelectMusica,
@@ -89,63 +99,27 @@ export function PainelRepertorios({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-[var(--text)]">{r.nome}</p>
                 <p className="truncate text-xs text-[var(--muted)]">
-                  {r.itens.length} música{r.itens.length === 1 ? '' : 's'}
+                  {r.itens.length} música{r.itens.length === 1 ? '' : 's'} · {r.ritos.length} rito
+                  {r.ritos.length === 1 ? '' : 's'}
                 </p>
               </div>
             </button>
 
             {aberto && (
-              <div className="border-t border-[var(--border)] p-2">
-                {r.itens.length === 0 && (
-                  <p className="px-2 py-2 text-xs text-[var(--muted)]">
-                    Nenhuma música ainda — use o botão + nas músicas ao lado.
-                  </p>
-                )}
-                {r.itens.map((item) => (
-                  <div
-                    key={item.musicaId}
-                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[var(--surface)]"
-                  >
-                    <button
-                      onClick={async () => {
-                        const musica = await getMusicaById(item.musicaId);
-                        if (musica) onSelectMusica(musica, r.id);
-                      }}
-                      className="min-w-0 flex-1 truncate text-left text-sm text-[var(--text)]"
-                    >
-                      {item.title}
-                    </button>
-                    <span className="shrink-0 font-mono text-xs font-bold text-[var(--accent)]">
-                      {item.tone}
-                    </span>
-                    <button
-                      onClick={() => removerMusica(r.id, item.musicaId)}
-                      aria-label="Remover música do repertório"
-                      className="shrink-0 text-[var(--muted)] hover:text-[var(--text)]"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-                {r.shareToken && (
-                  <button
-                    onClick={() => copiarLinkRepertorio(r.shareToken!)}
-                    className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] py-1.5 text-center text-xs font-medium text-[var(--text)] hover:bg-[var(--surface2)]"
-                  >
-                    <Share2 size={13} />
-                    {linkCopiadoId === r.id ? 'Link copiado!' : 'Compartilhar link'}
-                  </button>
-                )}
-                <button
-                  onClick={() => {
-                    remover(r.id);
-                    setRepertorioAberto(null);
-                  }}
-                  className="mt-2 w-full rounded-lg py-1.5 text-center text-xs font-medium text-red-500 hover:bg-[var(--surface)]"
-                >
-                  Excluir repertório
-                </button>
-              </div>
+              <RepertorioDetalhe
+                repertorio={r}
+                removerMusica={removerMusica}
+                moverMusicaParaRito={moverMusicaParaRito}
+                adicionarRito={adicionarRito}
+                removerRito={removerRito}
+                copiarLinkRepertorio={copiarLinkRepertorio}
+                linkCopiado={linkCopiadoId === r.id}
+                onSelectMusica={onSelectMusica}
+                onExcluir={() => {
+                  remover(r.id);
+                  setRepertorioAberto(null);
+                }}
+              />
             )}
           </div>
         );
@@ -175,8 +149,178 @@ export function PainelRepertorios({
       </form>
 
       <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
-        Monte o repertório da missa e compartilhe com o ministério.
+        Monte o repertório da missa por rito e compartilhe com o ministério.
       </div>
     </>
+  );
+}
+
+// ---------- Detalhe expandido de um repertório (agrupado por rito) ----------
+
+function RepertorioDetalhe({
+  repertorio,
+  removerMusica,
+  moverMusicaParaRito,
+  adicionarRito,
+  removerRito,
+  copiarLinkRepertorio,
+  linkCopiado,
+  onSelectMusica,
+  onExcluir,
+}: {
+  repertorio: Repertorio;
+  removerMusica: (repertorioId: string, musicaId: string) => void;
+  moverMusicaParaRito: (repertorioId: string, musicaId: string, novoRito: string) => void;
+  adicionarRito: (repertorioId: string, nome: string) => void;
+  removerRito: (repertorioId: string, nome: string) => void;
+  copiarLinkRepertorio: (token: string) => void;
+  linkCopiado: boolean;
+  onSelectMusica: (musica: Musica, repertorioId?: string) => void;
+  onExcluir: () => void;
+}) {
+  const [novoRito, setNovoRito] = useState('');
+  const [ritoColapsado, setRitoColapsado] = useState<Record<string, boolean>>({});
+
+  const itensPorRito = new Map<string, typeof repertorio.itens>();
+  for (const nome of repertorio.ritos) itensPorRito.set(nome, []);
+  const orfaos: typeof repertorio.itens = [];
+  for (const item of repertorio.itens) {
+    if (item.momento && itensPorRito.has(item.momento)) {
+      itensPorRito.get(item.momento)!.push(item);
+    } else {
+      orfaos.push(item);
+    }
+  }
+
+  const gruposParaExibir = [...repertorio.ritos, ...(orfaos.length ? [RITO_SEM_SECAO] : [])];
+  if (orfaos.length) itensPorRito.set(RITO_SEM_SECAO, orfaos);
+
+  const opcoesDeRito = [...repertorio.ritos, ...(orfaos.length ? [RITO_SEM_SECAO] : [])];
+
+  return (
+    <div className="border-t border-[var(--border)] p-2">
+      {gruposParaExibir.map((nomeRito) => {
+        const itens = itensPorRito.get(nomeRito) ?? [];
+        const colapsado = ritoColapsado[nomeRito];
+        const removivel = nomeRito !== RITO_SEM_SECAO;
+
+        return (
+          <div key={nomeRito} className="mb-1">
+            <div className="flex items-center gap-1 px-1 py-1">
+              <button
+                onClick={() =>
+                  setRitoColapsado((s) => ({ ...s, [nomeRito]: !s[nomeRito] }))
+                }
+                className="flex flex-1 items-center gap-1 text-left"
+              >
+                {colapsado ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+                <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                  {nomeRito}
+                </span>
+                <span className="text-[10px] text-[var(--muted)]">({itens.length})</span>
+              </button>
+              {removivel && itens.length === 0 && (
+                <button
+                  onClick={() => removerRito(repertorio.id, nomeRito)}
+                  aria-label={`Excluir rito ${nomeRito}`}
+                  title="Excluir rito"
+                  className="shrink-0 text-[var(--muted)] hover:text-red-500"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+
+            {!colapsado && (
+              <>
+                {itens.length === 0 && (
+                  <p className="px-2 py-1 text-xs text-[var(--muted)]">Nenhuma música aqui.</p>
+                )}
+                {itens.map((item) => (
+                  <div
+                    key={item.musicaId}
+                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[var(--surface)]"
+                  >
+                    <button
+                      onClick={async () => {
+                        const musica = await getMusicaById(item.musicaId);
+                        if (musica) onSelectMusica(musica, repertorio.id);
+                      }}
+                      className="min-w-0 flex-1 truncate text-left text-sm text-[var(--text)]"
+                    >
+                      {item.title}
+                    </button>
+                    <span className="shrink-0 font-mono text-xs font-bold text-[var(--accent)]">
+                      {item.tone}
+                    </span>
+                    <select
+                      value={nomeRito}
+                      onChange={(e) =>
+                        moverMusicaParaRito(repertorio.id, item.musicaId, e.target.value)
+                      }
+                      aria-label="Mover música pra outro rito"
+                      className="shrink-0 rounded-md border border-[var(--border)] bg-[var(--bg)] px-1 py-0.5 text-[10px] text-[var(--text)]"
+                    >
+                      {opcoesDeRito.map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => removerMusica(repertorio.id, item.musicaId)}
+                      aria-label="Remover música do repertório"
+                      className="shrink-0 text-[var(--muted)] hover:text-[var(--text)]"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        );
+      })}
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!novoRito.trim()) return;
+          adicionarRito(repertorio.id, novoRito);
+          setNovoRito('');
+        }}
+        className="mt-2 flex gap-1.5"
+      >
+        <input
+          value={novoRito}
+          onChange={(e) => setNovoRito(e.target.value)}
+          placeholder="Novo rito (ex: Bênção Final)"
+          className="w-full rounded-lg border border-dashed border-[var(--border)] px-2 py-1 text-xs text-[var(--text)] focus:outline-none"
+        />
+        <button
+          type="submit"
+          aria-label="Adicionar rito"
+          className="flex shrink-0 items-center justify-center rounded-lg bg-[var(--accent)] px-2 text-[var(--accent-fg)]"
+        >
+          <Plus size={14} />
+        </button>
+      </form>
+
+      {repertorio.shareToken && (
+        <button
+          onClick={() => copiarLinkRepertorio(repertorio.shareToken!)}
+          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] py-1.5 text-center text-xs font-medium text-[var(--text)] hover:bg-[var(--surface2)]"
+        >
+          <Share2 size={13} />
+          {linkCopiado ? 'Link copiado!' : 'Compartilhar link'}
+        </button>
+      )}
+      <button
+        onClick={onExcluir}
+        className="mt-2 w-full rounded-lg py-1.5 text-center text-xs font-medium text-red-500 hover:bg-[var(--surface)]"
+      >
+        Excluir repertório
+      </button>
+    </div>
   );
 }
