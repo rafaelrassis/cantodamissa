@@ -3,15 +3,18 @@ import * as api from './repertorios';
 import type { ItemRepertorio, Repertorio } from './repertorios';
 
 /**
- * Estado reativo dos repertórios do usuário. Persistido em localStorage
- * (ver `repertorios.ts`). Sem sincronização entre abas por enquanto — cada
- * chamada de mutação recarrega a lista inteira do storage.
+ * Estado reativo dos repertórios do usuário. A camada `repertorios.ts` já
+ * decide sozinha se fala com Supabase ou com o fallback local — aqui só
+ * envolvemos em estado React e recarregamos após cada mutação.
  */
 export function useRepertorios() {
   const [repertorios, setRepertorios] = useState<Repertorio[]>([]);
+  const [carregando, setCarregando] = useState(true);
 
-  const recarregar = useCallback(() => {
-    setRepertorios(api.listarRepertorios());
+  const recarregar = useCallback(async () => {
+    const lista = await api.listarRepertorios();
+    setRepertorios(lista);
+    setCarregando(false);
   }, []);
 
   useEffect(() => {
@@ -19,61 +22,53 @@ export function useRepertorios() {
   }, [recarregar]);
 
   const criar = useCallback(
-    (nome: string) => {
-      const novo = api.criarRepertorio(nome);
-      recarregar();
+    async (nome: string) => {
+      const novo = await api.criarRepertorio(nome);
+      await recarregar();
       return novo;
     },
     [recarregar]
   );
 
   const renomear = useCallback(
-    (id: string, nome: string) => {
-      api.renomearRepertorio(id, nome);
-      recarregar();
+    async (id: string, nome: string) => {
+      await api.renomearRepertorio(id, nome);
+      await recarregar();
     },
     [recarregar]
   );
 
   const remover = useCallback(
-    (id: string) => {
-      api.removerRepertorio(id);
-      recarregar();
+    async (id: string) => {
+      await api.removerRepertorio(id);
+      await recarregar();
     },
     [recarregar]
   );
 
   const adicionarMusica = useCallback(
-    (repertorioId: string, item: ItemRepertorio) => {
-      api.adicionarMusica(repertorioId, item);
-      recarregar();
+    async (repertorioId: string, item: ItemRepertorio) => {
+      await api.adicionarMusica(repertorioId, item);
+      await recarregar();
     },
     [recarregar]
   );
 
   const removerMusica = useCallback(
-    (repertorioId: string, musicaId: string) => {
-      api.removerMusica(repertorioId, musicaId);
-      recarregar();
-    },
-    [recarregar]
-  );
-
-  const reordenarMusicas = useCallback(
-    (repertorioId: string, musicaIds: string[]) => {
-      api.reordenarMusicas(repertorioId, musicaIds);
-      recarregar();
+    async (repertorioId: string, musicaId: string) => {
+      await api.removerMusica(repertorioId, musicaId);
+      await recarregar();
     },
     [recarregar]
   );
 
   return {
     repertorios,
+    carregando,
     criar,
     renomear,
     remover,
     adicionarMusica,
     removerMusica,
-    reordenarMusicas,
   };
 }

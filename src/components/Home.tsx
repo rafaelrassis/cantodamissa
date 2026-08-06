@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarDays, Home as HomeIcon, ListMusic, Music2, Plus, Search, X } from 'lucide-react';
+import { CalendarDays, Home as HomeIcon, ListMusic, Music2, Plus, Search, Share2, X } from 'lucide-react';
 import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
 import { getMusicaById, getTop50, searchMusicas } from '../lib/musicasApi';
 import { domingoMaisProximo } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
+import { obterRepertorioPorToken, type Repertorio as RepertorioTipo } from '../lib/repertorios';
 import { useRepertorios } from '../lib/useRepertorios';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import { MusicaCard } from './MusicaCard';
@@ -45,6 +46,16 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
   const { repertorios, criar, remover, adicionarMusica, removerMusica } = useRepertorios();
   const [repertorioAberto, setRepertorioAberto] = useState<string | null>(null);
   const [novoNome, setNovoNome] = useState('');
+  const [linkCopiadoId, setLinkCopiadoId] = useState<string | null>(null);
+  const [repertorioCompartilhado, setRepertorioCompartilhado] = useState<RepertorioTipo | null>(
+    null
+  );
+
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get('rep');
+    if (!token) return;
+    obterRepertorioPorToken(token).then(setRepertorioCompartilhado);
+  }, []);
   const { criar: criarSubmissao } = useSubmissoes();
   const [formularioAberto, setFormularioAberto] = useState(false);
 
@@ -58,9 +69,21 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
     });
   }
 
-  function criarECriarAdicionar(nome: string, musica: Musica) {
-    const novo = criar(nome);
+  async function criarECriarAdicionar(nome: string, musica: Musica) {
+    const novo = await criar(nome);
     adicionar(novo.id, musica);
+  }
+
+  async function copiarLinkRepertorio(token: string) {
+    const url = `${window.location.origin}${window.location.pathname}?rep=${token}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      window.prompt('Copie o link:', url);
+    }
+    const idParaEfeito = repertorios.find((r) => r.shareToken === token)?.id ?? null;
+    setLinkCopiadoId(idParaEfeito);
+    setTimeout(() => setLinkCopiadoId(null), 2000);
   }
 
   useEffect(() => {
@@ -219,6 +242,34 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
 
         {/* Meus repertórios (desktop) */}
         <aside className="hidden w-[340px] shrink-0 flex-col gap-3 lg:flex">
+          {repertorioCompartilhado && (
+            <div className="rounded-xl border-2 border-[var(--accent)] p-3">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[var(--accent)]">
+                Compartilhado com você
+              </p>
+              <p className="mb-2 text-sm font-semibold text-[var(--text)]">
+                {repertorioCompartilhado.nome}
+              </p>
+              {repertorioCompartilhado.itens.map((item) => (
+                <button
+                  key={item.musicaId}
+                  onClick={async () => {
+                    const musica = await getMusicaById(item.musicaId);
+                    if (musica) onSelectMusica(musica, repertorioCompartilhado.id);
+                  }}
+                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-[var(--surface)]"
+                >
+                  <span className="min-w-0 flex-1 truncate text-sm text-[var(--text)]">
+                    {item.title}
+                  </span>
+                  <span className="shrink-0 font-mono text-xs font-bold text-[var(--accent)]">
+                    {item.tone}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
           <h2 className="text-sm font-semibold text-[var(--muted)]">Meus repertórios</h2>
 
           {repertorios.length === 0 && (
@@ -280,6 +331,15 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
                         </button>
                       </div>
                     ))}
+                    {r.shareToken && (
+                      <button
+                        onClick={() => copiarLinkRepertorio(r.shareToken!)}
+                        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] py-1.5 text-center text-xs font-medium text-[var(--text)] hover:bg-[var(--surface2)]"
+                      >
+                        <Share2 size={13} />
+                        {linkCopiadoId === r.id ? 'Link copiado!' : 'Compartilhar link'}
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         remover(r.id);

@@ -63,7 +63,11 @@ export function CifraReader({
 
   // carrega o repertório real (se a música foi aberta a partir de um)
   useEffect(() => {
-    setRepertorio(repertorioId ? obterRepertorio(repertorioId) : null);
+    if (repertorioId) {
+      obterRepertorio(repertorioId).then(setRepertorio);
+    } else {
+      setRepertorio(null);
+    }
   }, [repertorioId, musica.id]);
 
   async function trocarParaMusicaDoRepertorio(musicaId: string) {
