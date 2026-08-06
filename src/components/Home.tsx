@@ -183,6 +183,14 @@ export function Home({
           </div>
         </div>
 
+        {/* Nav mobile */}
+        <div className="flex items-center justify-between px-4 pt-4 lg:hidden">
+          <span className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[var(--accent)]">
+            Entrar
+          </span>
+          <img src="/icon-192.png" alt="Canto da Missa" className="h-8 w-8 rounded-lg" />
+        </div>
+
         <div className="px-4 pb-5 pt-4 lg:px-10 lg:pb-6">
           <h1 className="text-xl font-extrabold tracking-tight lg:text-[34px] lg:tracking-[-0.02em]">
             {domingoAtual.nome}
