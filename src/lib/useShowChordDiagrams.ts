@@ -4,7 +4,7 @@ const STORAGE_KEY = 'mostrar-diagramas-acorde';
 
 function valorInicial(): boolean {
   const salvo = localStorage.getItem(STORAGE_KEY);
-  return salvo === null ? true : salvo === '1';
+  return salvo === null ? false : salvo === '1';
 }
 
 /**
