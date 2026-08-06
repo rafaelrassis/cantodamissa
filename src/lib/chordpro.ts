@@ -137,24 +137,51 @@ export function parseLineToTokens(line: string): ChordToken[] {
 }
 
 export interface StructuredLine {
-  type: 'section' | 'chord-lyric' | 'blank';
+  type: 'section' | 'chord-lyric' | 'chord-progression' | 'blank';
   label: string;
   tokens: ChordToken[];
+  chords: string[]; // usado só quando type === 'chord-progression'
+}
+
+// heurística: token curto que bate com o padrão de um acorde musical real
+// (mesma lógica do extrator de PDF em scripts/extract_cifra_pdf.py)
+const CHORD_LIKE = /^[A-G](#|b)?(m|maj7?|min|dim|aug|sus[24]?)?[0-9]*(\([^)]*\))?(\/[A-G](#|b)?)?$/;
+
+function pareceAcorde(token: string): boolean {
+  return CHORD_LIKE.test(token);
 }
 
 /**
- * Parseia o chordsContent inteiro em linhas estruturadas, distinguindo
- * marcadores de seção (linha iniciada por "#", ex: "#Refrão") de linhas de
- * cifra normais e linhas em branco (espaçamento entre blocos).
+ * Parseia o chordsContent inteiro em linhas estruturadas, distinguindo:
+ * - marcador de seção (linha iniciada por "#", ex: "#Refrão")
+ * - linha em branco (espaçamento entre blocos)
+ * - progressão de acordes sem letra (ex: "[Intro] [E] [A9] [C#m7]") — comum
+ *   em introduções/pontes; sem sílaba pra ancorar, não dá pra usar o
+ *   posicionamento "acorde acima da sílaba" (todos ficariam empilhados no
+ *   mesmo ponto). Detectada quando todo token da linha tem texto vazio.
+ * - linha de cifra normal (acorde + letra)
  */
 export function parseContentToStructuredLines(chordsContent: string): StructuredLine[] {
   return chordsContent.split('\n').map((raw) => {
     if (raw.startsWith('#')) {
-      return { type: 'section', label: raw.slice(1).trim(), tokens: [] };
+      return { type: 'section', label: raw.slice(1).trim(), tokens: [], chords: [] };
     }
     if (!raw.trim()) {
-      return { type: 'blank', label: '', tokens: [] };
+      return { type: 'blank', label: '', tokens: [], chords: [] };
     }
-    return { type: 'chord-lyric', label: '', tokens: parseLineToTokens(raw) };
+
+    const tokens = parseLineToTokens(raw);
+    const somenteAcordes = tokens.length > 0 && tokens.every((t) => !t.text.trim());
+
+    if (somenteAcordes) {
+      const nomes = tokens.map((t) => t.chord).filter((c): c is string => !!c);
+      const label = nomes.find((c) => !pareceAcorde(c)) ?? '';
+      const chords = nomes.filter((c) => pareceAcorde(c));
+      if (chords.length > 0 || label) {
+        return { type: 'chord-progression', label, tokens: [], chords };
+      }
+    }
+
+    return { type: 'chord-lyric', label: '', tokens, chords: [] };
   });
 }

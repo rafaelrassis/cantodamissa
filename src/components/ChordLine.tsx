@@ -20,12 +20,35 @@ export function ChordLine({ line }: Props) {
     );
   }
 
-  if (line.type === 'blank' || line.tokens.length === 0) {
-    return <div>{' '}</div>;
+  if (line.type === 'blank') {
+    return <div>{' '}</div>;
+  }
+
+  // progressão de acordes sem letra (ex: intro/ponte) — sem sílaba pra
+  // ancorar, então renderiza como uma fileira normal, não empilhado
+  if (line.type === 'chord-progression') {
+    return (
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 pb-[0.3em] pt-[0.5em]">
+        {line.label && (
+          <span className="font-sans text-[0.6em] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+            {line.label}
+          </span>
+        )}
+        {line.chords.map((chord, i) => (
+          <span key={i} className="font-bold text-[var(--chord)]">
+            {chord}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  if (line.tokens.length === 0) {
+    return <div>{' '}</div>;
   }
 
   return (
-    <div className="relative whitespace-pre">
+    <div className="relative whitespace-pre-wrap break-words">
       {line.tokens.map((token, i) => (
         <span key={i} className="relative inline-block align-bottom">
           {token.chord && (
@@ -33,7 +56,7 @@ export function ChordLine({ line }: Props) {
               {token.chord}
             </span>
           )}
-          <span>{token.text || ' '}</span>
+          <span>{token.text || ' '}</span>
         </span>
       ))}
     </div>

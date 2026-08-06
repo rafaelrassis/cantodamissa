@@ -14,58 +14,98 @@ interface Props {
 
 export function CifraBottomBar(props: Props) {
   return (
-    <div className="flex items-center justify-between gap-1.5 border-t border-[var(--border)] bg-[var(--surface)] px-4 pb-[26px] pt-3 lg:hidden">
-      <button
-        onClick={props.onDecTone}
-        aria-label="Diminuir tom"
-        className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
-      >
-        <Minus size={18} />
-      </button>
-      <div className="flex h-[52px] w-[60px] shrink-0 flex-col items-center justify-center rounded-2xl bg-[var(--accent-soft)]">
-        <span className="font-mono text-sm font-bold text-[var(--accent)]">
-          {props.currentTone}
-        </span>
+    <div className="flex items-center justify-between gap-1 border-t border-[var(--border)] bg-[var(--surface)] px-3 pb-[22px] pt-2 lg:hidden">
+      <div className="flex items-center gap-1">
+        <button
+          onClick={props.onDecTone}
+          aria-label="Diminuir tom"
+          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
+        >
+          <Minus size={16} />
+        </button>
+        <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--accent-soft)]">
+          <span className="font-mono text-sm font-bold leading-none text-[var(--accent)]">
+            {props.currentTone}
+          </span>
+          <span className="text-[8px] font-semibold uppercase tracking-wide text-[var(--accent)]">
+            Tom
+          </span>
+        </div>
+        <button
+          onClick={props.onIncTone}
+          aria-label="Aumentar tom"
+          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
+        >
+          <Plus size={16} />
+        </button>
       </div>
-      <button
-        onClick={props.onIncTone}
-        aria-label="Aumentar tom"
-        className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
-      >
-        <Plus size={18} />
-      </button>
-      <button
+
+      <BarraBotao
         onClick={props.onTogglePlay}
-        aria-label="Alternar rolagem automática"
-        className="flex h-[52px] w-[60px] shrink-0 items-center justify-center rounded-2xl bg-[var(--accent)] text-[var(--accent-fg)]"
+        label="Rolagem"
+        ariaLabel="Alternar rolagem automática"
+        destaque
       >
-        {props.playing ? <Pause size={18} /> : <Play size={18} />}
-      </button>
-      <button
-        onClick={props.onDecFont}
-        aria-label="Diminuir fonte"
-        className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg)] text-sm font-semibold text-[var(--text)]"
-      >
-        A−
-      </button>
-      <button
-        onClick={props.onIncFont}
-        aria-label="Aumentar fonte"
-        className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg)] text-sm font-semibold text-[var(--text)]"
-      >
-        A+
-      </button>
-      <button
+        {props.playing ? <Pause size={17} /> : <Play size={17} />}
+      </BarraBotao>
+
+      <div className="flex items-center gap-1">
+        <button
+          onClick={props.onDecFont}
+          aria-label="Diminuir fonte"
+          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs font-semibold text-[var(--text)]"
+        >
+          A−
+        </button>
+        <button
+          onClick={props.onIncFont}
+          aria-label="Aumentar fonte"
+          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs font-semibold text-[var(--text)]"
+        >
+          A+
+        </button>
+      </div>
+
+      <BarraBotao
         onClick={props.onToggleSheet}
-        aria-label="Mais opções"
-        className={`flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl border ${
-          props.sheetOpen
-            ? 'border-transparent bg-[var(--accent)] text-[var(--accent-fg)]'
-            : 'border-[var(--border)] bg-[var(--bg)] text-[var(--text)]'
-        }`}
+        label="Mais"
+        ariaLabel="Mais opções"
+        ativo={props.sheetOpen}
       >
-        <MoreHorizontal size={20} />
-      </button>
+        <MoreHorizontal size={18} />
+      </BarraBotao>
     </div>
+  );
+}
+
+function BarraBotao({
+  children,
+  label,
+  ariaLabel,
+  onClick,
+  destaque,
+  ativo,
+}: {
+  children: React.ReactNode;
+  label: string;
+  ariaLabel: string;
+  onClick: () => void;
+  destaque?: boolean;
+  ativo?: boolean;
+}) {
+  const ativado = destaque || ativo;
+  return (
+    <button
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className={`flex h-11 w-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl ${
+        ativado
+          ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+          : 'border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]'
+      }`}
+    >
+      {children}
+      <span className="text-[8px] font-semibold uppercase tracking-wide">{label}</span>
+    </button>
   );
 }

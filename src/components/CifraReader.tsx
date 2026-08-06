@@ -19,6 +19,7 @@ import type { Theme } from '../lib/useTheme';
 import { ChordLine } from './ChordLine';
 import { CifraToolsSidebar } from './CifraToolsSidebar';
 import { ChordDictionary } from './ChordDictionary';
+import { ChordDiagramStrip } from './ChordDiagramStrip';
 import { CifraBottomBar } from './CifraBottomBar';
 import { CifraBottomSheet } from './CifraBottomSheet';
 
@@ -240,6 +241,8 @@ export function CifraReader({
               />
             </div>
           )}
+
+          {showDiagrams && <ChordDiagramStrip chords={chordsUsed} />}
 
           <div
             ref={scrollRef}
