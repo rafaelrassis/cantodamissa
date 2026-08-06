@@ -10,6 +10,7 @@ import {
 import { useAutoScroll } from '../lib/useAutoScroll';
 import { useKeepAwake } from '../lib/useKeepAwake';
 import { loadReaderState, saveReaderState } from '../lib/readerState';
+import { useShowChordDiagrams } from '../lib/useShowChordDiagrams';
 import { obterRepertorio, type Repertorio } from '../lib/repertorios';
 import { getMusicaById } from '../lib/musicasApi';
 import { useSubmissoes } from '../lib/useSubmissoes';
@@ -52,7 +53,7 @@ export function CifraReader({
   const [capo, setCapo] = useState(musica.capo);
   const [useFlats, setUseFlats] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  const [showDiagrams, setShowDiagrams] = useState(true);
+  const { show: showDiagrams, toggle: setShowDiagrams } = useShowChordDiagrams();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [repertorio, setRepertorio] = useState<Repertorio | null>(null);
   const [formularioCorrecaoAberto, setFormularioCorrecaoAberto] = useState(false);
@@ -201,7 +202,7 @@ export function CifraReader({
             <div className="h-6 w-px bg-[var(--border)]" />
             <ToolbarToggle
               active={showDiagrams}
-              onClick={() => setShowDiagrams((v) => !v)}
+              onClick={setShowDiagrams}
               ariaLabel="Alternar diagramas de acorde"
             >
               {showDiagrams ? 'acordes visíveis' : 'acordes ocultos'}
@@ -242,7 +243,7 @@ export function CifraReader({
             </div>
           )}
 
-          {showDiagrams && <ChordDiagramStrip chords={chordsUsed} />}
+          {showDiagrams && <ChordDiagramStrip chords={chordsUsed} onHide={setShowDiagrams} />}
 
           <div
             ref={scrollRef}
@@ -285,7 +286,7 @@ export function CifraReader({
         onIncCapo={() => setCapo((c) => Math.min(7, c + 1))}
         onDecCapo={() => setCapo((c) => Math.max(0, c - 1))}
         diagrams={showDiagrams}
-        onToggleDiagrams={() => setShowDiagrams((v) => !v)}
+        onToggleDiagrams={setShowDiagrams}
         theme={theme}
         onToggleTheme={onToggleTheme}
         awakeActive={keepAwake.active}

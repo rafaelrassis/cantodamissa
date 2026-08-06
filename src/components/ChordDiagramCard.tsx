@@ -2,24 +2,35 @@ import type { ChordDiagram } from '../lib/chordShapes';
 
 interface Props {
   diagram: ChordDiagram;
+  compact?: boolean;
 }
 
-export function ChordDiagramCard({ diagram }: Props) {
-  return (
-    <div className="rounded-xl border border-[var(--border)] p-3">
-      <p className="font-mono text-sm font-bold text-[var(--chord)]">{diagram.name}</p>
+export function ChordDiagramCard({ diagram, compact }: Props) {
+  const largura = compact ? 52 : 76;
+  const altura = compact ? 60 : 88;
+  const dotSize = compact ? 10 : 15;
 
-      <div className="mt-2 grid grid-cols-6 text-center font-mono text-[9px] text-[var(--muted)]">
-        {diagram.marks.map((mark, i) => (
-          <span key={i}>{mark.s}</span>
-        ))}
-      </div>
+  return (
+    <div className={`rounded-xl border border-[var(--border)] ${compact ? 'p-2' : 'p-3'}`}>
+      <p
+        className={`font-mono font-bold text-[var(--chord)] ${compact ? 'text-xs' : 'text-sm'}`}
+      >
+        {diagram.name}
+      </p>
+
+      {!compact && (
+        <div className="mt-2 grid grid-cols-6 text-center font-mono text-[9px] text-[var(--muted)]">
+          {diagram.marks.map((mark, i) => (
+            <span key={i}>{mark.s}</span>
+          ))}
+        </div>
+      )}
 
       <div
         className="relative mt-1"
         style={{
-          width: 76,
-          height: 88,
+          width: largura,
+          height: altura,
           borderTop: '3px solid var(--text)',
           borderRight: '1px solid var(--muted)',
           borderBottom: '1px solid var(--muted)',
@@ -32,18 +43,22 @@ export function ChordDiagramCard({ diagram }: Props) {
             key={i}
             className="absolute rounded-full bg-[var(--accent)]"
             style={{
-              width: 15,
-              height: 15,
+              width: dotSize,
+              height: dotSize,
               left: `${dot.left}%`,
               top: `${dot.top}%`,
-              margin: '-8px 0 0 -8px',
+              margin: `${-dotSize / 2}px 0 0 ${-dotSize / 2}px`,
             }}
           />
         ))}
       </div>
 
       {diagram.baseLabel && (
-        <p className="mt-1 font-mono text-[10px] text-[var(--muted)]">{diagram.baseLabel}</p>
+        <p
+          className={`mt-1 font-mono text-[var(--muted)] ${compact ? 'text-[8px]' : 'text-[10px]'}`}
+        >
+          {diagram.baseLabel}
+        </p>
       )}
     </div>
   );

@@ -24,6 +24,16 @@ CHROMATIC_FLAT.forEach((n, i) => (NOTE_TO_INDEX[n] = i));
 // e opcionalmente baixo invertido: "C/E" -> raiz "C", resto "", baixo "E"
 const CHORD_PARTS_REGEX = /^([A-G][#b]?)([^/]*)(?:\/([A-G][#b]?))?$/;
 
+// heurística: token curto que bate com o padrão de um acorde musical real
+// (mesma lógica do extrator de PDF em scripts/extract_cifra_pdf.py) — usada
+// pra distinguir acorde de verdade (ex: "C#m7") de marcador de seção que
+// também aparece entre colchetes (ex: "[Intro]", "[Refrão]")
+const CHORD_LIKE = /^[A-G](#|b)?(m|maj7?|min|dim|aug|sus[24]?)?[0-9]*(\([^)]*\))?(\/[A-G](#|b)?)?$/;
+
+export function pareceAcorde(token: string): boolean {
+  return CHORD_LIKE.test(token);
+}
+
 /**
  * Extrai a letra pura (sem marcações de acorde), útil pra busca full-text.
  */
@@ -33,6 +43,8 @@ export function extractLyrics(chordsContent: string): string {
 
 /**
  * Extrai a lista de acordes únicos usados na música, na ordem de aparição.
+ * Ignora marcadores de seção entre colchetes (ex: "[Intro]") que não são
+ * acordes de verdade.
  */
 export function extractChordsUsed(chordsContent: string): string[] {
   const found: string[] = [];
@@ -41,6 +53,7 @@ export function extractChordsUsed(chordsContent: string): string[] {
   const regex = new RegExp(CHORD_REGEX);
   while ((match = regex.exec(chordsContent)) !== null) {
     const chord = match[1];
+    if (!pareceAcorde(chord)) continue;
     if (!seen.has(chord)) {
       seen.add(chord);
       found.push(chord);
@@ -141,14 +154,6 @@ export interface StructuredLine {
   label: string;
   tokens: ChordToken[];
   chords: string[]; // usado só quando type === 'chord-progression'
-}
-
-// heurística: token curto que bate com o padrão de um acorde musical real
-// (mesma lógica do extrator de PDF em scripts/extract_cifra_pdf.py)
-const CHORD_LIKE = /^[A-G](#|b)?(m|maj7?|min|dim|aug|sus[24]?)?[0-9]*(\([^)]*\))?(\/[A-G](#|b)?)?$/;
-
-function pareceAcorde(token: string): boolean {
-  return CHORD_LIKE.test(token);
 }
 
 /**
