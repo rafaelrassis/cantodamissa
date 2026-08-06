@@ -5,6 +5,20 @@
 create extension if not exists "pgcrypto";
 create extension if not exists "unaccent";
 
+-- unaccent() é marcada STABLE (não IMMUTABLE) pelo Postgres, porque em teoria
+-- depende do dicionário de busca configurado. Colunas geradas (GENERATED
+-- ALWAYS AS ... STORED) exigem expressão IMMUTABLE, então criamos um
+-- wrapper que promete o compilador que o resultado é determinístico —
+-- seguro aqui porque não trocamos o dicionário de unaccent em runtime.
+create or replace function immutable_unaccent(text)
+returns text
+language sql
+immutable
+parallel safe
+as $$
+  select unaccent('unaccent', $1)
+$$;
+
 -- ---------- ENUMS ----------
 
 create type tempo_liturgico as enum (
@@ -57,7 +71,7 @@ create table public.musicas (
 
   -- coluna gerada para busca full-text ignorando acento
   search_vector tsvector generated always as (
-    to_tsvector('portuguese', unaccent(coalesce(title,'') || ' ' || coalesce(artist,'') || ' ' || coalesce(lyrics,'')))
+    to_tsvector('portuguese', immutable_unaccent(coalesce(title,'') || ' ' || coalesce(artist,'') || ' ' || coalesce(lyrics,'')))
   ) stored
 );
 
