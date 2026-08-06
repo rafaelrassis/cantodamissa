@@ -147,20 +147,6 @@ export function CifraReader({
         </div>
       </header>
 
-      {/* Header mobile */}
-      <header className="bg-[var(--accent)] px-4 pb-3 pt-4 text-[var(--accent-fg)] lg:hidden">
-        <button onClick={onClose} className="mb-1 text-xs opacity-80">
-          {repertorio ? `← Repertório · ${repertorio.nome}` : '← Voltar'}
-        </button>
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="truncate text-lg font-extrabold">{musica.title}</h1>
-            <p className="truncate text-sm opacity-80">{musica.artist}</p>
-          </div>
-          <HeaderCard label="tom" value={currentTone} />
-        </div>
-      </header>
-
       <div className="flex min-h-0 flex-1">
         <CifraToolsSidebar
           currentTone={currentTone}
@@ -257,6 +243,21 @@ export function CifraReader({
             }
           >
             <div className="mx-auto max-w-[840px]">
+              {/* Header mobile — vive dentro da área rolável de propósito, então
+                  some conforme o usuário rola pra baixo (não fica fixo/preso). */}
+              <header className="-mx-5 -mt-8 mb-6 bg-[var(--accent)] px-4 pb-3 pt-4 font-sans text-[var(--accent-fg)] lg:hidden">
+                <button onClick={onClose} className="mb-1 text-xs opacity-80">
+                  {repertorio ? `← Repertório · ${repertorio.nome}` : '← Voltar'}
+                </button>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <h1 className="truncate text-lg font-extrabold">{musica.title}</h1>
+                    <p className="truncate text-sm opacity-80">{musica.artist}</p>
+                  </div>
+                  <HeaderCard label="tom" value={currentTone} />
+                </div>
+              </header>
+
               {lines.map((line, i) => (
                 <ChordLine key={i} line={line} />
               ))}

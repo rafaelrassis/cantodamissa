@@ -21,15 +21,13 @@ interface Props {
 export function CifraBottomBar(props: Props) {
   if (props.playing) {
     return (
-      <div className="fixed inset-x-0 bottom-0 z-30 flex justify-center border-t border-[var(--border)] bg-[var(--surface)] px-3 pb-[22px] pt-2 lg:hidden">
-        <button
-          onClick={props.onTogglePlay}
-          aria-label="Pausar rolagem automática"
-          className="flex h-12 w-32 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] text-sm font-semibold text-[var(--accent-fg)]"
-        >
-          <Pause size={18} /> Pausar
-        </button>
-      </div>
+      <button
+        onClick={props.onTogglePlay}
+        aria-label="Pausar rolagem automática"
+        className="fixed bottom-5 left-1/2 z-30 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)] lg:hidden"
+      >
+        <Pause size={18} />
+      </button>
     );
   }
 
