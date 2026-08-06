@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarDays, Home as HomeIcon, ListMusic, Music2, Plus, Search, X } from 'lucide-react';
+import { CalendarDays, ChevronRight, Home as HomeIcon, ListMusic, Plus, Search, X } from 'lucide-react';
 import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
-import { getTop50, searchMusicas } from '../lib/musicasApi';
+import { getArtistasEmAlta, getTop50, searchMusicas, type ArtistaEmAlta } from '../lib/musicasApi';
 import { domingoMaisProximo } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
 import {
@@ -20,9 +20,12 @@ interface Props {
   filtroInicial?: TempoLiturgico;
   onAbrirCalendario?: () => void;
   onAbrirModeracao?: () => void;
+  onAbrirTopMusicas?: () => void;
+  onAbrirTopArtistas?: () => void;
+  onSelectArtista?: (artista: string) => void;
+  buscaInicial?: string;
 }
 
-const TEMPOS: TempoLiturgico[] = ['Advento', 'Natal', 'Quaresma', 'Pascoa', 'TempoComum'];
 const MOMENTOS: MomentoMissa[] = [
   'Entrada',
   'AtoPenitencial',
@@ -37,9 +40,25 @@ const MOMENTOS: MomentoMissa[] = [
   'Envio',
 ];
 
-export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrirModeracao }: Props) {
-  const [query, setQuery] = useState('');
-  const [tempo, setTempo] = useState<TempoLiturgico | undefined>(filtroInicial);
+export function Home({
+  onSelectMusica,
+  filtroInicial,
+  onAbrirCalendario,
+  onAbrirModeracao,
+  onAbrirTopMusicas,
+  onAbrirTopArtistas,
+  onSelectArtista,
+  buscaInicial,
+}: Props) {
+  const [query, setQuery] = useState(buscaInicial ?? '');
+  const [artistas, setArtistas] = useState<ArtistaEmAlta[]>([]);
+
+  useEffect(() => {
+    getArtistasEmAlta(5).then(setArtistas);
+  }, []);
+  // sem chip de tempo litúrgico na UI mais, mas o valor inicial (vindo do
+  // Calendário, via filtroInicial) ainda filtra a lista uma vez
+  const [tempo] = useState<TempoLiturgico | undefined>(filtroInicial);
   const [momento, setMomento] = useState<MomentoMissa | undefined>();
   const [resultados, setResultados] = useState<Musica[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -105,7 +124,7 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
     let cancelado = false;
     setCarregando(true);
     const filtro = { tempo, momento };
-    const promise = buscando ? searchMusicas(query, filtro) : getTop50(filtro);
+    const promise = buscando ? searchMusicas(query, filtro) : getTop50(filtro, 15);
     promise.then((lista) => {
       if (!cancelado) {
         setResultados(lista);
@@ -128,7 +147,7 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
     return () => window.removeEventListener('keydown', onKeydown);
   }, []);
 
-  const listTitle = momento ? `Momento: ${LABEL_MOMENTO[momento]}` : 'Top 50 mais acessadas';
+  const listTitle = momento ? `Momento: ${LABEL_MOMENTO[momento]}` : 'Músicas em alta';
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--bg)] font-sans text-[var(--text)]">
@@ -138,7 +157,7 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
         <div className="hidden items-center justify-between px-10 py-4 lg:flex">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
-              <Music2 size={20} />
+              <img src="/icon-192.png" alt="" className="h-8 w-8 rounded-lg" />
               Canto da Missa
             </div>
             <nav className="flex items-center gap-6 text-sm font-medium opacity-90">
@@ -205,25 +224,6 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
         ))}
       </div>
 
-      {/* Filtro por tempo litúrgico (secundário) */}
-      <div className="flex gap-2 overflow-x-auto border-b border-[var(--border)] px-4 py-2 lg:px-10">
-        <FiltroChip
-          ativo={tempo === undefined}
-          label="Todos os tempos"
-          onClick={() => setTempo(undefined)}
-          pequeno
-        />
-        {TEMPOS.map((t) => (
-          <FiltroChip
-            key={t}
-            ativo={tempo === t}
-            label={LABEL_TEMPO[t]}
-            onClick={() => setTempo(tempo === t ? undefined : t)}
-            pequeno
-          />
-        ))}
-      </div>
-
       {/* Corpo */}
       <div className="flex flex-1 flex-col lg:flex-row lg:gap-6 lg:px-10 lg:py-6">
         <div className="flex-1">
@@ -231,9 +231,19 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
             <h2 className="text-sm font-semibold text-[var(--muted)]">
               {buscando ? `Resultados para "${query}"` : listTitle}
             </h2>
-            <span className="text-xs text-[var(--muted)]">
-              {carregando ? 'carregando…' : `${resultados.length} músicas`}
-            </span>
+            {!buscando && onAbrirTopMusicas ? (
+              <button
+                onClick={onAbrirTopMusicas}
+                aria-label="Ver top 50 completo"
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface)]"
+              >
+                <ChevronRight size={16} />
+              </button>
+            ) : (
+              <span className="text-xs text-[var(--muted)]">
+                {carregando ? 'carregando…' : `${resultados.length} músicas`}
+              </span>
+            )}
           </div>
 
           {!carregando && resultados.length === 0 && (
@@ -255,6 +265,49 @@ export function Home({ onSelectMusica, filtroInicial, onAbrirCalendario, onAbrir
               />
             ))}
           </div>
+
+          {!buscando && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between px-4 py-3 lg:px-0">
+                <h2 className="text-sm font-semibold text-[var(--muted)]">
+                  Artistas mais ouvidos
+                </h2>
+                {onAbrirTopArtistas && (
+                  <button
+                    onClick={onAbrirTopArtistas}
+                    aria-label="Ver top 20 artistas"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface)]"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                )}
+              </div>
+              <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+                {artistas.map((a, i) => (
+                  <button
+                    key={a.artist}
+                    onClick={() => onSelectArtista?.(a.artist)}
+                    className="flex w-full items-center gap-3 border-b border-[var(--border)] px-4 py-3 text-left last:border-b-0 hover:bg-[var(--surface)]"
+                  >
+                    <span className="w-6 shrink-0 text-right font-mono text-sm text-[var(--muted)]">
+                      {i + 1}
+                    </span>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] font-mono text-xs font-bold text-[var(--accent)]">
+                      {a.artist.charAt(0).toUpperCase()}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[var(--text)]">
+                        {a.artist}
+                      </p>
+                      <p className="truncate text-xs text-[var(--muted)]">
+                        {a.songCount} música{a.songCount === 1 ? '' : 's'}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Meus repertórios (desktop) */}

@@ -91,18 +91,21 @@ export async function getMusicaById(id: string): Promise<Musica | null> {
   return data ? mapearLinha(data as unknown as LinhaMusicaSupabase) : null;
 }
 
-export async function getTop50(filtro: FiltroMusicas = {}): Promise<Musica[]> {
+export async function getTop50(
+  filtro: FiltroMusicas = {},
+  limite: number = 50
+): Promise<Musica[]> {
   if (!isSupabaseConfigured) {
     return filtrarMock([...mockMusicas], filtro)
       .sort((a, b) => b.viewsCount - a.viewsCount)
-      .slice(0, 50);
+      .slice(0, limite);
   }
 
   const { data, error } = await supabase
     .from('musicas')
     .select(SELECT_COM_RELACOES)
     .order('views_count', { ascending: false })
-    .limit(50);
+    .limit(limite);
 
   if (error) {
     console.error('getTop50:', error.message);
@@ -163,4 +166,35 @@ export async function searchMusicas(
   if (filtro.tempo) musicas = musicas.filter((m) => m.tempoLiturgico.includes(filtro.tempo!));
   if (filtro.momento) musicas = musicas.filter((m) => m.momento.includes(filtro.momento!));
   return musicas;
+}
+
+export interface ArtistaEmAlta {
+  artist: string;
+  totalViews: number;
+  songCount: number;
+}
+
+/**
+ * Agrega músicas por artista (soma de visualizações), ordenado do mais
+ * ouvido pro menos. Deriva do próprio conjunto de músicas mais acessadas —
+ * não é uma métrica separada de "artista mais ouvido" de verdade (exigiria
+ * tracking próprio), mas serve bem como proxy pra essa fase do produto.
+ */
+export async function getArtistasEmAlta(limite: number = 20): Promise<ArtistaEmAlta[]> {
+  const musicas = await getTop50({}, 200);
+  const porArtista = new Map<string, ArtistaEmAlta>();
+
+  for (const m of musicas) {
+    const nome = m.artist?.trim();
+    if (!nome) continue;
+    const atual = porArtista.get(nome);
+    if (atual) {
+      atual.totalViews += m.viewsCount;
+      atual.songCount += 1;
+    } else {
+      porArtista.set(nome, { artist: nome, totalViews: m.viewsCount, songCount: 1 });
+    }
+  }
+
+  return [...porArtista.values()].sort((a, b) => b.totalViews - a.totalViews).slice(0, limite);
 }
