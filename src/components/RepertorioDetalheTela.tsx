@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, Download, GripVertical, Plus, Share2, X } from 'lucide-react';
+import { ChevronLeft, Download, GripVertical, Plus, Share2, Trash2, X } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import type { Repertorio } from '../lib/repertorios';
 import { RITO_SEM_SECAO } from '../lib/repertorios';
@@ -14,6 +14,7 @@ interface Props {
   adicionarRito: (repertorioId: string, nome: string) => void;
   removerRito: (repertorioId: string, nome: string) => void;
   reordenarRitos: (repertorioId: string, nomesOrdenados: string[]) => void;
+  onExcluirRepertorio: (repertorioId: string) => void;
 }
 
 /**
@@ -31,10 +32,21 @@ export function RepertorioDetalheTela({
   adicionarRito,
   removerRito,
   reordenarRitos,
+  onExcluirRepertorio,
 }: Props) {
   const [novoRito, setNovoRito] = useState('');
   const [ordem, setOrdem] = useState<string[]>(repertorio.ritos);
   const [linkCopiado, setLinkCopiado] = useState(false);
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+
+  function excluir() {
+    if (!confirmandoExclusao) {
+      setConfirmandoExclusao(true);
+      return;
+    }
+    onExcluirRepertorio(repertorio.id);
+    onBack();
+  }
 
   async function copiarLink() {
     if (!repertorio.shareToken) return;
@@ -168,9 +180,24 @@ export function RepertorioDetalheTela({
             >
               <Download size={16} />
             </button>
+            <button
+              onClick={excluir}
+              onBlur={() => setConfirmandoExclusao(false)}
+              aria-label="Excluir repertório"
+              className={`flex h-9 w-9 items-center justify-center rounded-full ${
+                confirmandoExclusao ? 'bg-red-500' : 'bg-white/16'
+              }`}
+            >
+              <Trash2 size={16} />
+            </button>
           </div>
         </div>
         {linkCopiado && <p className="mt-1 text-xs opacity-90">Link copiado!</p>}
+        {confirmandoExclusao && (
+          <p className="mt-1 text-xs font-semibold opacity-90">
+            Toca de novo pra confirmar — essa ação não pode ser desfeita.
+          </p>
+        )}
       </header>
 
       <div className="mx-auto max-w-2xl px-4 py-4 lg:px-10">

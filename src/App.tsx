@@ -101,6 +101,7 @@ function App() {
         adicionarRito={repertoriosApi.adicionarRito}
         removerRito={repertoriosApi.removerRito}
         reordenarRitos={repertoriosApi.reordenarRitos}
+        onExcluirRepertorio={repertoriosApi.remover}
       />
     );
   }
