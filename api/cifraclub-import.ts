@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
-import { parseCifraClubTexto } from '../src/lib/cifraClubParser';
-import { extractLyrics } from '../src/lib/chordpro';
+import { parseCifraClubTexto } from '../src/lib/cifraClubParser.js';
+import { extractLyrics } from '../src/lib/chordpro.js';
 
 export const config = { runtime: 'nodejs' };
 

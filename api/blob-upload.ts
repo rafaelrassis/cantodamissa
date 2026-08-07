@@ -1,6 +1,6 @@
 import { put } from '@vercel/blob';
 
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs' };
 
 const TIPOS_PERMITIDOS = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 const TAMANHO_MAX_BYTES = 15 * 1024 * 1024; // 15MB

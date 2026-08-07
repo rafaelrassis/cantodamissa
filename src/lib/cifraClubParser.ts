@@ -1,4 +1,4 @@
-import { pareceAcorde } from './chordpro';
+import { pareceAcorde } from './chordpro.js';
 
 /**
  * Parser de texto cru (padrão Cifra Club: linha de acordes em cima,
