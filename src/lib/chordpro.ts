@@ -190,3 +190,29 @@ export function parseContentToStructuredLines(chordsContent: string): Structured
     return { type: 'chord-lyric', label: '', tokens, chords: [] };
   });
 }
+
+/**
+ * Gera as 12 opções de tom cromáticas mantendo a mesma "qualidade" (sufixo)
+ * do acorde de referência — ex: a partir de "F#m" gera Am, A#m, Bm... todas
+ * menores, não troca pra maior no meio do caminho. Usado no seletor de tom.
+ */
+export function gerarOpcoesDeTom(tomReferencia: string, useFlats = false): string[] {
+  const match = tomReferencia.match(CHORD_PARTS_REGEX);
+  const sufixo = match ? match[2] : '';
+  const escala = useFlats ? CHROMATIC_FLAT : CHROMATIC_SHARP;
+  return escala.map((nota) => `${nota}${sufixo}`);
+}
+
+/**
+ * Diferença em semitons entre dois acordes (considera só a nota raiz,
+ * ignora sufixo — "F#m" -> "Bm" é a mesma distância que "F#" -> "B").
+ */
+export function semitonesEntreAcordes(deAcorde: string, paraAcorde: string): number {
+  const raizDe = deAcorde.match(CHORD_PARTS_REGEX)?.[1];
+  const raizPara = paraAcorde.match(CHORD_PARTS_REGEX)?.[1];
+  if (!raizDe || !raizPara) return 0;
+  const idxDe = NOTE_TO_INDEX[raizDe];
+  const idxPara = NOTE_TO_INDEX[raizPara];
+  if (idxDe === undefined || idxPara === undefined) return 0;
+  return idxPara - idxDe;
+}

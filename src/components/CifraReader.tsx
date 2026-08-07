@@ -18,6 +18,7 @@ import { useRepertorios } from '../lib/useRepertorios';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import { SubmissaoForm } from './SubmissaoForm';
 import { AddToRepertorioMenu } from './AddToRepertorioMenu';
+import { TomSeletor } from './TomSeletor';
 import { LABEL_MOMENTO, LABEL_TEMPO } from '../lib/labels';
 import type { Theme } from '../lib/useTheme';
 import { ChordLine } from './ChordLine';
@@ -62,6 +63,7 @@ export function CifraReader({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [repertorio, setRepertorio] = useState<Repertorio | null>(null);
   const [formularioCorrecaoAberto, setFormularioCorrecaoAberto] = useState(false);
+  const [tomSeletorAberto, setTomSeletorAberto] = useState(false);
   const { criar: criarSubmissao } = useSubmissoes();
   const { repertorios, adicionarMusica } = useRepertorios();
 
@@ -187,7 +189,7 @@ export function CifraReader({
           </div>
         </div>
         <div className="flex shrink-0 gap-2">
-          <HeaderCard label="tom" value={currentTone} />
+          <HeaderCard label="tom" value={currentTone} onClick={() => setTomSeletorAberto(true)} />
           <HeaderCard label="capo" value={capo === 0 ? '—' : String(capo)} />
         </div>
       </header>
@@ -300,7 +302,7 @@ export function CifraReader({
                     <h1 className="truncate text-lg font-extrabold">{musica.title}</h1>
                     <p className="truncate text-sm opacity-80">{musica.artist}</p>
                   </div>
-                  <HeaderCard label="tom" value={currentTone} />
+                  <HeaderCard label="tom" value={currentTone} onClick={() => setTomSeletorAberto(true)} />
                 </div>
               </header>
 
@@ -354,18 +356,47 @@ export function CifraReader({
           }
         />
       )}
+
+      {tomSeletorAberto && (
+        <div
+          onClick={() => setTomSeletorAberto(false)}
+          className="fixed inset-0 z-40 flex items-start justify-center bg-black/40 p-4 pt-24"
+        >
+          <TomSeletor
+            originalTone={musica.originalTone}
+            currentTone={currentTone}
+            useFlats={useFlats}
+            onSelecionarTom={(novoSemitones) => setSemitones(novoSemitones)}
+            onMeioTom={(direcao) => setSemitones((s) => s + direcao)}
+            onResetar={() => setSemitones(0)}
+            onClose={() => setTomSeletorAberto(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }
 
-function HeaderCard({ label, value }: { label: string; value: string }) {
+function HeaderCard({
+  label,
+  value,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  onClick?: () => void;
+}) {
+  const Tag = onClick ? 'button' : 'div';
   return (
-    <div className="rounded-[10px] bg-white/16 px-3 py-1.5 text-center">
+    <Tag
+      onClick={onClick}
+      className="rounded-[10px] bg-white/16 px-3 py-1.5 text-center"
+    >
       <div className="text-[9px] font-semibold uppercase tracking-[0.16em] opacity-75">
         {label}
       </div>
       <div className="font-mono text-[22px] font-bold leading-none">{value}</div>
-    </div>
+    </Tag>
   );
 }
 
