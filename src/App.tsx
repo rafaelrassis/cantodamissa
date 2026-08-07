@@ -127,6 +127,7 @@ function App() {
       buscaInicial={buscaArtista}
       onAbrirCalendario={() => setTela('calendario')}
       onAbrirModeracao={() => setTela('moderacao')}
+      onAbrirLoginAdmin={() => setTela('moderacao')}
       onAbrirTopMusicas={() => setTela('top-musicas')}
       onAbrirTopArtistas={() => setTela('top-artistas')}
       onSelectArtista={irParaHomeComArtista}

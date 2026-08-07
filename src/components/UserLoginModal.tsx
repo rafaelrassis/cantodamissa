@@ -4,9 +4,10 @@ import { GoogleIcon } from './GoogleIcon';
 interface Props {
   onLogin: () => void;
   onClose: () => void;
+  onAdminLogin: () => void;
 }
 
-export function UserLoginModal({ onLogin, onClose }: Props) {
+export function UserLoginModal({ onLogin, onClose, onAdminLogin }: Props) {
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 lg:items-center">
       <div className="w-full max-w-sm rounded-t-2xl bg-[var(--bg)] p-6 lg:rounded-2xl">
@@ -32,6 +33,13 @@ export function UserLoginModal({ onLogin, onClose }: Props) {
         <p className="mt-4 text-center text-xs text-[var(--muted)]">
           Login simulado — substituir por OAuth Google real na Fase 2 (ver SPEC.md).
         </p>
+
+        <button
+          onClick={onAdminLogin}
+          className="mt-3 block w-full text-center text-xs text-[var(--muted)] underline-offset-2 hover:underline"
+        >
+          Entrar como administrador
+        </button>
       </div>
     </div>
   );

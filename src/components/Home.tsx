@@ -22,6 +22,7 @@ interface Props {
   filtroInicial?: TempoLiturgico;
   onAbrirCalendario?: () => void;
   onAbrirModeracao?: () => void;
+  onAbrirLoginAdmin?: () => void;
   onAbrirTopMusicas?: () => void;
   onAbrirTopArtistas?: () => void;
   onAbrirRepertorio: (id: string) => void;
@@ -48,6 +49,7 @@ export function Home({
   filtroInicial,
   onAbrirCalendario,
   onAbrirModeracao,
+  onAbrirLoginAdmin,
   onAbrirTopMusicas,
   onAbrirTopArtistas,
   onSelectArtista,
@@ -379,6 +381,10 @@ export function Home({
             setLoginAberto(false);
           }}
           onClose={() => setLoginAberto(false)}
+          onAdminLogin={() => {
+            setLoginAberto(false);
+            onAbrirLoginAdmin?.();
+          }}
         />
       )}
 
