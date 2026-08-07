@@ -71,6 +71,12 @@ export function CifraReader({
   const autoScroll = useAutoScroll(scrollRef);
   const keepAwake = useKeepAwake();
 
+  // esconde o menu "Mais" assim que a rolagem automática começa — tela
+  // limpa é o objetivo, não faz sentido o painel ficar em cima do texto
+  useEffect(() => {
+    if (autoScroll.playing) setSheetOpen(false);
+  }, [autoScroll.playing]);
+
   // carrega o repertório real (se a música foi aberta a partir de um)
   useEffect(() => {
     if (repertorioId) {
