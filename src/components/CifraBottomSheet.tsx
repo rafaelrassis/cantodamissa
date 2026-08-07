@@ -1,7 +1,5 @@
-import { Minus, Moon, Plus, Share2, Sun, Sunrise } from 'lucide-react';
+import { Minus, Moon, Plus, Sun, Sunrise } from 'lucide-react';
 import type { Theme } from '../lib/useTheme';
-import type { Repertorio } from '../lib/repertorios';
-import { AddToRepertorioMenu } from './AddToRepertorioMenu';
 
 interface Props {
   open: boolean;
@@ -17,9 +15,6 @@ interface Props {
   awakeActive: boolean;
   awakeSupported: boolean;
   onToggleAwake: () => void;
-  repertorios: Repertorio[];
-  onAddToRepertorio: (repertorioId: string) => void;
-  onCompartilhar: () => void;
 }
 
 export function CifraBottomSheet(props: Props) {
@@ -80,18 +75,6 @@ export function CifraBottomSheet(props: Props) {
           {props.theme === 'dark' ? 'modo escuro' : 'modo claro'}
         </SheetToggle>
       </div>
-
-      <div className="mb-4 flex items-center justify-between rounded-xl border border-[var(--border)] px-3 py-2">
-        <span className="text-sm font-medium text-[var(--text)]">Adicionar ao repertório</span>
-        <AddToRepertorioMenu repertorios={props.repertorios} onAdd={props.onAddToRepertorio} />
-      </div>
-
-      <button
-        onClick={props.onCompartilhar}
-        className="mb-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm font-semibold text-[var(--text)]"
-      >
-        <Share2 size={16} /> Compartilhar
-      </button>
 
       {props.awakeSupported && (
         <button

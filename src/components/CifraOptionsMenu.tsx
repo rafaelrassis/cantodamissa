@@ -6,6 +6,7 @@ interface Props {
   repertorios: Repertorio[];
   onAdicionarAoRepertorio: (repertorioId: string) => void;
   onCompartilhar: () => void;
+  buttonClassName?: string;
 }
 
 /**
@@ -13,7 +14,12 @@ interface Props {
  * Criar repertório novo não é uma opção aqui de propósito — só na página
  * de Repertórios (evita duplicar esse fluxo em vários lugares do app).
  */
-export function CifraOptionsMenu({ repertorios, onAdicionarAoRepertorio, onCompartilhar }: Props) {
+export function CifraOptionsMenu({
+  repertorios,
+  onAdicionarAoRepertorio,
+  onCompartilhar,
+  buttonClassName,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [tela, setTela] = useState<'menu' | 'repertorios'>('menu');
 
@@ -35,7 +41,10 @@ export function CifraOptionsMenu({ repertorios, onAdicionarAoRepertorio, onCompa
           setOpen((v) => !v);
         }}
         aria-label="Mais opções"
-        className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--muted)] hover:bg-[var(--surface2)]"
+        className={
+          buttonClassName ??
+          'flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--muted)] hover:bg-[var(--surface2)]'
+        }
       >
         <MoreVertical size={16} />
       </button>
