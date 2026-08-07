@@ -1,7 +1,7 @@
 import type { Musica } from '../types/musica';
 import { LABEL_MOMENTO } from '../lib/labels';
 import type { Repertorio } from '../lib/repertorios';
-import { AddToRepertorioMenu } from './AddToRepertorioMenu';
+import { CifraOptionsMenu } from './CifraOptionsMenu';
 
 interface Props {
   musica: Musica;
@@ -19,6 +19,23 @@ export function MusicaCard({
   onAddToRepertorio,
 }: Props) {
   const mostrarMenu = repertorios !== undefined && onAddToRepertorio;
+
+  async function compartilhar() {
+    const texto = `${musica.title}${musica.artist ? ` - ${musica.artist}` : ''} (tom ${musica.originalTone}) · Canto da Missa`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: musica.title, text: texto });
+        return;
+      } catch {
+        // usuário cancelou o compartilhamento nativo — cai pro clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      window.prompt('Copie:', texto);
+    }
+  }
 
   return (
     <div
@@ -51,7 +68,11 @@ export function MusicaCard({
       </span>
 
       {mostrarMenu && (
-        <AddToRepertorioMenu repertorios={repertorios} onAdd={onAddToRepertorio} />
+        <CifraOptionsMenu
+          repertorios={repertorios}
+          onAdicionarAoRepertorio={onAddToRepertorio}
+          onCompartilhar={compartilhar}
+        />
       )}
     </div>
   );
