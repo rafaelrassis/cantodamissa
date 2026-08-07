@@ -15,7 +15,7 @@ interface Props {
 export function TopMusicasTela({ onBack, onSelectMusica }: Props) {
   const [musicas, setMusicas] = useState<Musica[]>([]);
   const [carregando, setCarregando] = useState(true);
-  const { repertorios, criar, adicionarMusica } = useRepertorios();
+  const { repertorios, adicionarMusica } = useRepertorios();
 
   useEffect(() => {
     getTop50({}, 50).then((lista) => {
@@ -32,11 +32,6 @@ export function TopMusicasTela({ onBack, onSelectMusica }: Props) {
       tone: musica.originalTone,
       momento: ritoSugeridoParaMomento(musica.momento[0] ?? null),
     });
-  }
-
-  async function criarECriarAdicionar(nome: string, musica: Musica) {
-    const novo = await criar(nome);
-    adicionar(novo.id, musica);
   }
 
   return (
@@ -61,7 +56,6 @@ export function TopMusicasTela({ onBack, onSelectMusica }: Props) {
             onClick={() => onSelectMusica(musica)}
             repertorios={repertorios}
             onAddToRepertorio={(repertorioId) => adicionar(repertorioId, musica)}
-            onCreateRepertorioAndAdd={(nome) => criarECriarAdicionar(nome, musica)}
           />
         ))}
       </div>

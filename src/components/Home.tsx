@@ -94,11 +94,6 @@ export function Home({
     });
   }
 
-  async function criarECriarAdicionar(nome: string, musica: Musica) {
-    const novo = await criar(nome);
-    adicionar(novo.id, musica);
-  }
-
   useEffect(() => {
     let cancelado = false;
     setCarregando(true);
@@ -251,7 +246,6 @@ export function Home({
                 onClick={() => onSelectMusica(musica)}
                 repertorios={repertorios}
                 onAddToRepertorio={(repertorioId) => adicionar(repertorioId, musica)}
-                onCreateRepertorioAndAdd={(nome) => criarECriarAdicionar(nome, musica)}
               />
             ))}
           </div>

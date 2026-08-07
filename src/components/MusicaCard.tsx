@@ -9,7 +9,6 @@ interface Props {
   onClick: () => void;
   repertorios?: Repertorio[];
   onAddToRepertorio?: (repertorioId: string) => void;
-  onCreateRepertorioAndAdd?: (nome: string) => void;
 }
 
 export function MusicaCard({
@@ -18,9 +17,8 @@ export function MusicaCard({
   onClick,
   repertorios,
   onAddToRepertorio,
-  onCreateRepertorioAndAdd,
 }: Props) {
-  const mostrarMenu = repertorios !== undefined && onAddToRepertorio && onCreateRepertorioAndAdd;
+  const mostrarMenu = repertorios !== undefined && onAddToRepertorio;
 
   return (
     <div
@@ -53,11 +51,7 @@ export function MusicaCard({
       </span>
 
       {mostrarMenu && (
-        <AddToRepertorioMenu
-          repertorios={repertorios}
-          onAdd={onAddToRepertorio}
-          onCreateAndAdd={onCreateRepertorioAndAdd}
-        />
+        <AddToRepertorioMenu repertorios={repertorios} onAdd={onAddToRepertorio} />
       )}
     </div>
   );

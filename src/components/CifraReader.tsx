@@ -17,7 +17,7 @@ import { getMusicaById } from '../lib/musicasApi';
 import { useRepertorios } from '../lib/useRepertorios';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import { SubmissaoForm } from './SubmissaoForm';
-import { AddToRepertorioMenu } from './AddToRepertorioMenu';
+import { CifraOptionsMenu } from './CifraOptionsMenu';
 import { LABEL_MOMENTO, LABEL_TEMPO } from '../lib/labels';
 import type { Theme } from '../lib/useTheme';
 import { ChordLine } from './ChordLine';
@@ -63,7 +63,7 @@ export function CifraReader({
   const [repertorio, setRepertorio] = useState<Repertorio | null>(null);
   const [formularioCorrecaoAberto, setFormularioCorrecaoAberto] = useState(false);
   const { criar: criarSubmissao } = useSubmissoes();
-  const { repertorios, criar: criarRepertorio, adicionarMusica } = useRepertorios();
+  const { repertorios, adicionarMusica } = useRepertorios();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoScroll = useAutoScroll(scrollRef);
@@ -124,9 +124,21 @@ export function CifraReader({
     });
   }
 
-  async function criarRepertorioEAdicionar(nome: string) {
-    const novo = await criarRepertorio(nome);
-    adicionarAoRepertorio(novo.id);
+  async function compartilhar() {
+    const texto = `${musica.title}${musica.artist ? ` - ${musica.artist}` : ''} (tom ${currentTone}) · Canto da Missa`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: musica.title, text: texto, url: window.location.href });
+        return;
+      } catch {
+        // usuário cancelou o compartilhamento nativo — cai pro clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      window.prompt('Copie:', texto);
+    }
   }
 
   const transposedContent = useMemo(
@@ -239,10 +251,10 @@ export function CifraReader({
               </ToolbarToggle>
             )}
             <div className="flex-1" />
-            <AddToRepertorioMenu
+            <CifraOptionsMenu
               repertorios={repertorios}
-              onAdd={adicionarAoRepertorio}
-              onCreateAndAdd={criarRepertorioEAdicionar}
+              onAdicionarAoRepertorio={adicionarAoRepertorio}
+              onCompartilhar={compartilhar}
             />
             <button
               onClick={() => setFormularioCorrecaoAberto(true)}
@@ -333,7 +345,7 @@ export function CifraReader({
         onToggleAwake={keepAwake.toggle}
         repertorios={repertorios}
         onAddToRepertorio={adicionarAoRepertorio}
-        onCreateRepertorioAndAdd={criarRepertorioEAdicionar}
+        onCompartilhar={compartilhar}
       />
 
       {formularioCorrecaoAberto && (
