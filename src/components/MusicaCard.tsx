@@ -59,10 +59,6 @@ export function MusicaCard({
         </p>
       </div>
 
-      <span className="shrink-0 rounded-md bg-[var(--accent-soft)] px-2 py-1 font-mono text-xs font-bold text-[var(--accent)]">
-        {musica.originalTone}
-      </span>
-
       <span className="hidden w-14 shrink-0 text-right font-mono text-xs text-[var(--muted)] sm:block">
         {musica.viewsCount.toLocaleString('pt-BR')}
       </span>
