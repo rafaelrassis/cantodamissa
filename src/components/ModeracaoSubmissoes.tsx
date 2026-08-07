@@ -4,6 +4,7 @@ import type { StatusSubmissao } from '../lib/submissoes';
 
 interface Props {
   onBack: () => void;
+  onLogout: () => void;
 }
 
 const LABEL_STATUS: Record<StatusSubmissao, string> = {
@@ -18,7 +19,7 @@ const COR_STATUS: Record<StatusSubmissao, string> = {
   rejeitada: '#a3111d',
 };
 
-export function ModeracaoSubmissoes({ onBack }: Props) {
+export function ModeracaoSubmissoes({ onBack, onLogout }: Props) {
   const { submissoes, atualizarStatus } = useSubmissoes();
   const pendentes = submissoes.filter((s) => s.status === 'pendente');
   const resolvidas = submissoes.filter((s) => s.status !== 'pendente');
@@ -26,13 +27,17 @@ export function ModeracaoSubmissoes({ onBack }: Props) {
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
       <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
-        <button onClick={onBack} className="mb-2 flex items-center gap-1 text-xs opacity-80">
-          <ChevronLeft size={14} /> Voltar
-        </button>
+        <div className="mb-2 flex items-center justify-between">
+          <button onClick={onBack} className="flex items-center gap-1 text-xs opacity-80">
+            <ChevronLeft size={14} /> Voltar
+          </button>
+          <button onClick={onLogout} className="text-xs opacity-80 hover:underline">
+            Sair
+          </button>
+        </div>
         <h1 className="text-xl font-extrabold tracking-tight">Moderação de sugestões</h1>
         <p className="mt-0.5 text-sm opacity-80">
-          {pendentes.length} pendente{pendentes.length === 1 ? '' : 's'} · nota: sem controle de
-          acesso ainda — qualquer pessoa vê esta tela até termos autenticação de admin.
+          {pendentes.length} pendente{pendentes.length === 1 ? '' : 's'}
         </p>
       </header>
 

@@ -3,11 +3,13 @@ import { Home } from './components/Home';
 import { CifraReader } from './components/CifraReader';
 import { CalendarioLiturgico } from './components/CalendarioLiturgico';
 import { ModeracaoSubmissoes } from './components/ModeracaoSubmissoes';
+import { AdminLogin } from './components/AdminLogin';
 import { TopMusicasTela } from './components/TopMusicasTela';
 import { TopArtistasTela } from './components/TopArtistasTela';
 import { RepertorioDetalheTela } from './components/RepertorioDetalheTela';
 import { useTheme } from './lib/useTheme';
 import { useRepertorios } from './lib/useRepertorios';
+import { useAdminAuth } from './lib/useAdminAuth';
 import type { Musica, TempoLiturgico } from './types/musica';
 
 const MIN_FONT = 15;
@@ -31,6 +33,7 @@ function App() {
   const [buscaArtista, setBuscaArtista] = useState<string | undefined>();
   const { theme, toggleTheme } = useTheme();
   const [fontSize, setFontSize] = useState(DEFAULT_FONT);
+  const { isAdmin, login, logout } = useAdminAuth();
 
   const repertoriosApi = useRepertorios();
   const repertorioAtual = repertoriosApi.repertorios.find((r) => r.id === repertorioId) ?? null;
@@ -75,7 +78,18 @@ function App() {
   }
 
   if (tela === 'moderacao') {
-    return <ModeracaoSubmissoes onBack={() => setTela('home')} />;
+    if (!isAdmin) {
+      return <AdminLogin onLogin={login} onBack={() => setTela('home')} />;
+    }
+    return (
+      <ModeracaoSubmissoes
+        onBack={() => setTela('home')}
+        onLogout={() => {
+          logout();
+          setTela('home');
+        }}
+      />
+    );
   }
 
   if (tela === 'top-musicas') {
