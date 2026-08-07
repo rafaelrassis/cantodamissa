@@ -1,6 +1,7 @@
-import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
+import type { Musica, MomentoMissa, TempoLiturgico, CicloDominical } from '../types/musica';
 import { mockMusicas } from './mockMusicas';
 import { supabase, isSupabaseConfigured } from './supabase';
+import { extractLyrics } from './chordpro';
 
 /**
  * Camada de acesso a dados. Usa o Supabase real quando
@@ -197,4 +198,161 @@ export async function getArtistasEmAlta(limite: number = 20): Promise<ArtistaEmA
   }
 
   return [...porArtista.values()].sort((a, b) => b.totalViews - a.totalViews).slice(0, limite);
+}
+
+// ---------- CRUD de escrita (painel admin) ----------
+//
+// Sem fallback pra mock aqui de propósito: escrita sem Supabase configurado
+// não tem onde persistir, então essas funções lançam erro nesse caso em vez
+// de fingir sucesso sobre um array em memória que se perde no reload.
+
+export interface DadosMusica {
+  title: string;
+  artist: string | null;
+  originalTone: string;
+  difficulty: number | null;
+  capo: number;
+  youtubeUrl: string | null;
+  lyrics: string | null;
+  chordsContent: string;
+  tempoLiturgico: TempoLiturgico[];
+  ciclo: CicloDominical[];
+  momento: MomentoMissa[];
+  sourceUrl?: string | null;
+  sourceFileUrl?: string | null;
+}
+
+function slugify(titulo: string): string {
+  return (
+    titulo
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') || 'musica'
+  );
+}
+
+function exigirSupabase() {
+  if (!isSupabaseConfigured) {
+    throw new Error(
+      'Supabase não configurado — CRUD de músicas precisa de VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY (ver .env.example).'
+    );
+  }
+}
+
+/** Grava as relações N:N (tempo/ciclo/momento) apagando e reinserindo — mais simples que diff. */
+async function sincronizarRelacoes(musicaId: string, dados: DadosMusica) {
+  await Promise.all([
+    supabase.from('musica_tempo_liturgico').delete().eq('musica_id', musicaId),
+    supabase.from('musica_ciclo').delete().eq('musica_id', musicaId),
+    supabase.from('musica_momento').delete().eq('musica_id', musicaId),
+  ]);
+
+  const inserts: PromiseLike<unknown>[] = [];
+  if (dados.tempoLiturgico.length) {
+    inserts.push(
+      supabase
+        .from('musica_tempo_liturgico')
+        .insert(dados.tempoLiturgico.map((tempo) => ({ musica_id: musicaId, tempo })))
+    );
+  }
+  if (dados.ciclo.length) {
+    inserts.push(
+      supabase
+        .from('musica_ciclo')
+        .insert(dados.ciclo.map((ciclo) => ({ musica_id: musicaId, ciclo })))
+    );
+  }
+  if (dados.momento.length) {
+    inserts.push(
+      supabase
+        .from('musica_momento')
+        .insert(dados.momento.map((momento) => ({ musica_id: musicaId, momento })))
+    );
+  }
+  await Promise.all(inserts);
+}
+
+export async function listarTodasMusicas(): Promise<Musica[]> {
+  exigirSupabase();
+  const { data, error } = await supabase
+    .from('musicas')
+    .select(SELECT_COM_RELACOES)
+    .order('title', { ascending: true });
+
+  if (error) throw new Error(`listarTodasMusicas: ${error.message}`);
+  return ((data ?? []) as unknown as LinhaMusicaSupabase[]).map(mapearLinha);
+}
+
+export async function criarMusica(dados: DadosMusica): Promise<Musica> {
+  exigirSupabase();
+
+  const slugBase = slugify(dados.title);
+  let slug = slugBase;
+  for (let tentativa = 2; tentativa <= 20; tentativa++) {
+    const { data: existente } = await supabase.from('musicas').select('id').eq('slug', slug).maybeSingle();
+    if (!existente) break;
+    slug = `${slugBase}-${tentativa}`;
+  }
+
+  const { data, error } = await supabase
+    .from('musicas')
+    .insert({
+      slug,
+      title: dados.title,
+      artist: dados.artist,
+      original_tone: dados.originalTone,
+      difficulty: dados.difficulty,
+      capo: dados.capo,
+      youtube_url: dados.youtubeUrl,
+      lyrics: dados.lyrics ?? extractLyrics(dados.chordsContent),
+      chords_content: dados.chordsContent,
+      source_url: dados.sourceUrl ?? null,
+      source_file_url: dados.sourceFileUrl ?? null,
+    })
+    .select('id')
+    .single();
+
+  if (error) throw new Error(`criarMusica: ${error.message}`);
+
+  await sincronizarRelacoes(data.id, dados);
+
+  const musica = await getMusicaById(data.id);
+  if (!musica) throw new Error('criarMusica: música criada mas não encontrada ao reler');
+  return musica;
+}
+
+export async function atualizarMusica(id: string, dados: DadosMusica): Promise<Musica> {
+  exigirSupabase();
+
+  const { error } = await supabase
+    .from('musicas')
+    .update({
+      title: dados.title,
+      artist: dados.artist,
+      original_tone: dados.originalTone,
+      difficulty: dados.difficulty,
+      capo: dados.capo,
+      youtube_url: dados.youtubeUrl,
+      lyrics: dados.lyrics ?? extractLyrics(dados.chordsContent),
+      chords_content: dados.chordsContent,
+      source_url: dados.sourceUrl ?? null,
+      source_file_url: dados.sourceFileUrl ?? null,
+    })
+    .eq('id', id);
+
+  if (error) throw new Error(`atualizarMusica: ${error.message}`);
+
+  await sincronizarRelacoes(id, dados);
+
+  const musica = await getMusicaById(id);
+  if (!musica) throw new Error('atualizarMusica: música não encontrada após update');
+  return musica;
+}
+
+export async function excluirMusica(id: string): Promise<void> {
+  exigirSupabase();
+  const { error } = await supabase.from('musicas').delete().eq('id', id);
+  if (error) throw new Error(`excluirMusica: ${error.message}`);
 }

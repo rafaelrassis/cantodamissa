@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ClipboardList, Music, ListMusic } from 'lucide-react';
 import { ModeracaoSubmissoes } from './ModeracaoSubmissoes';
+import { MusicasAdmin } from './MusicasAdmin';
 import { useSubmissoes } from '../lib/useSubmissoes';
 
 interface Props {
@@ -61,14 +62,7 @@ export function AdminPanel({ onBack, onLogout }: Props) {
         <ModeracaoSubmissoesEmbed />
       )}
 
-      {aba === 'musicas' && (
-        <div className="mx-auto max-w-2xl px-4 py-10 text-center lg:px-10">
-          <Music size={28} className="mx-auto mb-3 text-[var(--muted)]" />
-          <p className="text-sm text-[var(--muted)]">
-            CRUD de músicas ainda não implementado — só leitura via Supabase por enquanto.
-          </p>
-        </div>
-      )}
+      {aba === 'musicas' && <MusicasAdmin />}
 
       {aba === 'repertorios' && (
         <div className="mx-auto max-w-2xl px-4 py-10 text-center lg:px-10">
