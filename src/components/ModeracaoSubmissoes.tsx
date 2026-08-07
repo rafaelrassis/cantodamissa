@@ -5,6 +5,8 @@ import type { StatusSubmissao } from '../lib/submissoes';
 interface Props {
   onBack: () => void;
   onLogout: () => void;
+  /** Quando usado dentro do AdminPanel, esconde o header próprio (já existe um no hub). */
+  embedded?: boolean;
 }
 
 const LABEL_STATUS: Record<StatusSubmissao, string> = {
@@ -19,29 +21,13 @@ const COR_STATUS: Record<StatusSubmissao, string> = {
   rejeitada: '#a3111d',
 };
 
-export function ModeracaoSubmissoes({ onBack, onLogout }: Props) {
+export function ModeracaoSubmissoes({ onBack, onLogout, embedded }: Props) {
   const { submissoes, atualizarStatus } = useSubmissoes();
   const pendentes = submissoes.filter((s) => s.status === 'pendente');
   const resolvidas = submissoes.filter((s) => s.status !== 'pendente');
 
-  return (
-    <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
-        <div className="mb-2 flex items-center justify-between">
-          <button onClick={onBack} className="flex items-center gap-1 text-xs opacity-80">
-            <ChevronLeft size={14} /> Voltar
-          </button>
-          <button onClick={onLogout} className="text-xs opacity-80 hover:underline">
-            Sair
-          </button>
-        </div>
-        <h1 className="text-xl font-extrabold tracking-tight">Moderação de sugestões</h1>
-        <p className="mt-0.5 text-sm opacity-80">
-          {pendentes.length} pendente{pendentes.length === 1 ? '' : 's'}
-        </p>
-      </header>
-
-      <div className="mx-auto max-w-2xl px-4 py-4 lg:px-10">
+  const conteudo = (
+    <div className="mx-auto max-w-2xl px-4 py-4 lg:px-10">
         {submissoes.length === 0 && (
           <p className="py-10 text-center text-sm text-[var(--muted)]">
             Nenhuma sugestão enviada ainda.
@@ -116,7 +102,28 @@ export function ModeracaoSubmissoes({ onBack, onLogout }: Props) {
             ))}
           </>
         )}
-      </div>
+    </div>
+  );
+
+  if (embedded) return conteudo;
+
+  return (
+    <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
+      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
+        <div className="mb-2 flex items-center justify-between">
+          <button onClick={onBack} className="flex items-center gap-1 text-xs opacity-80">
+            <ChevronLeft size={14} /> Voltar
+          </button>
+          <button onClick={onLogout} className="text-xs opacity-80 hover:underline">
+            Sair
+          </button>
+        </div>
+        <h1 className="text-xl font-extrabold tracking-tight">Moderação de sugestões</h1>
+        <p className="mt-0.5 text-sm opacity-80">
+          {pendentes.length} pendente{pendentes.length === 1 ? '' : 's'}
+        </p>
+      </header>
+      {conteudo}
     </div>
   );
 }

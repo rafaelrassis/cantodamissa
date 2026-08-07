@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Home } from './components/Home';
 import { CifraReader } from './components/CifraReader';
 import { CalendarioLiturgico } from './components/CalendarioLiturgico';
-import { ModeracaoSubmissoes } from './components/ModeracaoSubmissoes';
+import { AdminPanel } from './components/AdminPanel';
 import { AdminLogin } from './components/AdminLogin';
 import { TopMusicasTela } from './components/TopMusicasTela';
 import { TopArtistasTela } from './components/TopArtistasTela';
@@ -19,7 +19,7 @@ const DEFAULT_FONT = 21;
 type Tela =
   | 'home'
   | 'calendario'
-  | 'moderacao'
+  | 'admin'
   | 'top-musicas'
   | 'top-artistas'
   | 'repertorio-detalhe';
@@ -77,12 +77,12 @@ function App() {
     );
   }
 
-  if (tela === 'moderacao') {
+  if (tela === 'admin') {
     if (!isAdmin) {
       return <AdminLogin onLogin={login} onBack={() => setTela('home')} />;
     }
     return (
-      <ModeracaoSubmissoes
+      <AdminPanel
         onBack={() => setTela('home')}
         onLogout={() => {
           logout();
@@ -126,8 +126,8 @@ function App() {
       filtroInicial={filtroTempo}
       buscaInicial={buscaArtista}
       onAbrirCalendario={() => setTela('calendario')}
-      onAbrirModeracao={() => setTela('moderacao')}
-      onAbrirLoginAdmin={() => setTela('moderacao')}
+      onAbrirModeracao={() => setTela('admin')}
+      onAbrirLoginAdmin={() => setTela('admin')}
       onAbrirTopMusicas={() => setTela('top-musicas')}
       onAbrirTopArtistas={() => setTela('top-artistas')}
       onSelectArtista={irParaHomeComArtista}
