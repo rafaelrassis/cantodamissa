@@ -11,9 +11,11 @@ import {
 } from '../lib/repertorios';
 import { useRepertorios } from '../lib/useRepertorios';
 import { useSubmissoes } from '../lib/useSubmissoes';
+import { useUserAuth } from '../lib/useUserAuth';
 import { MusicaCard } from './MusicaCard';
 import { PainelRepertorios } from './PainelRepertorios';
 import { SubmissaoForm } from './SubmissaoForm';
+import { UserLoginModal } from './UserLoginModal';
 
 interface Props {
   onSelectMusica: (musica: Musica, repertorioId?: string) => void;
@@ -83,6 +85,8 @@ export function Home({
   const { criar: criarSubmissao } = useSubmissoes();
   const [formularioAberto, setFormularioAberto] = useState(false);
   const [repertoriosMobileAberto, setRepertoriosMobileAberto] = useState(false);
+  const { isLoggedIn, userName, login, logout } = useUserAuth();
+  const [loginAberto, setLoginAberto] = useState(false);
 
   function adicionar(repertorioId: string, musica: Musica) {
     adicionarMusica(repertorioId, {
@@ -151,9 +155,13 @@ export function Home({
             >
               <Plus size={15} /> Sugerir música
             </button>
-            <span className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[var(--accent)]">
-              Entrar
-            </span>
+            <button
+              onClick={() => (isLoggedIn ? logout() : setLoginAberto(true))}
+              title={isLoggedIn ? 'Sair' : 'Entrar'}
+              className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[var(--accent)]"
+            >
+              {isLoggedIn ? userName : 'Entrar'}
+            </button>
           </div>
         </div>
 
@@ -163,9 +171,13 @@ export function Home({
             <img src="/logo-header.png" alt="" className="h-8 w-8" />
             Canto da Missa
           </div>
-          <span className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[var(--accent)]">
-            Entrar
-          </span>
+          <button
+            onClick={() => (isLoggedIn ? logout() : setLoginAberto(true))}
+            title={isLoggedIn ? 'Sair' : 'Entrar'}
+            className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[var(--accent)]"
+          >
+            {isLoggedIn ? userName : 'Entrar'}
+          </button>
         </div>
 
         <div className="px-4 pb-5 pt-4 lg:px-10 lg:pb-6">
@@ -357,6 +369,16 @@ export function Home({
           modo="nova"
           onClose={() => setFormularioAberto(false)}
           onSubmit={(dados) => criarSubmissao({ ...dados, tipo: 'nova' })}
+        />
+      )}
+
+      {loginAberto && (
+        <UserLoginModal
+          onLogin={() => {
+            login();
+            setLoginAberto(false);
+          }}
+          onClose={() => setLoginAberto(false)}
         />
       )}
 
