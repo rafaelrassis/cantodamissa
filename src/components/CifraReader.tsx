@@ -12,10 +12,12 @@ import { useAutoScroll } from '../lib/useAutoScroll';
 import { useKeepAwake } from '../lib/useKeepAwake';
 import { loadReaderState, saveReaderState } from '../lib/readerState';
 import { useShowChordDiagrams } from '../lib/useShowChordDiagrams';
-import { obterRepertorio, type Repertorio } from '../lib/repertorios';
+import { obterRepertorio, ritoSugeridoParaMomento, type Repertorio } from '../lib/repertorios';
 import { getMusicaById } from '../lib/musicasApi';
+import { useRepertorios } from '../lib/useRepertorios';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import { SubmissaoForm } from './SubmissaoForm';
+import { AddToRepertorioMenu } from './AddToRepertorioMenu';
 import { LABEL_MOMENTO, LABEL_TEMPO } from '../lib/labels';
 import type { Theme } from '../lib/useTheme';
 import { ChordLine } from './ChordLine';
@@ -61,6 +63,7 @@ export function CifraReader({
   const [repertorio, setRepertorio] = useState<Repertorio | null>(null);
   const [formularioCorrecaoAberto, setFormularioCorrecaoAberto] = useState(false);
   const { criar: criarSubmissao } = useSubmissoes();
+  const { repertorios, criar: criarRepertorio, adicionarMusica } = useRepertorios();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoScroll = useAutoScroll(scrollRef);
@@ -107,6 +110,24 @@ export function CifraReader({
     () => transposeChord(musica.originalTone, semitones, useFlats),
     [musica.originalTone, semitones, useFlats]
   );
+
+  // adicionar ao repertório salva o TOM ATUAL (já transposto na tela), não o
+  // tom original da música — é isso que o organizador do repertório
+  // escolheu pra essa missa específica
+  function adicionarAoRepertorio(repertorioId: string) {
+    adicionarMusica(repertorioId, {
+      musicaId: musica.id,
+      title: musica.title,
+      artist: musica.artist,
+      tone: currentTone,
+      momento: ritoSugeridoParaMomento(musica.momento[0] ?? null),
+    });
+  }
+
+  async function criarRepertorioEAdicionar(nome: string) {
+    const novo = await criarRepertorio(nome);
+    adicionarAoRepertorio(novo.id);
+  }
 
   const transposedContent = useMemo(
     () => transposeContent(musica.chordsContent, semitones, useFlats),
@@ -218,6 +239,11 @@ export function CifraReader({
               </ToolbarToggle>
             )}
             <div className="flex-1" />
+            <AddToRepertorioMenu
+              repertorios={repertorios}
+              onAdd={adicionarAoRepertorio}
+              onCreateAndAdd={criarRepertorioEAdicionar}
+            />
             <button
               onClick={() => setFormularioCorrecaoAberto(true)}
               className="flex h-[34px] items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--surface2)]"
@@ -305,6 +331,9 @@ export function CifraReader({
         awakeActive={keepAwake.active}
         awakeSupported={keepAwake.supported}
         onToggleAwake={keepAwake.toggle}
+        repertorios={repertorios}
+        onAddToRepertorio={adicionarAoRepertorio}
+        onCreateRepertorioAndAdd={criarRepertorioEAdicionar}
       />
 
       {formularioCorrecaoAberto && (
