@@ -14,7 +14,7 @@ interface Props {
   adicionarRito: (repertorioId: string, nome: string) => void;
   removerRito: (repertorioId: string, nome: string) => void;
   reordenarRitos: (repertorioId: string, nomesOrdenados: string[]) => void;
-  onExcluirRepertorio: (repertorioId: string) => void;
+  onExcluirRepertorio: (repertorioId: string) => Promise<void>;
 }
 
 /**
@@ -39,12 +39,12 @@ export function RepertorioDetalheTela({
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
 
-  function excluir() {
+  async function excluir() {
     if (!confirmandoExclusao) {
       setConfirmandoExclusao(true);
       return;
     }
-    onExcluirRepertorio(repertorio.id);
+    await onExcluirRepertorio(repertorio.id);
     onBack();
   }
 
