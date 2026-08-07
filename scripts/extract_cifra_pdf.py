@@ -19,8 +19,10 @@ import re
 import sys
 import pdfplumber
 
+# "M" no fim (ex: "G7M") é a notação brasileira de sétima maior, equivalente
+# a "maj7" com a ordem número-letra invertida.
 CHORD_TOKEN = re.compile(
-    r'^[A-G](#|b)?(m|maj|min|dim|aug|sus)?[0-9]*(\([^)]*\))?(/[A-G](#|b)?)?$'
+    r'^[A-G](#|b)?(m|maj|min|dim|aug|sus)?[0-9]*M?(\([^)]*\))?(/[A-G](#|b)?)?$'
 )
 
 SECTION_MARKER = re.compile(r'^\[.+\]$')  # ex: "[Intro]", "[Refrão]"

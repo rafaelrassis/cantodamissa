@@ -28,7 +28,9 @@ const CHORD_PARTS_REGEX = /^([A-G][#b]?)([^/]*)(?:\/([A-G][#b]?))?$/;
 // (mesma lógica do extrator de PDF em scripts/extract_cifra_pdf.py) — usada
 // pra distinguir acorde de verdade (ex: "C#m7") de marcador de seção que
 // também aparece entre colchetes (ex: "[Intro]", "[Refrão]")
-const CHORD_LIKE = /^[A-G](#|b)?(m|maj7?|min|dim|aug|sus[24]?)?[0-9]*(\([^)]*\))?(\/[A-G](#|b)?)?$/;
+// "M" no fim (ex: "G7M", "Eb7M") é a notação brasileira de cifra pra sétima
+// maior — equivalente a "maj7", mas com a ordem número-letra invertida.
+const CHORD_LIKE = /^[A-G](#|b)?(m|maj7?|min|dim|aug|sus[24]?)?[0-9]*M?(\([^)]*\))?(\/[A-G](#|b)?)?$/;
 
 export function pareceAcorde(token: string): boolean {
   return CHORD_LIKE.test(token);

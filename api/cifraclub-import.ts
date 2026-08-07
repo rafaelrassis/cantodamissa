@@ -33,12 +33,24 @@ export default async function handler(req: Request): Promise<Response> {
   let html: string;
   try {
     const resp = await fetch(url, {
-      headers: { 'user-agent': 'Mozilla/5.0 (compatible; CantoDaMissaBot/1.0)' },
+      headers: {
+        // UA de navegador real — um UA de bot explícito faz alguns sites
+        // aceitarem a conexão e nunca responderem, travando o fetch até
+        // o timeout da função (foi a causa do erro original aqui).
+        'user-agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+      },
+      signal: AbortSignal.timeout(15000),
     });
     if (!resp.ok) return json({ error: `Cifra Club respondeu ${resp.status}` }, 502);
     html = await resp.text();
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'erro desconhecido';
+    const timeout = err instanceof Error && err.name === 'TimeoutError';
+    const msg = timeout
+      ? 'Cifra Club não respondeu a tempo (timeout de 15s)'
+      : err instanceof Error
+        ? err.message
+        : 'erro desconhecido';
     return json({ error: `Falha ao buscar a página: ${msg}` }, 502);
   }
 
