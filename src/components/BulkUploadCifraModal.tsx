@@ -26,6 +26,7 @@ interface ItemUpload {
   file: File;
   musica: string;
   cantor: string;
+  musicaSugeridaDoNome: string; // chute inicial vindo do nome do arquivo — se o usuário editar, não sobrescreve mais com o título extraído do PDF
   status: StatusItem;
   chordsContent: string; // extraído do PDF (editável) — vazio pra imagens ou PDF sem camada de texto
   mostrarCifra: boolean;
@@ -105,7 +106,18 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
       });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error || 'Falha ao extrair cifra');
-      atualizarItem(item.id, { status: 'pronto', chordsContent: data.chordsContent ?? '' });
+      setItens((atual) =>
+        atual.map((it) => {
+          if (it.id !== item.id) return it;
+          // só usa o título extraído do PDF se o campo ainda tiver o chute
+          // original do nome do arquivo — esse formato de PDF raramente tem
+          // música/cantor no nome, então o título de dentro do arquivo
+          // costuma ser mais confiável, mas não sobrescreve edição manual
+          const musica =
+            it.musica === it.musicaSugeridaDoNome && data.tituloSugerido ? data.tituloSugerido : it.musica;
+          return { ...it, status: 'pronto', chordsContent: data.chordsContent ?? '', musica };
+        })
+      );
     } catch (err) {
       atualizarItem(item.id, {
         status: 'pronto',
@@ -132,14 +144,18 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
       }
     }
 
-    const novos: ItemUpload[] = [...diretos, ...doZip].map((f) => ({
-      id: gerarId(),
-      file: f,
-      status: 'pendente',
-      chordsContent: '',
-      mostrarCifra: false,
-      ...chuteInicial(f.name),
-    }));
+    const novos: ItemUpload[] = [...diretos, ...doZip].map((f) => {
+      const sugestao = chuteInicial(f.name);
+      return {
+        id: gerarId(),
+        file: f,
+        status: 'pendente',
+        chordsContent: '',
+        mostrarCifra: false,
+        musicaSugeridaDoNome: sugestao.musica,
+        ...sugestao,
+      };
+    });
     setItens((atual) => [...atual, ...novos]);
 
     for (const item of novos) {

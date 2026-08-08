@@ -158,6 +158,24 @@ function realinharTodasAsLinhas(linhas: string[]): string[] {
 export interface ResultadoExtracaoPdf {
   chordsContent: string;
   lyrics: string;
+  tituloSugerido: string | null;
+}
+
+/**
+ * O nome do arquivo raramente carrega música/cantor nesse formato (ex:
+ * "03__GLÓRIA_GLÓRIA_ANJOS_DO_CÉU.pdf" — só número de faixa + título, sem
+ * cantor). O título costuma vir na primeira linha de texto do PDF, antes
+ * do corpo de acordes começar (cabeçalho de data/site já foi filtrado em
+ * reconstruirLinhasDaPagina). Não tenta achar cantor: esse formato não tem
+ * um campo separado pra isso — fica pra digitação manual mesmo.
+ */
+function extrairTituloSugerido(linhas: string[]): string | null {
+  for (const linha of linhas) {
+    const trimmed = linha.trim();
+    if (!trimmed) continue;
+    return pareceLinhaDeAcordes(linha) ? null : trimmed;
+  }
+  return null;
 }
 
 // forma mínima que nos interessa de pdf.js TextItem — evitamos importar o
@@ -189,9 +207,10 @@ export async function extrairCifraDoPdf(bytes: Uint8Array): Promise<ResultadoExt
     }
   }
 
+  const tituloSugerido = extrairTituloSugerido(todasAsLinhas);
   const linhasRealinhadas = realinharTodasAsLinhas(todasAsLinhas);
   const chordsContent = parseCifraClubTexto(linhasRealinhadas.join('\n'));
   const lyrics = extractLyrics(chordsContent);
 
-  return { chordsContent, lyrics };
+  return { chordsContent, lyrics, tituloSugerido };
 }
