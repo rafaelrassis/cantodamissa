@@ -83,6 +83,7 @@ function App() {
         repertorioId={repertorioId}
         tomForcado={tomForcado}
         onSelectMusica={(m) => abrirMusica(m, repertorioId)}
+        onAbrirCantor={abrirCantor}
       />
     );
   }

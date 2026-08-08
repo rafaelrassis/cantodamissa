@@ -35,13 +35,14 @@ interface LinhaMusicaResumo {
   views_count: number;
 }
 
-function mapearMusicaResumo(row: LinhaMusicaResumo, cantorId: string): Musica {
+function mapearMusicaResumo(row: LinhaMusicaResumo, cantorId: string, cantorSlug: string): Musica {
   return {
     id: row.id,
     slug: row.slug,
     title: row.title,
     artist: row.artist,
     cantorId,
+    cantorSlug,
     originalTone: row.original_tone,
     difficulty: null,
     capo: 0,
@@ -68,7 +69,7 @@ export async function getCantorBySlug(slug: string): Promise<Cantor | null> {
   return mapearCantor(data);
 }
 
-export async function getTop10PorCantor(cantorId: string): Promise<Musica[]> {
+export async function getTop10PorCantor(cantorId: string, cantorSlug: string): Promise<Musica[]> {
   if (!isSupabaseConfigured) return [];
 
   const { data } = await supabase
@@ -78,10 +79,12 @@ export async function getTop10PorCantor(cantorId: string): Promise<Musica[]> {
     .order('views_count', { ascending: false })
     .limit(10);
 
-  return ((data ?? []) as unknown as LinhaMusicaResumo[]).map((row) => mapearMusicaResumo(row, cantorId));
+  return ((data ?? []) as unknown as LinhaMusicaResumo[]).map((row) =>
+    mapearMusicaResumo(row, cantorId, cantorSlug)
+  );
 }
 
-export async function getTodasAlfabeticoPorCantor(cantorId: string): Promise<Musica[]> {
+export async function getTodasAlfabeticoPorCantor(cantorId: string, cantorSlug: string): Promise<Musica[]> {
   if (!isSupabaseConfigured) return [];
 
   const { data } = await supabase
@@ -90,7 +93,9 @@ export async function getTodasAlfabeticoPorCantor(cantorId: string): Promise<Mus
     .eq('cantor_id', cantorId)
     .order('title', { ascending: true });
 
-  return ((data ?? []) as unknown as LinhaMusicaResumo[]).map((row) => mapearMusicaResumo(row, cantorId));
+  return ((data ?? []) as unknown as LinhaMusicaResumo[]).map((row) =>
+    mapearMusicaResumo(row, cantorId, cantorSlug)
+  );
 }
 
 // ---------- CRUD (AdminPanel) ----------

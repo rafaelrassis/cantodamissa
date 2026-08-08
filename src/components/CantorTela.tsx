@@ -35,8 +35,8 @@ export function CantorTela({ slug, onBack, onSelectMusica }: Props) {
 
       if (c) {
         const [top, lista] = await Promise.all([
-          getTop10PorCantor(c.id),
-          getTodasAlfabeticoPorCantor(c.id),
+          getTop10PorCantor(c.id, c.slug),
+          getTodasAlfabeticoPorCantor(c.id, c.slug),
         ]);
         if (!ativo) return;
         setTop10(top);

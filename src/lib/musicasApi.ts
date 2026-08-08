@@ -30,6 +30,7 @@ interface LinhaMusicaSupabase {
   title: string;
   artist: string | null;
   cantor_id: string | null;
+  cantores: { slug: string } | null;
   original_tone: string;
   difficulty: number | null;
   capo: number;
@@ -43,7 +44,7 @@ interface LinhaMusicaSupabase {
 }
 
 const SELECT_COM_RELACOES =
-  '*, musica_tempo_liturgico(tempo), musica_ciclo(ciclo), musica_momento(momento)';
+  '*, cantores(slug), musica_tempo_liturgico(tempo), musica_ciclo(ciclo), musica_momento(momento)';
 
 function mapearLinha(row: LinhaMusicaSupabase): Musica {
   return {
@@ -52,6 +53,7 @@ function mapearLinha(row: LinhaMusicaSupabase): Musica {
     title: row.title,
     artist: row.artist,
     cantorId: row.cantor_id,
+    cantorSlug: row.cantores?.slug ?? null,
     originalTone: row.original_tone,
     difficulty: row.difficulty,
     capo: row.capo,

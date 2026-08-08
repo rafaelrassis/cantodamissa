@@ -40,6 +40,7 @@ interface Props {
   onDecFont: () => void;
   repertorioId?: string | null;
   onSelectMusica?: (musica: Musica) => void;
+  onAbrirCantor?: (slug: string) => void;
   tomForcado?: string | null;
 }
 
@@ -53,6 +54,7 @@ export function CifraReader({
   onDecFont,
   repertorioId = null,
   onSelectMusica,
+  onAbrirCantor,
   tomForcado = null,
 }: Props) {
   const [semitones, setSemitones] = useState(0);
@@ -179,7 +181,16 @@ export function CifraReader({
           <div className="min-w-0">
             <h1 className="truncate text-xl font-extrabold tracking-tight">{musica.title}</h1>
             <p className="truncate text-[13px] opacity-80">
-              {musica.artist}
+              {musica.artist && musica.cantorSlug && onAbrirCantor ? (
+                <button
+                  onClick={() => onAbrirCantor(musica.cantorSlug!)}
+                  className="underline underline-offset-2 hover:opacity-100"
+                >
+                  {musica.artist}
+                </button>
+              ) : (
+                musica.artist
+              )}
               {tempoLabel && ` · ${tempoLabel}`}
             </p>
           </div>
@@ -306,7 +317,16 @@ export function CifraReader({
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <h1 className="truncate text-lg font-extrabold">{musica.title}</h1>
-                    <p className="truncate text-sm opacity-80">{musica.artist}</p>
+                    {musica.artist && musica.cantorSlug && onAbrirCantor ? (
+                      <button
+                        onClick={() => onAbrirCantor(musica.cantorSlug!)}
+                        className="truncate text-sm underline underline-offset-2 opacity-80 hover:opacity-100"
+                      >
+                        {musica.artist}
+                      </button>
+                    ) : (
+                      <p className="truncate text-sm opacity-80">{musica.artist}</p>
+                    )}
                   </div>
                   <HeaderCard label="tom" value={currentTone} onClick={() => setTomSeletorAberto(true)} />
                 </div>

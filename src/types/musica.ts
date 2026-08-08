@@ -26,6 +26,7 @@ export interface Musica {
   title: string;
   artist: string | null;
   cantorId: string | null;
+  cantorSlug: string | null; // slug do cantor (via join) — usado pra linkar artist -> /cantor
   originalTone: string;
   difficulty: number | null;
   capo: number;
