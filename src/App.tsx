@@ -9,6 +9,7 @@ import { TopArtistasTela } from './components/TopArtistasTela';
 import { RepertorioDetalheTela } from './components/RepertorioDetalheTela';
 import { CantorTela } from './components/CantorTela';
 import { ArtistaTela } from './components/ArtistaTela';
+import { BuscaTela } from './components/BuscaTela';
 import { useTheme } from './lib/useTheme';
 import { useRepertorios } from './lib/useRepertorios';
 import { useAdminAuth } from './lib/useAdminAuth';
@@ -26,7 +27,8 @@ type Tela =
   | 'top-artistas'
   | 'repertorio-detalhe'
   | 'cantor'
-  | 'artista';
+  | 'artista'
+  | 'busca';
 
 function App() {
   const [tela, setTela] = useState<Tela>('home');
@@ -124,6 +126,18 @@ function App() {
     return <TopArtistasTela onBack={() => setTela('home')} onSelectArtista={abrirArtista} />;
   }
 
+  if (tela === 'busca') {
+    return (
+      <BuscaTela
+        onBack={() => setTela('home')}
+        onSelectMusica={(m) => abrirMusica(m)}
+        onAbrirTopMusicas={() => setTela('top-musicas')}
+        onAbrirTopArtistas={() => setTela('top-artistas')}
+        onAbrirCalendario={() => setTela('calendario')}
+      />
+    );
+  }
+
   if (tela === 'cantor' && cantorSlug) {
     return (
       <CantorTela
@@ -169,6 +183,7 @@ function App() {
       onAbrirLoginAdmin={() => setTela('admin')}
       onAbrirTopMusicas={() => setTela('top-musicas')}
       onAbrirTopArtistas={() => setTela('top-artistas')}
+      onAbrirBusca={() => setTela('busca')}
       onSelectArtista={abrirArtista}
       onAbrirRepertorio={(id) => {
         setRepertorioId(id);

@@ -32,6 +32,7 @@ interface Props {
   onAbrirLoginAdmin?: () => void;
   onAbrirTopMusicas?: () => void;
   onAbrirTopArtistas?: () => void;
+  onAbrirBusca?: () => void;
   onAbrirRepertorio: (id: string) => void;
   onSelectArtista?: (artista: string) => void;
 }
@@ -58,6 +59,7 @@ export function Home({
   onAbrirLoginAdmin,
   onAbrirTopMusicas,
   onAbrirTopArtistas,
+  onAbrirBusca,
   onSelectArtista,
   onAbrirRepertorio,
 }: Props) {
@@ -402,14 +404,7 @@ export function Home({
       </button>
       <nav className="sticky bottom-0 flex items-center justify-around border-t border-[var(--border)] bg-[var(--surface)] py-2 lg:hidden">
         <TabItem icon={<HomeIcon size={18} />} label="Início" active />
-        <TabItem
-          icon={<Search size={18} />}
-          label="Buscar"
-          onClick={() => {
-            searchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            searchRef.current?.focus();
-          }}
-        />
+        <TabItem icon={<Search size={18} />} label="Buscar" onClick={onAbrirBusca} />
         <TabItem
           icon={<ListMusic size={18} />}
           label="Repertórios"
