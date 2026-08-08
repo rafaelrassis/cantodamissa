@@ -42,6 +42,7 @@ interface Props {
   repertorioId?: string | null;
   onSelectMusica?: (musica: Musica) => void;
   onAbrirCantor?: (slug: string) => void;
+  onAbrirArtista?: (artista: string) => void;
   tomForcado?: string | null;
 }
 
@@ -56,6 +57,7 @@ export function CifraReader({
   repertorioId = null,
   onSelectMusica,
   onAbrirCantor,
+  onAbrirArtista,
   tomForcado = null,
 }: Props) {
   const [semitones, setSemitones] = useState(0);
@@ -83,6 +85,15 @@ export function CifraReader({
       ativo = false;
     };
   }, [musica.cantorId]);
+
+  // com cantor cadastrado, prioriza a página dele (foto, cadastro); sem
+  // cantor associado, cai pra página do artista pelo texto livre — mesma
+  // rota usada pela lista "Artistas mais ouvidos" da Home
+  function abrirPaginaDoArtista() {
+    if (cantorSlug && onAbrirCantor) onAbrirCantor(cantorSlug);
+    else if (musica.artist && onAbrirArtista) onAbrirArtista(musica.artist);
+  }
+  const artistaClicavel = Boolean(musica.artist && (onAbrirCantor || onAbrirArtista));
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoScroll = useAutoScroll(scrollRef);
@@ -196,9 +207,9 @@ export function CifraReader({
           <div className="min-w-0">
             <h1 className="truncate text-xl font-extrabold tracking-tight">{musica.title}</h1>
             <p className="truncate text-[13px] opacity-80">
-              {musica.artist && cantorSlug && onAbrirCantor ? (
+              {artistaClicavel ? (
                 <button
-                  onClick={() => onAbrirCantor(cantorSlug)}
+                  onClick={abrirPaginaDoArtista}
                   className="underline underline-offset-2 hover:opacity-100"
                 >
                   {musica.artist}
@@ -332,9 +343,9 @@ export function CifraReader({
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <h1 className="truncate text-lg font-extrabold">{musica.title}</h1>
-                    {musica.artist && cantorSlug && onAbrirCantor ? (
+                    {artistaClicavel ? (
                       <button
-                        onClick={() => onAbrirCantor(cantorSlug)}
+                        onClick={abrirPaginaDoArtista}
                         className="truncate text-sm underline underline-offset-2 opacity-80 hover:opacity-100"
                       >
                         {musica.artist}
