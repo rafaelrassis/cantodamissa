@@ -41,6 +41,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
   const filenameHeader = request.headers['x-filename'];
   const filename = (Array.isArray(filenameHeader) ? filenameHeader[0] : filenameHeader) || `cifra-${Date.now()}`;
 
+  const folderHeader = request.headers['x-folder'];
+  const folderRaw = (Array.isArray(folderHeader) ? folderHeader[0] : folderHeader) || 'cifras';
+  // Sanitiza: só letras/números/acentos/-_/ (permite subpastas tipo "cifra/Fulano")
+  const folder = folderRaw.replace(/[^\p{L}\p{N}\-_/]/gu, '').replace(/^\/+|\/+$/g, '') || 'cifras';
+
   const chunks: Buffer[] = [];
   for await (const chunk of request) {
     chunks.push(chunk as Buffer);
@@ -53,7 +58,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   }
 
   try {
-    const blob = await put(`cifras/${Date.now()}-${filename}`, body, {
+    const blob = await put(`${folder}/${filename}`, body, {
       access: 'public',
       contentType,
     });

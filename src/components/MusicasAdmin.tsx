@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Music } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Music, FolderUp } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import {
   listarTodasMusicas,
@@ -9,12 +9,14 @@ import {
   type DadosMusica,
 } from '../lib/musicasApi';
 import { MusicaFormModal } from './MusicaFormModal';
+import { BulkUploadCifraModal } from './BulkUploadCifraModal';
 
 export function MusicasAdmin() {
   const [musicas, setMusicas] = useState<Musica[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [editando, setEditando] = useState<Musica | null | 'nova'>(null);
+  const [uploadEmMassa, setUploadEmMassa] = useState(false);
 
   const recarregar = useCallback(() => {
     setCarregando(true);
@@ -53,12 +55,20 @@ export function MusicasAdmin() {
     <div className="mx-auto max-w-2xl px-4 py-4 lg:px-10">
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-[var(--muted)]">{musicas.length} música(s)</p>
-        <button
-          onClick={() => setEditando('nova')}
-          className="flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-[var(--accent-fg)]"
-        >
-          <Plus size={15} /> Nova música
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setUploadEmMassa(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-semibold"
+          >
+            <FolderUp size={15} /> Upload em massa
+          </button>
+          <button
+            onClick={() => setEditando('nova')}
+            className="flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-[var(--accent-fg)]"
+          >
+            <Plus size={15} /> Nova música
+          </button>
+        </div>
       </div>
 
       {carregando && (
@@ -116,6 +126,8 @@ export function MusicasAdmin() {
           onFechar={() => setEditando(null)}
         />
       )}
+
+      {uploadEmMassa && <BulkUploadCifraModal onFechar={() => setUploadEmMassa(false)} />}
     </div>
   );
 }
