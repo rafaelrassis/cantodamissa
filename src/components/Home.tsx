@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, ChevronRight, Home as HomeIcon, ListMusic, Plus, Search, X } from 'lucide-react';
 import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
-import { getArtistasEmAlta, getTop50, searchMusicas, type ArtistaEmAlta } from '../lib/musicasApi';
+import {
+  getArtistasEmAlta,
+  getMusicaById,
+  getTop50,
+  searchMusicas,
+  type ArtistaEmAlta,
+} from '../lib/musicasApi';
+import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
 import { domingoMaisProximo } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
 import {
@@ -87,6 +94,12 @@ export function Home({
   const [repertoriosMobileAberto, setRepertoriosMobileAberto] = useState(false);
   const { isLoggedIn, userName, login, logout } = useUserAuth();
   const [loginAberto, setLoginAberto] = useState(false);
+  const { historico, remover: removerHistorico, limpar: limparHistorico } = useHistoricoMusicas();
+
+  async function abrirDoHistorico(id: string) {
+    const musica = await getMusicaById(id);
+    if (musica) onSelectMusica(musica);
+  }
 
   function adicionar(repertorioId: string, musica: Musica) {
     adicionarMusica(repertorioId, {
@@ -224,6 +237,47 @@ export function Home({
       {/* Corpo */}
       <div className="flex flex-1 flex-col lg:flex-row lg:gap-6 lg:px-10 lg:py-6">
         <div className="flex-1">
+          {!buscando && historico.length > 0 && (
+            <div className="px-4 py-3 lg:px-0">
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-[var(--muted)]">Histórico</h2>
+                <button
+                  onClick={limparHistorico}
+                  className="text-xs text-[var(--muted)] hover:text-[var(--text)]"
+                >
+                  limpar
+                </button>
+              </div>
+              <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+                {historico.map((h) => (
+                  <div
+                    key={h.id}
+                    className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3 last:border-b-0"
+                  >
+                    <button
+                      onClick={() => abrirDoHistorico(h.id)}
+                      className="min-w-0 flex-1 text-left"
+                    >
+                      <p className="truncate text-[15px] font-semibold text-[var(--text)]">
+                        {h.title}
+                      </p>
+                      {h.artist && (
+                        <p className="truncate text-xs text-[var(--muted)]">{h.artist}</p>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => removerHistorico(h.id)}
+                      aria-label={`remover ${h.title} do histórico`}
+                      className="ml-2 shrink-0 text-[var(--muted)] hover:text-[var(--text)]"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between px-4 py-3 lg:px-0">
             <h2 className="text-sm font-semibold text-[var(--muted)]">
               {buscando ? `Resultados para "${query}"` : listTitle}

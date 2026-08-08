@@ -16,6 +16,7 @@ import { obterRepertorio, ritoSugeridoParaMomento, type Repertorio } from '../li
 import { getMusicaById } from '../lib/musicasApi';
 import { getCantorSlugById } from '../lib/cantoresApi';
 import { useRepertorios } from '../lib/useRepertorios';
+import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import { SubmissaoForm } from './SubmissaoForm';
 import { AddToRepertorioMenu } from './AddToRepertorioMenu';
@@ -71,6 +72,16 @@ export function CifraReader({
   const [tomSeletorAberto, setTomSeletorAberto] = useState(false);
   const { criar: criarSubmissao } = useSubmissoes();
   const { repertorios, adicionarMusica } = useRepertorios();
+  const { registrarAbertura } = useHistoricoMusicas();
+
+  useEffect(() => {
+    registrarAbertura({
+      id: musica.id,
+      slug: musica.slug,
+      title: musica.title,
+      artist: musica.artist,
+    });
+  }, [musica.id, musica.slug, musica.title, musica.artist, registrarAbertura]);
 
   const [cantorSlug, setCantorSlug] = useState<string | null>(null);
   useEffect(() => {
