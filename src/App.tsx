@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Home } from './components/Home';
 import { CifraReader } from './components/CifraReader';
 import { CalendarioLiturgico } from './components/CalendarioLiturgico';
@@ -7,6 +7,7 @@ import { AdminLogin } from './components/AdminLogin';
 import { TopMusicasTela } from './components/TopMusicasTela';
 import { TopArtistasTela } from './components/TopArtistasTela';
 import { RepertorioDetalheTela } from './components/RepertorioDetalheTela';
+import { CantorTela } from './components/CantorTela';
 import { useTheme } from './lib/useTheme';
 import { useRepertorios } from './lib/useRepertorios';
 import { useAdminAuth } from './lib/useAdminAuth';
@@ -22,7 +23,8 @@ type Tela =
   | 'admin'
   | 'top-musicas'
   | 'top-artistas'
-  | 'repertorio-detalhe';
+  | 'repertorio-detalhe'
+  | 'cantor';
 
 function App() {
   const [tela, setTela] = useState<Tela>('home');
@@ -31,6 +33,7 @@ function App() {
   const [tomForcado, setTomForcado] = useState<string | null>(null);
   const [filtroTempo, setFiltroTempo] = useState<TempoLiturgico | undefined>();
   const [buscaArtista, setBuscaArtista] = useState<string | undefined>();
+  const [cantorSlug, setCantorSlug] = useState<string | null>(null);
   const { theme, toggleTheme } = useTheme();
   const [fontSize, setFontSize] = useState(DEFAULT_FONT);
   const { isAdmin, login, logout } = useAdminAuth();
@@ -53,6 +56,19 @@ function App() {
     setBuscaArtista(artista);
     setTela('home');
   }
+
+  function abrirCantor(slug: string) {
+    setCantorSlug(slug);
+    setTela('cantor');
+  }
+
+  // Link direto pra página do cantor via URL (ex: compartilhado a partir do
+  // admin), no mesmo padrão do `?rep=` usado pra repertório compartilhado
+  // em Home.tsx.
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get('cantor');
+    if (slug) abrirCantor(slug);
+  }, []);
 
   if (musicaAtual) {
     return (
@@ -101,6 +117,16 @@ function App() {
   if (tela === 'top-artistas') {
     return (
       <TopArtistasTela onBack={() => setTela('home')} onSelectArtista={irParaHomeComArtista} />
+    );
+  }
+
+  if (tela === 'cantor' && cantorSlug) {
+    return (
+      <CantorTela
+        slug={cantorSlug}
+        onBack={() => setTela('home')}
+        onSelectMusica={(m) => abrirMusica(m)}
+      />
     );
   }
 
