@@ -14,6 +14,7 @@ import { loadReaderState, saveReaderState } from '../lib/readerState';
 import { useShowChordDiagrams } from '../lib/useShowChordDiagrams';
 import { obterRepertorio, ritoSugeridoParaMomento, type Repertorio } from '../lib/repertorios';
 import { getMusicaById } from '../lib/musicasApi';
+import { getCantorSlugById } from '../lib/cantoresApi';
 import { useRepertorios } from '../lib/useRepertorios';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import { SubmissaoForm } from './SubmissaoForm';
@@ -68,6 +69,20 @@ export function CifraReader({
   const [tomSeletorAberto, setTomSeletorAberto] = useState(false);
   const { criar: criarSubmissao } = useSubmissoes();
   const { repertorios, adicionarMusica } = useRepertorios();
+
+  const [cantorSlug, setCantorSlug] = useState<string | null>(null);
+  useEffect(() => {
+    let ativo = true;
+    setCantorSlug(null);
+    if (musica.cantorId) {
+      getCantorSlugById(musica.cantorId).then((slug) => {
+        if (ativo) setCantorSlug(slug);
+      });
+    }
+    return () => {
+      ativo = false;
+    };
+  }, [musica.cantorId]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoScroll = useAutoScroll(scrollRef);
@@ -181,9 +196,9 @@ export function CifraReader({
           <div className="min-w-0">
             <h1 className="truncate text-xl font-extrabold tracking-tight">{musica.title}</h1>
             <p className="truncate text-[13px] opacity-80">
-              {musica.artist && musica.cantorSlug && onAbrirCantor ? (
+              {musica.artist && cantorSlug && onAbrirCantor ? (
                 <button
-                  onClick={() => onAbrirCantor(musica.cantorSlug!)}
+                  onClick={() => onAbrirCantor(cantorSlug)}
                   className="underline underline-offset-2 hover:opacity-100"
                 >
                   {musica.artist}
@@ -317,9 +332,9 @@ export function CifraReader({
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <h1 className="truncate text-lg font-extrabold">{musica.title}</h1>
-                    {musica.artist && musica.cantorSlug && onAbrirCantor ? (
+                    {musica.artist && cantorSlug && onAbrirCantor ? (
                       <button
-                        onClick={() => onAbrirCantor(musica.cantorSlug!)}
+                        onClick={() => onAbrirCantor(cantorSlug)}
                         className="truncate text-sm underline underline-offset-2 opacity-80 hover:opacity-100"
                       >
                         {musica.artist}

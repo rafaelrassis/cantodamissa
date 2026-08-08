@@ -69,6 +69,25 @@ export async function getCantorBySlug(slug: string): Promise<Cantor | null> {
   return mapearCantor(data);
 }
 
+/**
+ * Resolve o slug de um cantor a partir do id — usado pelo CifraReader pra
+ * linkar o artista sem depender de embed `cantores(slug)` nas queries de
+ * listagem (getTop50 etc.), que quebrariam a Home inteira se a relação
+ * falhar no PostgREST.
+ */
+export async function getCantorSlugById(cantorId: string): Promise<string | null> {
+  if (!isSupabaseConfigured) return null;
+
+  const { data, error } = await supabase
+    .from('cantores')
+    .select('slug')
+    .eq('id', cantorId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data.slug;
+}
+
 export async function getTop10PorCantor(cantorId: string, cantorSlug: string): Promise<Musica[]> {
   if (!isSupabaseConfigured) return [];
 

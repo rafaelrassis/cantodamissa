@@ -30,7 +30,6 @@ interface LinhaMusicaSupabase {
   title: string;
   artist: string | null;
   cantor_id: string | null;
-  cantores: { slug: string } | null;
   original_tone: string;
   difficulty: number | null;
   capo: number;
@@ -44,8 +43,12 @@ interface LinhaMusicaSupabase {
 }
 
 const SELECT_COM_RELACOES =
-  '*, cantores(slug), musica_tempo_liturgico(tempo), musica_ciclo(ciclo), musica_momento(momento)';
+  '*, musica_tempo_liturgico(tempo), musica_ciclo(ciclo), musica_momento(momento)';
 
+// cantorSlug NÃO vem embutido aqui de propósito: um embed `cantores(slug)`
+// nessa query (usada por getTop50/searchMusicas/toda a Home) já quebrou a
+// tela inicial inteira em produção quando a relação falhou no PostgREST —
+// o slug é resolvido à parte, sob demanda, em getCantorSlugById.
 function mapearLinha(row: LinhaMusicaSupabase): Musica {
   return {
     id: row.id,
@@ -53,7 +56,7 @@ function mapearLinha(row: LinhaMusicaSupabase): Musica {
     title: row.title,
     artist: row.artist,
     cantorId: row.cantor_id,
-    cantorSlug: row.cantores?.slug ?? null,
+    cantorSlug: null,
     originalTone: row.original_tone,
     difficulty: row.difficulty,
     capo: row.capo,
