@@ -23,10 +23,41 @@ const LINHAS_IGNORAR =
 // linha de afinação tipo "E A D G B E" — 5 a 7 notas soltas, sem letra
 const TUNING_LINE = /^([A-G](#|b)?\s*){5,7}$/;
 
+/**
+ * Marca tokens que fazem parte de um grupo "(...)" de acorde alternativo
+ * (ex: "A7 (A G#)" — sugestão opcional, não o acorde principal). Um grupo
+ * pode abranger vários tokens separados por espaço ("(A" ... "G#)"), então
+ * não dá pra detectar com regex por token isolado — precisa rastrear
+ * abertura/fechamento ao longo da linha.
+ *
+ * Tokens já colados como "Am7(9)" ou "Csus4(add9)" não entram aqui: eles
+ * começam com uma nota (A-G), não com "(", então nunca abrem grupo.
+ */
+export function marcarGrupoAlternativo(tokens: string[]): boolean[] {
+  const dentroDeGrupo: boolean[] = [];
+  let aberto = false;
+  for (const token of tokens) {
+    if (aberto) {
+      dentroDeGrupo.push(true);
+      if (token.endsWith(')')) aberto = false;
+      continue;
+    }
+    if (token.startsWith('(')) {
+      dentroDeGrupo.push(true);
+      if (!token.endsWith(')')) aberto = true; // grupo abre e continua no próximo token
+      continue;
+    }
+    dentroDeGrupo.push(false);
+  }
+  return dentroDeGrupo;
+}
+
 export function pareceLinhaDeAcordes(linha: string): boolean {
   const trimmed = linha.trim();
   if (!trimmed) return false;
-  const tokens = trimmed.split(/\s+/).filter((t) => !SECTION_MARKER.test(t));
+  const brutos = trimmed.split(/\s+/);
+  const marcados = marcarGrupoAlternativo(brutos);
+  const tokens = brutos.filter((t, i) => !SECTION_MARKER.test(t) && !marcados[i]);
   if (tokens.length === 0) return false;
   const validos = tokens.filter((t) => pareceAcorde(t)).length;
   return validos / tokens.length >= 0.7;
@@ -38,12 +69,17 @@ export function pareceLinhaDeAcordes(linha: string): boolean {
  * retorna só os acordes entre colchetes.
  */
 function montarLinhaChordPro(linhaAcordes: string, linhaLetra: string | null): string {
-  const posicoes: { col: number; token: string }[] = [];
+  const brutos: { col: number; token: string }[] = [];
   const re = /\S+/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(linhaAcordes))) {
-    posicoes.push({ col: m.index, token: m[0] });
+    brutos.push({ col: m.index, token: m[0] });
   }
+  // descarta grupos "(...)" de acorde alternativo (ex: "(A G#)") — são
+  // sugestão opcional, e tentar bracketá-los corrompe o ChordPro (o grupo
+  // pode ter vários tokens, cada um viraria um "[...]" quebrado)
+  const marcados = marcarGrupoAlternativo(brutos.map((p) => p.token));
+  const posicoes = brutos.filter((_, i) => !marcados[i]);
 
   if (!linhaLetra) {
     return posicoes
