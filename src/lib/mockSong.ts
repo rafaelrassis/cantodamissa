@@ -5,6 +5,7 @@ export const mockSong: Musica = {
   slug: 'como-sao-belos',
   title: 'Como São Belos',
   artist: 'Pe. Zezinho, SCJ',
+  cantorId: null,
   originalTone: 'G',
   difficulty: 2,
   capo: 0,

@@ -29,6 +29,7 @@ interface LinhaMusicaSupabase {
   slug: string;
   title: string;
   artist: string | null;
+  cantor_id: string | null;
   original_tone: string;
   difficulty: number | null;
   capo: number;
@@ -50,6 +51,7 @@ function mapearLinha(row: LinhaMusicaSupabase): Musica {
     slug: row.slug,
     title: row.title,
     artist: row.artist,
+    cantorId: row.cantor_id,
     originalTone: row.original_tone,
     difficulty: row.difficulty,
     capo: row.capo,
@@ -209,6 +211,7 @@ export async function getArtistasEmAlta(limite: number = 20): Promise<ArtistaEmA
 export interface DadosMusica {
   title: string;
   artist: string | null;
+  cantorId?: string | null;
   originalTone: string;
   difficulty: number | null;
   capo: number;
@@ -302,6 +305,7 @@ export async function criarMusica(dados: DadosMusica): Promise<Musica> {
       slug,
       title: dados.title,
       artist: dados.artist,
+      cantor_id: dados.cantorId ?? null,
       original_tone: dados.originalTone,
       difficulty: dados.difficulty,
       capo: dados.capo,
@@ -331,6 +335,7 @@ export async function atualizarMusica(id: string, dados: DadosMusica): Promise<M
     .update({
       title: dados.title,
       artist: dados.artist,
+      cantor_id: dados.cantorId ?? null,
       original_tone: dados.originalTone,
       difficulty: dados.difficulty,
       capo: dados.capo,

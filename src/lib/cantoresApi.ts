@@ -35,12 +35,13 @@ interface LinhaMusicaResumo {
   views_count: number;
 }
 
-function mapearMusicaResumo(row: LinhaMusicaResumo): Musica {
+function mapearMusicaResumo(row: LinhaMusicaResumo, cantorId: string): Musica {
   return {
     id: row.id,
     slug: row.slug,
     title: row.title,
     artist: row.artist,
+    cantorId,
     originalTone: row.original_tone,
     difficulty: null,
     capo: 0,
@@ -77,7 +78,7 @@ export async function getTop10PorCantor(cantorId: string): Promise<Musica[]> {
     .order('views_count', { ascending: false })
     .limit(10);
 
-  return ((data ?? []) as unknown as LinhaMusicaResumo[]).map(mapearMusicaResumo);
+  return ((data ?? []) as unknown as LinhaMusicaResumo[]).map((row) => mapearMusicaResumo(row, cantorId));
 }
 
 export async function getTodasAlfabeticoPorCantor(cantorId: string): Promise<Musica[]> {
@@ -89,5 +90,83 @@ export async function getTodasAlfabeticoPorCantor(cantorId: string): Promise<Mus
     .eq('cantor_id', cantorId)
     .order('title', { ascending: true });
 
-  return ((data ?? []) as unknown as LinhaMusicaResumo[]).map(mapearMusicaResumo);
+  return ((data ?? []) as unknown as LinhaMusicaResumo[]).map((row) => mapearMusicaResumo(row, cantorId));
+}
+
+// ---------- CRUD (AdminPanel) ----------
+
+function exigirSupabase() {
+  if (!isSupabaseConfigured) {
+    throw new Error(
+      'Supabase não configurado — CRUD de cantores precisa de VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY (ver .env.example).'
+    );
+  }
+}
+
+function slugify(nome: string): string {
+  return (
+    nome
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') || 'cantor'
+  );
+}
+
+export interface DadosCantor {
+  nome: string;
+  fotoUrl: string | null;
+}
+
+export async function listarCantores(): Promise<Cantor[]> {
+  exigirSupabase();
+  const { data, error } = await supabase
+    .from('cantores')
+    .select('id, nome, slug, foto_url')
+    .order('nome', { ascending: true });
+
+  if (error) throw new Error(`listarCantores: ${error.message}`);
+  return ((data ?? []) as unknown as LinhaCantorSupabase[]).map(mapearCantor);
+}
+
+export async function criarCantor(dados: DadosCantor): Promise<Cantor> {
+  exigirSupabase();
+
+  const slugBase = slugify(dados.nome);
+  let slug = slugBase;
+  for (let tentativa = 2; tentativa <= 20; tentativa++) {
+    const { data: existente } = await supabase.from('cantores').select('id').eq('slug', slug).maybeSingle();
+    if (!existente) break;
+    slug = `${slugBase}-${tentativa}`;
+  }
+
+  const { data, error } = await supabase
+    .from('cantores')
+    .insert({ nome: dados.nome, slug, foto_url: dados.fotoUrl })
+    .select('id, nome, slug, foto_url')
+    .single();
+
+  if (error) throw new Error(`criarCantor: ${error.message}`);
+  return mapearCantor(data as unknown as LinhaCantorSupabase);
+}
+
+export async function atualizarCantor(id: string, dados: DadosCantor): Promise<Cantor> {
+  exigirSupabase();
+
+  const { data, error } = await supabase
+    .from('cantores')
+    .update({ nome: dados.nome, foto_url: dados.fotoUrl })
+    .eq('id', id)
+    .select('id, nome, slug, foto_url')
+    .single();
+
+  if (error) throw new Error(`atualizarCantor: ${error.message}`);
+  return mapearCantor(data as unknown as LinhaCantorSupabase);
+}
+
+export async function excluirCantor(id: string): Promise<void> {
+  exigirSupabase();
+  const { error } = await supabase.from('cantores').delete().eq('id', id);
+  if (error) throw new Error(`excluirCantor: ${error.message}`);
 }

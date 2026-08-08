@@ -25,6 +25,7 @@ export interface Musica {
   slug: string;
   title: string;
   artist: string | null;
+  cantorId: string | null;
   originalTone: string;
   difficulty: number | null;
   capo: number;

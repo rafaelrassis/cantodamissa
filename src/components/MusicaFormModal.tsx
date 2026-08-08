@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Link2, Upload, PenLine, Loader2, FolderSearch, FileText } from 'lucide-react';
 import type { Musica, TempoLiturgico, CicloDominical, MomentoMissa } from '../types/musica';
 import type { DadosMusica } from '../lib/musicasApi';
+import type { Cantor } from '../types/cantor';
+import { listarCantores } from '../lib/cantoresApi';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
 
 interface Props {
@@ -29,6 +31,7 @@ const TODOS_MOMENTOS: MomentoMissa[] = [
 const FORM_VAZIO: DadosMusica = {
   title: '',
   artist: '',
+  cantorId: null,
   originalTone: 'C',
   difficulty: null,
   capo: 0,
@@ -49,6 +52,7 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
       ? {
           title: musicaExistente.title,
           artist: musicaExistente.artist ?? '',
+          cantorId: musicaExistente.cantorId,
           originalTone: musicaExistente.originalTone,
           difficulty: musicaExistente.difficulty,
           capo: musicaExistente.capo,
@@ -69,6 +73,13 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
   const [arquivosExistentes, setArquivosExistentes] = useState<ArquivoBlob[] | null>(null);
   const [carregandoArquivos, setCarregandoArquivos] = useState(false);
   const [filtroArquivos, setFiltroArquivos] = useState('');
+  const [cantores, setCantores] = useState<Cantor[]>([]);
+
+  useEffect(() => {
+    listarCantores()
+      .then(setCantores)
+      .catch(() => setCantores([]));
+  }, []);
 
   function atualizar<K extends keyof DadosMusica>(campo: K, valor: DadosMusica[K]) {
     setForm((f) => ({ ...f, [campo]: valor }));
@@ -310,6 +321,21 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
               />
             </Campo>
           </div>
+
+          <Campo label="Cantor (página do cantor — opcional, cadastrado na aba Cantores)">
+            <select
+              value={form.cantorId ?? ''}
+              onChange={(e) => atualizar('cantorId', e.target.value || null)}
+              className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+            >
+              <option value="">Nenhum</option>
+              {cantores.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </select>
+          </Campo>
 
           <div className="grid grid-cols-3 gap-3">
             <Campo label="Tom original">

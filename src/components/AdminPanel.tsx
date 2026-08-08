@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ChevronLeft, ClipboardList, Music, ListMusic } from 'lucide-react';
+import { ChevronLeft, ClipboardList, Music, Mic2, ListMusic } from 'lucide-react';
 import { ModeracaoSubmissoes } from './ModeracaoSubmissoes';
 import { MusicasAdmin } from './MusicasAdmin';
+import { CantoresAdmin } from './CantoresAdmin';
 import { useSubmissoes } from '../lib/useSubmissoes';
 
 interface Props {
@@ -9,7 +10,7 @@ interface Props {
   onLogout: () => void;
 }
 
-type Aba = 'sugestoes' | 'musicas' | 'repertorios';
+type Aba = 'sugestoes' | 'musicas' | 'cantores' | 'repertorios';
 
 export function AdminPanel({ onBack, onLogout }: Props) {
   const [aba, setAba] = useState<Aba>('sugestoes');
@@ -19,6 +20,7 @@ export function AdminPanel({ onBack, onLogout }: Props) {
   const abas: { id: Aba; label: string; icon: typeof ClipboardList; badge?: number }[] = [
     { id: 'sugestoes', label: 'Sugestões', icon: ClipboardList, badge: pendentes || undefined },
     { id: 'musicas', label: 'Músicas', icon: Music },
+    { id: 'cantores', label: 'Cantores', icon: Mic2 },
     { id: 'repertorios', label: 'Repertórios', icon: ListMusic },
   ];
 
@@ -63,6 +65,8 @@ export function AdminPanel({ onBack, onLogout }: Props) {
       )}
 
       {aba === 'musicas' && <MusicasAdmin />}
+
+      {aba === 'cantores' && <CantoresAdmin />}
 
       {aba === 'repertorios' && (
         <div className="mx-auto max-w-2xl px-4 py-10 text-center lg:px-10">
