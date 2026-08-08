@@ -8,6 +8,7 @@ import { TopMusicasTela } from './components/TopMusicasTela';
 import { TopArtistasTela } from './components/TopArtistasTela';
 import { RepertorioDetalheTela } from './components/RepertorioDetalheTela';
 import { CantorTela } from './components/CantorTela';
+import { ArtistaTela } from './components/ArtistaTela';
 import { useTheme } from './lib/useTheme';
 import { useRepertorios } from './lib/useRepertorios';
 import { useAdminAuth } from './lib/useAdminAuth';
@@ -24,7 +25,8 @@ type Tela =
   | 'top-musicas'
   | 'top-artistas'
   | 'repertorio-detalhe'
-  | 'cantor';
+  | 'cantor'
+  | 'artista';
 
 function App() {
   const [tela, setTela] = useState<Tela>('home');
@@ -32,8 +34,8 @@ function App() {
   const [repertorioId, setRepertorioId] = useState<string | null>(null);
   const [tomForcado, setTomForcado] = useState<string | null>(null);
   const [filtroTempo, setFiltroTempo] = useState<TempoLiturgico | undefined>();
-  const [buscaArtista, setBuscaArtista] = useState<string | undefined>();
   const [cantorSlug, setCantorSlug] = useState<string | null>(null);
+  const [artistaNome, setArtistaNome] = useState<string | null>(null);
   const { theme, toggleTheme } = useTheme();
   const [fontSize, setFontSize] = useState(DEFAULT_FONT);
   const { isAdmin, login, logout } = useAdminAuth();
@@ -52,9 +54,9 @@ function App() {
     setTela('home');
   }
 
-  function irParaHomeComArtista(artista: string) {
-    setBuscaArtista(artista);
-    setTela('home');
+  function abrirArtista(artista: string) {
+    setArtistaNome(artista);
+    setTela('artista');
   }
 
   function abrirCantor(slug: string) {
@@ -116,15 +118,23 @@ function App() {
   }
 
   if (tela === 'top-artistas') {
-    return (
-      <TopArtistasTela onBack={() => setTela('home')} onSelectArtista={irParaHomeComArtista} />
-    );
+    return <TopArtistasTela onBack={() => setTela('home')} onSelectArtista={abrirArtista} />;
   }
 
   if (tela === 'cantor' && cantorSlug) {
     return (
       <CantorTela
         slug={cantorSlug}
+        onBack={() => setTela('home')}
+        onSelectMusica={(m) => abrirMusica(m)}
+      />
+    );
+  }
+
+  if (tela === 'artista' && artistaNome) {
+    return (
+      <ArtistaTela
+        artista={artistaNome}
         onBack={() => setTela('home')}
         onSelectMusica={(m) => abrirMusica(m)}
       />
@@ -151,13 +161,12 @@ function App() {
     <Home
       onSelectMusica={(m, repId) => abrirMusica(m, repId ?? null)}
       filtroInicial={filtroTempo}
-      buscaInicial={buscaArtista}
       onAbrirCalendario={() => setTela('calendario')}
       onAbrirModeracao={() => setTela('admin')}
       onAbrirLoginAdmin={() => setTela('admin')}
       onAbrirTopMusicas={() => setTela('top-musicas')}
       onAbrirTopArtistas={() => setTela('top-artistas')}
-      onSelectArtista={irParaHomeComArtista}
+      onSelectArtista={abrirArtista}
       onAbrirRepertorio={(id) => {
         setRepertorioId(id);
         setTela('repertorio-detalhe');

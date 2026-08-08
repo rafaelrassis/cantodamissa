@@ -207,6 +207,27 @@ export async function getArtistasEmAlta(limite: number = 20): Promise<ArtistaEmA
   return [...porArtista.values()].sort((a, b) => b.totalViews - a.totalViews).slice(0, limite);
 }
 
+/** Todas as músicas de um artista (match exato no campo `artist`), ordenadas por visualizações. */
+export async function getMusicasPorArtista(artista: string): Promise<Musica[]> {
+  if (!isSupabaseConfigured) {
+    return mockMusicas
+      .filter((m) => m.artist === artista)
+      .sort((a, b) => b.viewsCount - a.viewsCount);
+  }
+
+  const { data, error } = await supabase
+    .from('musicas')
+    .select(SELECT_COM_RELACOES)
+    .eq('artist', artista)
+    .order('views_count', { ascending: false });
+
+  if (error) {
+    console.error('getMusicasPorArtista:', error.message);
+    return [];
+  }
+  return ((data ?? []) as unknown as LinhaMusicaSupabase[]).map(mapearLinha);
+}
+
 // ---------- CRUD de escrita (painel admin) ----------
 //
 // Sem fallback pra mock aqui de propósito: escrita sem Supabase configurado

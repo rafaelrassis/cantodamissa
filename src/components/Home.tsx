@@ -27,7 +27,6 @@ interface Props {
   onAbrirTopArtistas?: () => void;
   onAbrirRepertorio: (id: string) => void;
   onSelectArtista?: (artista: string) => void;
-  buscaInicial?: string;
 }
 
 const MOMENTOS: MomentoMissa[] = [
@@ -53,10 +52,9 @@ export function Home({
   onAbrirTopMusicas,
   onAbrirTopArtistas,
   onSelectArtista,
-  buscaInicial,
   onAbrirRepertorio,
 }: Props) {
-  const [query, setQuery] = useState(buscaInicial ?? '');
+  const [query, setQuery] = useState('');
   const [artistas, setArtistas] = useState<ArtistaEmAlta[]>([]);
 
   useEffect(() => {
