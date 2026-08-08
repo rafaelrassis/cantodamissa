@@ -12,14 +12,15 @@ import {
   ChevronDown,
   ChevronRight,
   AlertTriangle,
+  Copy,
 } from 'lucide-react';
-import { criarMusica } from '../lib/musicasApi';
+import { criarMusica, listarTodasMusicas, normalizar } from '../lib/musicasApi';
 
 interface Props {
   onFechar: () => void;
 }
 
-type StatusItem = 'pendente' | 'extraindo' | 'pronto' | 'enviando' | 'ok' | 'erro';
+type StatusItem = 'pendente' | 'extraindo' | 'pronto' | 'enviando' | 'ok' | 'erro' | 'duplicada';
 
 interface ItemUpload {
   id: string;
@@ -58,6 +59,12 @@ function sanitizarNomeArquivo(nome: string): string {
     .replace(/[^a-zA-Z0-9\- ]/g, '')
     .trim()
     .replace(/\s+/g, ' ');
+}
+
+// Chave pra comparar música+cantor ignorando maiúsculas/acentos — evita
+// criar duas músicas iguais no banco (ex: reenvio acidental do mesmo lote).
+function chaveMusica(musica: string, cantor: string): string {
+  return `${normalizar(musica)}|${normalizar(cantor)}`;
 }
 
 function extensaoParaMime(nome: string): string | null {
@@ -178,8 +185,23 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
 
   async function enviarTodos() {
     setEnviando(true);
+
+    const musicasExistentes = new Set(
+      (await listarTodasMusicas()).map((m) => chaveMusica(m.title, m.artist ?? ''))
+    );
+
     for (const item of itens) {
       if (item.status === 'ok') continue;
+
+      const chave = chaveMusica(item.musica, item.cantor);
+      if (item.chordsContent.trim() && musicasExistentes.has(chave)) {
+        atualizarItem(item.id, {
+          status: 'duplicada',
+          erro: 'Já existe uma música com esse título e cantor — nada foi enviado. Edite o nome ou remova o item se for intencional.',
+        });
+        continue;
+      }
+
       atualizarItem(item.id, { status: 'enviando', erro: undefined });
       try {
         const ext = item.file.name.split('.').pop() || 'pdf';
@@ -212,6 +234,7 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
             momento: [],
             sourceFileUrl: data.url,
           });
+          musicasExistentes.add(chave); // evita duplicar de novo dentro do mesmo lote
         }
 
         atualizarItem(item.id, { status: 'ok' });
@@ -227,6 +250,7 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
 
   const enviadosOk = itens.filter((it) => it.status === 'ok').length;
   const comCifraCount = itens.filter((it) => it.chordsContent.trim()).length;
+  const duplicadasCount = itens.filter((it) => it.status === 'duplicada').length;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -303,6 +327,7 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
                       <Loader2 size={16} className="animate-spin" />
                     )}
                     {item.status === 'erro' && <XCircle size={16} className="text-red-600" />}
+                    {item.status === 'duplicada' && <Copy size={16} className="text-amber-600" />}
                   </div>
                   <p className="w-32 shrink-0 truncate text-xs text-[var(--muted)]" title={item.file.name}>
                     {item.file.name}
@@ -363,7 +388,15 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
                   </div>
                 )}
 
-                {item.erro && <p className="mt-1.5 pl-8 text-xs text-red-600">{item.erro}</p>}
+                {item.erro && (
+                  <p
+                    className={`mt-1.5 pl-8 text-xs ${
+                      item.status === 'duplicada' ? 'text-amber-600' : 'text-red-600'
+                    }`}
+                  >
+                    {item.erro}
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -371,7 +404,9 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
 
         <div className="mt-5 flex items-center justify-between gap-2">
           <p className="text-xs text-[var(--muted)]">
-            {itens.length > 0 && `${enviadosOk}/${itens.length} enviado(s) · ${comCifraCount} com cifra extraída`}
+            {itens.length > 0 &&
+              `${enviadosOk}/${itens.length} enviado(s) · ${comCifraCount} com cifra extraída` +
+                (duplicadasCount > 0 ? ` · ${duplicadasCount} duplicada(s)` : '')}
           </p>
           <div className="flex gap-2">
             <button onClick={onFechar} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm">

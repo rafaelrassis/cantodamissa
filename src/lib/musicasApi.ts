@@ -15,7 +15,7 @@ export interface FiltroMusicas {
   momento?: MomentoMissa;
 }
 
-function normalizar(texto: string): string {
+export function normalizar(texto: string): string {
   return texto
     .toLowerCase()
     .normalize('NFD')
