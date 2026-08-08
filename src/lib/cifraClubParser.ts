@@ -51,12 +51,19 @@ function montarLinhaChordPro(linhaAcordes: string, linhaLetra: string | null): s
       .join(' ');
   }
 
-  // insere do fim pro começo pra não invalidar os índices já calculados
+  // insere do fim pro começo pra não invalidar os índices já calculados.
+  // o clamp usa sempre o tamanho ORIGINAL da letra, nunca resultado.length:
+  // quando há dois ou mais acordes "de cauda" (coluna além do fim da letra,
+  // ex: acorde de passagem depois da última sílaba), resultado.length já
+  // cresceu com o colchete inserido pro acorde anterior, e usar esse valor
+  // como índice faz o próximo colchete cair no meio do que acabou de ser
+  // inserido — corrompendo os dois (ex: "[C/[Am]D]" em vez de "[C/D][Am]")
+  const letraLen = linhaLetra.length;
   let resultado = linhaLetra;
   for (let i = posicoes.length - 1; i >= 0; i--) {
     const { col, token } = posicoes[i];
     if (SECTION_MARKER.test(token)) continue; // marcador de seção não se insere no meio da letra
-    const idx = Math.min(col, resultado.length);
+    const idx = Math.min(col, letraLen);
     resultado = `${resultado.slice(0, idx)}[${token}]${resultado.slice(idx)}`;
   }
   return resultado;
