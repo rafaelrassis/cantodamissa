@@ -127,7 +127,7 @@ export interface ChordToken {
 }
 
 export function parseLineToTokens(line: string): ChordToken[] {
-  const tokens: ChordToken[] = [];
+  const brutos: ChordToken[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   const regex = new RegExp(CHORD_REGEX);
@@ -136,7 +136,7 @@ export function parseLineToTokens(line: string): ChordToken[] {
   while ((match = regex.exec(line)) !== null) {
     const textBefore = line.slice(lastIndex, match.index);
     if (textBefore) {
-      tokens.push({ chord: pendingChord, text: textBefore });
+      brutos.push({ chord: pendingChord, text: textBefore });
       pendingChord = null;
     }
     pendingChord = match[1];
@@ -145,7 +145,22 @@ export function parseLineToTokens(line: string): ChordToken[] {
 
   const rest = line.slice(lastIndex);
   if (rest || pendingChord) {
-    tokens.push({ chord: pendingChord, text: rest });
+    brutos.push({ chord: pendingChord, text: rest });
+  }
+
+  // mescla acordes consecutivos sem letra real entre eles (ex: um riff tipo
+  // "G G9 G4 G G9" antes da letra começar) numa única etiqueta — sem isso,
+  // cada acorde vira um span quase sem largura e todos ficam empilhados no
+  // mesmo ponto, ilegíveis
+  const tokens: ChordToken[] = [];
+  for (const t of brutos) {
+    const semTextoReal = !t.text.trim();
+    const anterior = tokens[tokens.length - 1];
+    if (semTextoReal && t.chord && anterior && !anterior.text.trim() && anterior.chord) {
+      anterior.chord = `${anterior.chord} ${t.chord}`;
+      continue;
+    }
+    tokens.push({ ...t });
   }
 
   return tokens;
@@ -181,7 +196,9 @@ export function parseContentToStructuredLines(chordsContent: string): Structured
     const somenteAcordes = tokens.length > 0 && tokens.every((t) => !t.text.trim());
 
     if (somenteAcordes) {
-      const nomes = tokens.map((t) => t.chord).filter((c): c is string => !!c);
+      // cada token.chord pode já vir mesclado (ex: "Intro E A9") pelo
+      // parseLineToTokens — separa de volta pra classificar item a item
+      const nomes = tokens.flatMap((t) => (t.chord ? t.chord.split(' ') : []));
       const label = nomes.find((c) => !pareceAcorde(c)) ?? '';
       const chords = nomes.filter((c) => pareceAcorde(c));
       if (chords.length > 0 || label) {
