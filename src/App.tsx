@@ -55,11 +55,13 @@ function App() {
   }
 
   function abrirArtista(artista: string) {
+    setMusicaAtual(null);
     setArtistaNome(artista);
     setTela('artista');
   }
 
   function abrirCantor(slug: string) {
+    setMusicaAtual(null);
     setCantorSlug(slug);
     setTela('cantor');
   }
