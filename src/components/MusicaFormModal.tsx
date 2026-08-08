@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Link2, Upload, PenLine, Loader2 } from 'lucide-react';
+import { X, Link2, Upload, PenLine, Loader2, FolderSearch, FileText } from 'lucide-react';
 import type { Musica, TempoLiturgico, CicloDominical, MomentoMissa } from '../types/musica';
 import type { DadosMusica } from '../lib/musicasApi';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
@@ -11,6 +11,13 @@ interface Props {
 }
 
 type ModoEntrada = 'manual' | 'upload' | 'link';
+
+interface ArquivoBlob {
+  url: string;
+  pathname: string;
+  size: number;
+  uploadedAt: string;
+}
 
 const TODOS_TEMPOS: TempoLiturgico[] = ['Advento', 'Natal', 'Quaresma', 'Pascoa', 'TempoComum'];
 const TODOS_CICLOS: CicloDominical[] = ['A', 'B', 'C'];
@@ -59,6 +66,9 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
   const [enviandoArquivo, setEnviandoArquivo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [arquivosExistentes, setArquivosExistentes] = useState<ArquivoBlob[] | null>(null);
+  const [carregandoArquivos, setCarregandoArquivos] = useState(false);
+  const [filtroArquivos, setFiltroArquivos] = useState('');
 
   function atualizar<K extends keyof DadosMusica>(campo: K, valor: DadosMusica[K]) {
     setForm((f) => ({ ...f, [campo]: valor }));
@@ -115,6 +125,26 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
     } finally {
       setEnviandoArquivo(false);
     }
+  }
+
+  async function carregarArquivosExistentes() {
+    setErro(null);
+    setCarregandoArquivos(true);
+    try {
+      const resp = await fetch('/api/blob-list?prefix=cifra');
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Falha ao listar arquivos');
+      setArquivosExistentes(data.blobs);
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : 'Falha ao listar arquivos');
+    } finally {
+      setCarregandoArquivos(false);
+    }
+  }
+
+  function escolherArquivoExistente(url: string) {
+    atualizar('sourceFileUrl', url);
+    setModo('manual'); // arquivo é só referência — cifra ainda é preenchida/colada manualmente
   }
 
   async function handleSalvar() {
@@ -183,6 +213,56 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
                 {form.sourceFileUrl}
               </a>
             )}
+
+            <div className="mt-4 border-t border-[var(--border)] pt-3 text-left">
+              {arquivosExistentes === null ? (
+                <button
+                  type="button"
+                  onClick={carregarArquivosExistentes}
+                  disabled={carregandoArquivos}
+                  className="mx-auto flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline disabled:opacity-50"
+                >
+                  {carregandoArquivos ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : (
+                    <FolderSearch size={12} />
+                  )}
+                  Ver arquivos já enviados
+                </button>
+              ) : (
+                <>
+                  <input
+                    value={filtroArquivos}
+                    onChange={(e) => setFiltroArquivos(e.target.value)}
+                    placeholder="Filtrar por nome ou cantor..."
+                    className="mb-2 w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-1.5 text-xs"
+                  />
+                  <div className="max-h-48 space-y-1 overflow-y-auto">
+                    {arquivosExistentes
+                      .filter((a) => a.pathname.toLowerCase().includes(filtroArquivos.toLowerCase()))
+                      .map((a) => (
+                        <button
+                          type="button"
+                          key={a.url}
+                          onClick={() => escolherArquivoExistente(a.url)}
+                          className={`flex w-full items-center gap-1.5 truncate rounded-md px-2 py-1.5 text-left text-xs hover:bg-[var(--bg)] ${
+                            form.sourceFileUrl === a.url ? 'bg-[var(--bg)] font-semibold' : ''
+                          }`}
+                          title={a.pathname}
+                        >
+                          <FileText size={12} className="shrink-0 text-[var(--muted)]" />
+                          <span className="truncate">{a.pathname.replace(/^cifra\//, '')}</span>
+                        </button>
+                      ))}
+                    {arquivosExistentes.length === 0 && (
+                      <p className="py-2 text-center text-xs text-[var(--muted)]">
+                        Nenhum arquivo encontrado.
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
 
