@@ -1,5 +1,4 @@
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
-import type { TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
+import { getDocument } from 'unpdf/pdfjs';
 import { parseCifraClubTexto, pareceLinhaDeAcordes, marcarGrupoAlternativo } from './cifraClubParser.js';
 import { extractLyrics } from './chordpro.js';
 
@@ -161,33 +160,33 @@ export interface ResultadoExtracaoPdf {
   lyrics: string;
 }
 
-function ehTextItem(it: TextItem | TextMarkedContent): it is TextItem {
-  return 'str' in it;
+// forma mínima que nos interessa de pdf.js TextItem — evitamos importar o
+// tipo oficial porque unpdf não reexporta TextItem/TextMarkedContent no seu
+// módulo público (só um subconjunto curado, ver unpdf/dist/types/src/pdf.d.ts)
+interface ItemDeTextoPdf {
+  str: string;
+  transform: number[];
+  width: number;
 }
 
 export async function extrairCifraDoPdf(bytes: Uint8Array): Promise<ResultadoExtracaoPdf> {
-  const doc = await pdfjsLib.getDocument({
+  const doc = await getDocument({
     data: bytes,
     disableFontFace: true,
   }).promise;
 
   const todasAsLinhas: string[] = [];
-  try {
-    for (let p = 1; p <= doc.numPages; p++) {
-      const page = await doc.getPage(p);
-      try {
-        const content = await page.getTextContent();
-        const items: ItemPosicionado[] = content.items
-          .filter(ehTextItem)
-          .filter((it) => it.str.trim().length > 0)
-          .map((it) => ({ str: it.str, x: it.transform[4], y: it.transform[5], width: it.width }));
-        todasAsLinhas.push(...reconstruirLinhasDaPagina(items));
-      } finally {
-        page.cleanup();
-      }
+  for (let p = 1; p <= doc.numPages; p++) {
+    const page = await doc.getPage(p);
+    try {
+      const content = await page.getTextContent();
+      const items: ItemPosicionado[] = (content.items as ItemDeTextoPdf[])
+        .filter((it) => typeof it.str === 'string' && it.str.trim().length > 0)
+        .map((it) => ({ str: it.str, x: it.transform[4], y: it.transform[5], width: it.width }));
+      todasAsLinhas.push(...reconstruirLinhasDaPagina(items));
+    } finally {
+      page.cleanup();
     }
-  } finally {
-    await doc.destroy();
   }
 
   const linhasRealinhadas = realinharTodasAsLinhas(todasAsLinhas);
