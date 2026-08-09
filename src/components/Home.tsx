@@ -250,7 +250,7 @@ export function Home({
           {!buscando && historico.length > 0 && (
             <div className="px-4 py-3 lg:px-0">
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[var(--muted)]">Histórico</h2>
+                <h2 className="text-sm font-semibold text-[var(--muted)]">Visto recentemente</h2>
                 <button
                   onClick={limparHistorico}
                   className="text-xs text-[var(--muted)] hover:text-[var(--text)]"
