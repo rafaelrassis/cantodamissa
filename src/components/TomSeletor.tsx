@@ -66,6 +66,7 @@ export function TomSeletor({
       <div className="grid grid-cols-6 gap-1.5">
         {opcoes.map((tom) => {
           const ativo = tom === currentTone;
+          const original = tom === originalTone;
           return (
             <button
               key={tom}
@@ -73,7 +74,9 @@ export function TomSeletor({
               className={`rounded-lg py-2 text-sm font-semibold ${
                 ativo
                   ? 'bg-white text-black'
-                  : 'bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface2)]'
+                  : original
+                    ? 'bg-[var(--surface)] text-[var(--text)] ring-2 ring-inset ring-[var(--text)] hover:bg-[var(--surface2)]'
+                    : 'bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface2)]'
               }`}
             >
               {tom}
