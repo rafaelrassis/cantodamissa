@@ -243,7 +243,6 @@ export function CifraReader({
           </div>
         </div>
         <div className="flex shrink-0 gap-2">
-          <HeaderCard label="tom" value={currentTone} onClick={() => setTomSeletorAberto(true)} />
           <HeaderCard label="capo" value={capo === 0 ? '—' : String(capo)} />
         </div>
       </header>
@@ -365,7 +364,6 @@ export function CifraReader({
                       <p className="truncate text-sm opacity-80">{musica.artist}</p>
                     )}
                   </div>
-                  <HeaderCard label="tom" value={currentTone} onClick={() => setTomSeletorAberto(true)} />
                 </div>
               </header>
 
@@ -383,6 +381,7 @@ export function CifraReader({
         currentTone={currentTone}
         onDecTone={() => setSemitones((s) => Math.max(-11, s - 1))}
         onIncTone={() => setSemitones((s) => Math.min(11, s + 1))}
+        onOpenTomSeletor={() => setTomSeletorAberto(true)}
         playing={autoScroll.playing}
         onTogglePlay={autoScroll.toggle}
         onDecFont={onDecFont}

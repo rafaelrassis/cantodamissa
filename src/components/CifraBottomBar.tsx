@@ -4,6 +4,7 @@ interface Props {
   currentTone: string;
   onDecTone: () => void;
   onIncTone: () => void;
+  onOpenTomSeletor: () => void;
   playing: boolean;
   onTogglePlay: () => void;
   onDecFont: () => void;
@@ -41,14 +42,18 @@ export function CifraBottomBar(props: Props) {
         >
           <Minus size={16} />
         </button>
-        <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--accent-soft)]">
+        <button
+          onClick={props.onOpenTomSeletor}
+          aria-label="Abrir seletor de tom"
+          className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--accent-soft)]"
+        >
           <span className="font-mono text-sm font-bold leading-none text-[var(--accent)]">
             {props.currentTone}
           </span>
           <span className="text-[8px] font-semibold uppercase tracking-wide text-[var(--accent)]">
             Tom
           </span>
-        </div>
+        </button>
         <button
           onClick={props.onIncTone}
           aria-label="Aumentar tom"
