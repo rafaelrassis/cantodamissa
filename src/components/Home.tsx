@@ -11,7 +11,7 @@ import {
 } from '../lib/musicasApi';
 import { getCantoresPopulares } from '../lib/cantoresApi';
 import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
-import { proximoDomingo, diasAte } from '../lib/liturgicalCalendar';
+import { proximoDomingoCalculado, diasAte } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
 import {
   obterRepertorioPorToken,
@@ -85,7 +85,7 @@ export function Home({
   const [carregando, setCarregando] = useState(true);
 
   const searchRef = useRef<HTMLInputElement>(null);
-  const domingoAtual = useMemo(() => proximoDomingo(new Date()), []);
+  const domingoAtual = useMemo(() => proximoDomingoCalculado(new Date()), []);
   const diasParaDomingo = useMemo(() => diasAte(domingoAtual.data, new Date()), [domingoAtual]);
   const ehHoje = diasParaDomingo === 0;
   const buscando = query.trim().length > 0;
