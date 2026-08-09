@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarDays, ChevronRight, Home as HomeIcon, ListMusic, Plus, Search, X } from 'lucide-react';
+import { CalendarDays, ChevronRight, Home as HomeIcon, ListMusic, Plus, Search, Users, X } from 'lucide-react';
 import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
 import type { Cantor } from '../types/cantor';
 import {
@@ -40,6 +40,7 @@ interface Props {
   onAbrirRepertorio: (id: string) => void;
   onSelectArtista?: (artista: string) => void;
   onSelectCantor?: (slug: string) => void;
+  onAbrirMinisterio?: () => void;
 }
 
 const MOMENTOS: MomentoMissa[] = [
@@ -68,6 +69,7 @@ export function Home({
   onSelectArtista,
   onSelectCantor,
   onAbrirRepertorio,
+  onAbrirMinisterio,
 }: Props) {
   const [query, setQuery] = useState('');
   const [artistas, setArtistas] = useState<ArtistaEmAlta[]>([]);
@@ -467,6 +469,7 @@ export function Home({
           onClick={() => setRepertoriosMobileAberto(true)}
         />
         <TabItem icon={<CalendarDays size={18} />} label="Calendário" onClick={onAbrirCalendario} />
+        <TabItem icon={<Users size={18} />} label="Ministério" onClick={onAbrirMinisterio} />
       </nav>
 
       {formularioAberto && (
