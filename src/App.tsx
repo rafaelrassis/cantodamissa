@@ -185,6 +185,7 @@ function App() {
       onAbrirTopArtistas={() => setTela('top-artistas')}
       onAbrirBusca={() => setTela('busca')}
       onSelectArtista={abrirArtista}
+      onSelectCantor={abrirCantor}
       onAbrirRepertorio={(id) => {
         setRepertorioId(id);
         setTela('repertorio-detalhe');

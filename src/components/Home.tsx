@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, ChevronRight, Home as HomeIcon, ListMusic, Plus, Search, X } from 'lucide-react';
 import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
+import type { Cantor } from '../types/cantor';
 import {
   getArtistasEmAlta,
   getMusicaById,
@@ -8,6 +9,7 @@ import {
   searchMusicas,
   type ArtistaEmAlta,
 } from '../lib/musicasApi';
+import { getCantoresPopulares } from '../lib/cantoresApi';
 import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
 import { domingoMaisProximo } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
@@ -19,6 +21,7 @@ import {
 import { useRepertorios } from '../lib/useRepertorios';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import { useUserAuth } from '../lib/useUserAuth';
+import { CantoresPopularesSection } from './CantoresPopularesSection';
 import { MusicaCard } from './MusicaCard';
 import { PainelRepertorios } from './PainelRepertorios';
 import { SubmissaoForm } from './SubmissaoForm';
@@ -35,6 +38,7 @@ interface Props {
   onAbrirBusca?: () => void;
   onAbrirRepertorio: (id: string) => void;
   onSelectArtista?: (artista: string) => void;
+  onSelectCantor?: (slug: string) => void;
 }
 
 const MOMENTOS: MomentoMissa[] = [
@@ -61,13 +65,16 @@ export function Home({
   onAbrirTopArtistas,
   onAbrirBusca,
   onSelectArtista,
+  onSelectCantor,
   onAbrirRepertorio,
 }: Props) {
   const [query, setQuery] = useState('');
   const [artistas, setArtistas] = useState<ArtistaEmAlta[]>([]);
+  const [cantoresPopulares, setCantoresPopulares] = useState<Cantor[]>([]);
 
   useEffect(() => {
     getArtistasEmAlta(5).then(setArtistas);
+    getCantoresPopulares(20).then(setCantoresPopulares);
   }, []);
   // sem chip de tempo litúrgico na UI mais, mas o valor inicial (vindo do
   // Calendário, via filtroInicial) ainda filtra a lista uma vez
@@ -278,6 +285,10 @@ export function Home({
                 ))}
               </div>
             </div>
+          )}
+
+          {!buscando && onSelectCantor && (
+            <CantoresPopularesSection cantores={cantoresPopulares} onSelectCantor={onSelectCantor} />
           )}
 
           <div className="flex items-center justify-between px-4 py-3 lg:px-0">

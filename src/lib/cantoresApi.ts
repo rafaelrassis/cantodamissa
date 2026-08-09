@@ -88,6 +88,40 @@ export async function getCantorSlugById(cantorId: string): Promise<string | null
   return data.slug;
 }
 
+/**
+ * Cantores ordenados pela soma de views_count das músicas deles. Feita como
+ * duas queries simples + agregação client-side (em vez de um embed
+ * `cantores.musicas(views_count)`) pelo mesmo motivo do getCantorSlugById
+ * acima: embed reverso já quebrou a Home inteira quando a relação falhou no
+ * PostgREST, então listagens principais não dependem dele.
+ */
+export async function getCantoresPopulares(limit: number = 20): Promise<Cantor[]> {
+  if (!isSupabaseConfigured) return [];
+
+  const [{ data: cantores, error: errCantores }, { data: musicas, error: errMusicas }] =
+    await Promise.all([
+      supabase.from('cantores').select('id, nome, slug, foto_url'),
+      supabase.from('musicas').select('cantor_id, views_count').not('cantor_id', 'is', null),
+    ]);
+
+  if (errCantores || errMusicas || !cantores) {
+    console.error('getCantoresPopulares:', errCantores?.message ?? errMusicas?.message);
+    return [];
+  }
+
+  const viewsPorCantor = new Map<string, number>();
+  for (const m of musicas ?? []) {
+    const row = m as unknown as { cantor_id: string; views_count: number };
+    viewsPorCantor.set(row.cantor_id, (viewsPorCantor.get(row.cantor_id) ?? 0) + (row.views_count ?? 0));
+  }
+
+  return (cantores as unknown as LinhaCantorSupabase[])
+    .map(mapearCantor)
+    .filter((c) => (viewsPorCantor.get(c.id) ?? 0) > 0)
+    .sort((a, b) => (viewsPorCantor.get(b.id) ?? 0) - (viewsPorCantor.get(a.id) ?? 0))
+    .slice(0, limit);
+}
+
 export async function getTop10PorCantor(cantorId: string, cantorSlug: string): Promise<Musica[]> {
   if (!isSupabaseConfigured) return [];
 
