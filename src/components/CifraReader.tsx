@@ -422,7 +422,7 @@ export function CifraReader({
       {tomSeletorAberto && (
         <div
           onClick={() => setTomSeletorAberto(false)}
-          className="fixed inset-0 z-40 flex items-start justify-center bg-black/40 p-4 pt-24"
+          className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 p-4 pb-24"
         >
           <TomSeletor
             originalTone={musica.originalTone}
