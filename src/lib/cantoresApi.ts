@@ -109,15 +109,19 @@ export async function getCantoresPopulares(limit: number = 20): Promise<Cantor[]
     return [];
   }
 
+  // Conta músicas vinculadas (não só views) pra não esconder cantor recém
+  // linkado sem plays ainda — só ficam de fora cantores sem nenhuma música.
   const viewsPorCantor = new Map<string, number>();
+  const cantoresComMusica = new Set<string>();
   for (const m of musicas ?? []) {
     const row = m as unknown as { cantor_id: string; views_count: number };
+    cantoresComMusica.add(row.cantor_id);
     viewsPorCantor.set(row.cantor_id, (viewsPorCantor.get(row.cantor_id) ?? 0) + (row.views_count ?? 0));
   }
 
   return (cantores as unknown as LinhaCantorSupabase[])
     .map(mapearCantor)
-    .filter((c) => (viewsPorCantor.get(c.id) ?? 0) > 0)
+    .filter((c) => cantoresComMusica.has(c.id))
     .sort((a, b) => (viewsPorCantor.get(b.id) ?? 0) - (viewsPorCantor.get(a.id) ?? 0))
     .slice(0, limit);
 }
