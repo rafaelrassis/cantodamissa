@@ -207,20 +207,29 @@ export function gerarDomingosDoAnoLiturgico(anoCivil: number): DomingoCalculado[
   }
 
   // ---------- 6. Tempo Comum II (depois de Pentecostes -> véspera do Advento) ----------
-  // a semana litúrgica retoma a contagem de onde parou antes da Quaresma
+  // Cristo Rei é sempre a 34ª semana do Tempo Comum, então a numeração aqui
+  // conta de trás pra frente a partir dele — não é uma continuação direta de
+  // onde a Quaresma interrompeu a 1ª parte do Tempo Comum. Dependendo do ano
+  // isso pula alguns números (as leituras dessas semanas não são usadas
+  // naquele ano), exatamente como no calendário litúrgico oficial.
+  const datasComumII: Date[] = [];
   cursor = addDias(pentecostesAtual, 7);
   while (cursor < cristoRei) {
-    semanaComum++;
+    datasComumII.push(cursor);
+    cursor = addDias(cursor, 7);
+  }
+  const totalComumII = datasComumII.length;
+  datasComumII.forEach((data, indice) => {
+    const numero = 34 - totalComumII + indice;
     domingos.push({
-      data: cursor,
-      nome: `${semanaComum}º Domingo do Tempo Comum`,
+      data,
+      nome: `${numero}º Domingo do Tempo Comum`,
       tempo: 'TempoComum',
-      numeroSemana: semanaComum,
+      numeroSemana: numero,
       ciclo,
       corLiturgica: 'verde',
     });
-    cursor = addDias(cursor, 7);
-  }
+  });
 
   domingos.push({
     data: cristoRei,
