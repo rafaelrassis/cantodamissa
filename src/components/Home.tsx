@@ -23,6 +23,7 @@ import { useSubmissoes } from '../lib/useSubmissoes';
 import { useUserAuth } from '../lib/useUserAuth';
 import { CantoresPopularesSection } from './CantoresPopularesSection';
 import { MusicaCard } from './MusicaCard';
+import { PaginatedCarousel } from './PaginatedCarousel';
 import { PainelRepertorios } from './PainelRepertorios';
 import { SubmissaoForm } from './SubmissaoForm';
 import { UserLoginModal } from './UserLoginModal';
@@ -316,18 +317,39 @@ export function Home({
             </div>
           )}
 
-          <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
-            {resultados.map((musica, i) => (
-              <MusicaCard
-                key={musica.id}
-                musica={musica}
-                posicao={buscando ? undefined : i + 1}
-                onClick={() => onSelectMusica(musica)}
-                repertorios={repertorios}
-                onAddToRepertorio={(repertorioId) => adicionar(repertorioId, musica)}
-              />
-            ))}
-          </div>
+          {buscando ? (
+            <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+              {resultados.map((musica) => (
+                <MusicaCard
+                  key={musica.id}
+                  musica={musica}
+                  posicao={undefined}
+                  onClick={() => onSelectMusica(musica)}
+                  repertorios={repertorios}
+                  onAddToRepertorio={(repertorioId) => adicionar(repertorioId, musica)}
+                />
+              ))}
+            </div>
+          ) : (
+            <PaginatedCarousel
+              items={resultados}
+              pageSize={5}
+              renderPage={(pageItems, pageIndex) => (
+                <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+                  {pageItems.map((musica, i) => (
+                    <MusicaCard
+                      key={musica.id}
+                      musica={musica}
+                      posicao={pageIndex * 5 + i + 1}
+                      onClick={() => onSelectMusica(musica)}
+                      repertorios={repertorios}
+                      onAddToRepertorio={(repertorioId) => adicionar(repertorioId, musica)}
+                    />
+                  ))}
+                </div>
+              )}
+            />
+          )}
 
           {!buscando && (
             <div className="mt-6">
