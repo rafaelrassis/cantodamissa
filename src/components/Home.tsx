@@ -11,7 +11,7 @@ import {
 } from '../lib/musicasApi';
 import { getCantoresPopulares } from '../lib/cantoresApi';
 import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
-import { domingoMaisProximo } from '../lib/liturgicalCalendar';
+import { proximoDomingo, diasAte } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
 import {
   obterRepertorioPorToken,
@@ -85,7 +85,9 @@ export function Home({
   const [carregando, setCarregando] = useState(true);
 
   const searchRef = useRef<HTMLInputElement>(null);
-  const domingoAtual = useMemo(() => domingoMaisProximo(new Date()), []);
+  const domingoAtual = useMemo(() => proximoDomingo(new Date()), []);
+  const diasParaDomingo = useMemo(() => diasAte(domingoAtual.data, new Date()), [domingoAtual]);
+  const ehHoje = diasParaDomingo === 0;
   const buscando = query.trim().length > 0;
 
   const { repertorios, criar, adicionarMusica } = useRepertorios();
@@ -204,6 +206,21 @@ export function Home({
         </div>
 
         <div className="px-4 pb-5 pt-4 lg:px-10 lg:pb-6">
+          {ehHoje ? (
+            <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-[var(--accent)]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+              Hoje é domingo
+            </div>
+          ) : (
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide opacity-70">
+              Próximo domingo · {domingoAtual.data.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: 'long',
+              })}
+              {' · '}
+              {diasParaDomingo === 1 ? 'amanhã' : `daqui a ${diasParaDomingo} dias`}
+            </p>
+          )}
           <h1 className="text-xl font-extrabold tracking-tight lg:text-[34px] lg:tracking-[-0.02em]">
             {domingoAtual.nome}
           </h1>

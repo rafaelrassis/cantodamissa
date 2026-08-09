@@ -29,7 +29,7 @@ function addDias(data: Date, dias: number): Date {
   return new Date(data.getTime() + dias * MS_DIA);
 }
 
-function proximoDomingo(data: Date): Date {
+function domingoSeguinteOuIgual(data: Date): Date {
   const dia = data.getDay(); // 0 = domingo
   return dia === 0 ? data : addDias(data, 7 - dia);
 }
@@ -95,7 +95,7 @@ export function gerarDomingosDoAnoLiturgico(anoCivil: number): DomingoCalculado[
   const domAdvento1Atual = addDias(domAdvento4Atual, -21);
 
   // Epifania: domingo entre 2 e 8 de janeiro
-  const epifania = proximoDomingo(new Date(anoCivil, 0, 2));
+  const epifania = domingoSeguinteOuIgual(new Date(anoCivil, 0, 2));
   // Batismo do Senhor: domingo seguinte à Epifania
   const batismoSenhor = addDias(epifania, 7);
 
@@ -119,7 +119,7 @@ export function gerarDomingosDoAnoLiturgico(anoCivil: number): DomingoCalculado[
   // ---------- 2. Natal (Sagrada Família + eventualmente Epifania cai aqui) ----------
   const domSagradaFamilia = natalAnterior.getDay() === 0
     ? addDias(natalAnterior, 7) // se Natal é domingo, Sagrada Família é 30/dez
-    : proximoDomingo(natalAnterior);
+    : domingoSeguinteOuIgual(natalAnterior);
 
   domingos.push({
     data: domSagradaFamilia,
@@ -166,7 +166,7 @@ export function gerarDomingosDoAnoLiturgico(anoCivil: number): DomingoCalculado[
 
   // ---------- 4. Quaresma (Quarta de Cinzas -> véspera do Domingo de Páscoa) ----------
   const domRamos = addDias(pascoaAtual, -7);
-  let domQuaresma = proximoDomingo(quartaCinzasAtual);
+  let domQuaresma = domingoSeguinteOuIgual(quartaCinzasAtual);
   for (let semana = 1; semana <= 5; semana++) {
     domingos.push({
       data: domQuaresma,
@@ -269,4 +269,41 @@ export function domingoMaisProximo(data: Date): DomingoCalculado {
     }
   }
   return melhor;
+}
+
+/**
+ * Retorna o PRÓXIMO domingo a partir de hoje: se hoje já é domingo, retorna
+ * hoje mesmo; senão, o domingo futuro mais próximo (nunca um domingo passado).
+ * Diferente de domingoMaisProximo, que pode voltar pro domingo anterior se
+ * ele estiver cronologicamente mais perto (ex: terça-feira).
+ */
+export function proximoDomingo(data: Date): DomingoCalculado {
+  const anoCivil = data.getFullYear();
+  const candidatos = [
+    ...gerarDomingosDoAnoLiturgico(anoCivil),
+    ...gerarDomingosDoAnoLiturgico(anoCivil + 1),
+  ].sort((a, b) => a.data.getTime() - b.data.getTime());
+
+  const inicioHoje = new Date(data.getFullYear(), data.getMonth(), data.getDate()).getTime();
+
+  return (
+    candidatos.find((d) => {
+      const inicioDomingo = new Date(
+        d.data.getFullYear(),
+        d.data.getMonth(),
+        d.data.getDate()
+      ).getTime();
+      return inicioDomingo >= inicioHoje;
+    }) ?? candidatos[candidatos.length - 1]
+  );
+}
+
+/**
+ * Quantos dias faltam até a data alvo (0 = hoje), comparando só o dia
+ * civil (ignora hora).
+ */
+export function diasAte(alvo: Date, hoje: Date): number {
+  const a = new Date(alvo.getFullYear(), alvo.getMonth(), alvo.getDate()).getTime();
+  const h = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()).getTime();
+  return Math.round((a - h) / 86_400_000);
 }
