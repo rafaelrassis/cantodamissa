@@ -258,33 +258,39 @@ export function Home({
                   limpar
                 </button>
               </div>
-              <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
-                {historico.map((h) => (
-                  <div
-                    key={h.id}
-                    className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3 last:border-b-0"
-                  >
-                    <button
-                      onClick={() => abrirDoHistorico(h.id)}
-                      className="min-w-0 flex-1 text-left"
-                    >
-                      <p className="truncate text-[15px] font-semibold text-[var(--text)]">
-                        {h.title}
-                      </p>
-                      {h.artist && (
-                        <p className="truncate text-xs text-[var(--muted)]">{h.artist}</p>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => removerHistorico(h.id)}
-                      aria-label={`remover ${h.title} do histórico`}
-                      className="ml-2 shrink-0 text-[var(--muted)] hover:text-[var(--text)]"
-                    >
-                      <X size={14} />
-                    </button>
+              <PaginatedCarousel
+                items={historico.slice(0, 9)}
+                pageSize={3}
+                renderPage={(pageItems) => (
+                  <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+                    {pageItems.map((h) => (
+                      <div
+                        key={h.id}
+                        className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3 last:border-b-0"
+                      >
+                        <button
+                          onClick={() => abrirDoHistorico(h.id)}
+                          className="min-w-0 flex-1 text-left"
+                        >
+                          <p className="truncate text-[15px] font-semibold text-[var(--text)]">
+                            {h.title}
+                          </p>
+                          {h.artist && (
+                            <p className="truncate text-xs text-[var(--muted)]">{h.artist}</p>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => removerHistorico(h.id)}
+                          aria-label={`remover ${h.title} do histórico`}
+                          className="ml-2 shrink-0 text-[var(--muted)] hover:text-[var(--text)]"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              />
             </div>
           )}
 
