@@ -1,0 +1,89 @@
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { formatarDataCurta, formatarDataLonga } from '../../lib/mockMinisterio';
+import type { Escala } from '../../types/ministerio';
+
+interface Props {
+  escalas: Escala[];
+  onAbrirEscala: (id: string) => void;
+  onCriarEscala: () => void;
+}
+
+export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala }: Props) {
+  const [aba, setAba] = useState<'proximas' | 'anteriores'>('proximas');
+  const hoje = new Date().toISOString().slice(0, 10);
+
+  const lista = escalas
+    .filter((e) => (aba === 'proximas' ? e.data >= hoje : e.data < hoje))
+    .sort((a, b) => (aba === 'proximas' ? a.data.localeCompare(b.data) : b.data.localeCompare(a.data)));
+
+  return (
+    <div className="pb-24">
+      <div className="mx-4 mt-3 flex gap-1 rounded-full bg-[var(--surface)] p-1 text-xs font-semibold">
+        <button
+          onClick={() => setAba('proximas')}
+          className={`flex-1 rounded-full py-2 transition ${
+            aba === 'proximas' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
+          }`}
+        >
+          Próximas
+        </button>
+        <button
+          onClick={() => setAba('anteriores')}
+          className={`flex-1 rounded-full py-2 transition ${
+            aba === 'anteriores' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
+          }`}
+        >
+          Anteriores
+        </button>
+      </div>
+
+      {lista.length === 0 ? (
+        <p className="mt-10 px-4 text-center text-sm text-[var(--muted)]">
+          Lista vazia. Toque em ( + ) para cadastrar uma escala.
+        </p>
+      ) : (
+        <ul className="mt-4 space-y-2 px-4">
+          {lista.map((e) => {
+            const confirmados = e.participantes.filter((p) => p.status === 'confirmado').length;
+            return (
+              <li key={e.id}>
+                <button
+                  onClick={() => onAbrirEscala(e.id)}
+                  className="flex w-full items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-left"
+                >
+                  <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-[var(--accent)] text-[var(--accent-fg)]">
+                    <span className="text-[10px] font-semibold uppercase leading-none">
+                      {formatarDataCurta(e.data).split(' ')[1]}
+                    </span>
+                    <span className="text-base font-extrabold leading-none">
+                      {formatarDataCurta(e.data).split(' ')[0]}
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-[var(--text)]">{e.titulo}</p>
+                    <p className="truncate text-xs capitalize text-[var(--muted)]">
+                      {formatarDataLonga(e.data)} · {e.hora}
+                    </p>
+                    <p className="text-xs text-[var(--muted)]">
+                      {confirmados}/{e.participantes.length} confirmados
+                      {!e.publicada && ' · rascunho'}
+                    </p>
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <button
+        onClick={onCriarEscala}
+        aria-label="Nova escala"
+        className="fixed bottom-24 right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)]"
+      >
+        <Plus size={22} />
+      </button>
+    </div>
+  );
+}

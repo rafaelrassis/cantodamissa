@@ -10,9 +10,12 @@ import { RepertorioDetalheTela } from './components/RepertorioDetalheTela';
 import { CantorTela } from './components/CantorTela';
 import { ArtistaTela } from './components/ArtistaTela';
 import { BuscaTela } from './components/BuscaTela';
+import { MinisterioTela } from './components/ministerio/MinisterioTela';
+import { UserLoginModal } from './components/UserLoginModal';
 import { useTheme } from './lib/useTheme';
 import { useRepertorios } from './lib/useRepertorios';
 import { useAdminAuth } from './lib/useAdminAuth';
+import { useUserAuth } from './lib/useUserAuth';
 import type { Musica, TempoLiturgico } from './types/musica';
 
 const MIN_FONT = 15;
@@ -28,7 +31,8 @@ type Tela =
   | 'repertorio-detalhe'
   | 'cantor'
   | 'artista'
-  | 'busca';
+  | 'busca'
+  | 'ministerio';
 
 function App() {
   const [tela, setTela] = useState<Tela>('home');
@@ -41,6 +45,16 @@ function App() {
   const { theme, toggleTheme } = useTheme();
   const [fontSize, setFontSize] = useState(DEFAULT_FONT);
   const { isAdmin, login, logout } = useAdminAuth();
+  const { isLoggedIn, login: loginUsuario } = useUserAuth();
+  const [loginParaMinisterioAberto, setLoginParaMinisterioAberto] = useState(false);
+
+  function abrirMinisterio() {
+    if (isLoggedIn) {
+      setTela('ministerio');
+    } else {
+      setLoginParaMinisterioAberto(true);
+    }
+  }
 
   const repertoriosApi = useRepertorios();
   const repertorioAtual = repertoriosApi.repertorios.find((r) => r.id === repertorioId) ?? null;
@@ -138,6 +152,10 @@ function App() {
     );
   }
 
+  if (tela === 'ministerio' && isLoggedIn) {
+    return <MinisterioTela onBack={() => setTela('home')} />;
+  }
+
   if (tela === 'cantor' && cantorSlug) {
     return (
       <CantorTela
@@ -175,22 +193,40 @@ function App() {
   }
 
   return (
-    <Home
-      onSelectMusica={(m, repId) => abrirMusica(m, repId ?? null)}
-      filtroInicial={filtroTempo}
-      onAbrirCalendario={() => setTela('calendario')}
-      onAbrirModeracao={() => setTela('admin')}
-      onAbrirLoginAdmin={() => setTela('admin')}
-      onAbrirTopMusicas={() => setTela('top-musicas')}
-      onAbrirTopArtistas={() => setTela('top-artistas')}
-      onAbrirBusca={() => setTela('busca')}
-      onSelectArtista={abrirArtista}
-      onSelectCantor={abrirCantor}
-      onAbrirRepertorio={(id) => {
-        setRepertorioId(id);
-        setTela('repertorio-detalhe');
-      }}
-    />
+    <>
+      <Home
+        onSelectMusica={(m, repId) => abrirMusica(m, repId ?? null)}
+        filtroInicial={filtroTempo}
+        onAbrirCalendario={() => setTela('calendario')}
+        onAbrirModeracao={() => setTela('admin')}
+        onAbrirLoginAdmin={() => setTela('admin')}
+        onAbrirTopMusicas={() => setTela('top-musicas')}
+        onAbrirTopArtistas={() => setTela('top-artistas')}
+        onAbrirBusca={() => setTela('busca')}
+        onSelectArtista={abrirArtista}
+        onSelectCantor={abrirCantor}
+        onAbrirRepertorio={(id) => {
+          setRepertorioId(id);
+          setTela('repertorio-detalhe');
+        }}
+        onAbrirMinisterio={abrirMinisterio}
+      />
+
+      {loginParaMinisterioAberto && (
+        <UserLoginModal
+          onLogin={() => {
+            loginUsuario();
+            setLoginParaMinisterioAberto(false);
+            setTela('ministerio');
+          }}
+          onClose={() => setLoginParaMinisterioAberto(false)}
+          onAdminLogin={() => {
+            setLoginParaMinisterioAberto(false);
+            setTela('admin');
+          }}
+        />
+      )}
+    </>
   );
 }
 
