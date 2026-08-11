@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { CODIGO_CONVITE, FUNCOES } from '../../lib/mockMinisterio';
 import type { FuncaoMinisterio } from '../../types/ministerio';
+import { FuncaoEditorTela } from './FuncaoEditorTela';
 
 interface Props {
   onBack: () => void;
@@ -56,42 +57,29 @@ export function AdicionarMinisterioTela({ onBack, onConcluir }: Props) {
   // ---- Cadastrar ----
   const [nomeMinisterio, setNomeMinisterio] = useState('');
   const [funcoes, setFuncoes] = useState<FuncaoMinisterio[]>(FUNCOES);
-  const [formNovaFuncaoAberto, setFormNovaFuncaoAberto] = useState(false);
-  const [novoIcone, setNovoIcone] = useState('🎵');
-  const [novoNome, setNovoNome] = useState('');
-  const [editandoId, setEditandoId] = useState<string | null>(null);
-  const [edicaoIcone, setEdicaoIcone] = useState('');
-  const [edicaoNome, setEdicaoNome] = useState('');
+  const [funcaoEditor, setFuncaoEditor] = useState<{ id: string | null; nome: string; icone: string } | null>(
+    null
+  );
 
-  function adicionarFuncao() {
-    if (!novoNome.trim()) return;
-    setFuncoes((prev) => [
-      ...prev,
-      { id: `custom-${Date.now()}`, nome: novoNome.trim(), icone: novoIcone.trim() || '🎵' },
-    ]);
-    setNovoNome('');
-    setNovoIcone('🎵');
-    setFormNovaFuncaoAberto(false);
+  function abrirNovaFuncao() {
+    setFuncaoEditor({ id: null, nome: '', icone: '🎵' });
+  }
+
+  function abrirEdicaoFuncao(f: FuncaoMinisterio) {
+    setFuncaoEditor({ id: f.id, nome: f.nome, icone: f.icone });
+  }
+
+  function salvarFuncaoEditor(nome: string, icone: string) {
+    setFuncoes((prev) =>
+      funcaoEditor?.id
+        ? prev.map((f) => (f.id === funcaoEditor.id ? { ...f, nome, icone } : f))
+        : [...prev, { id: `custom-${Date.now()}`, nome, icone }]
+    );
+    setFuncaoEditor(null);
   }
 
   function removerFuncao(id: string) {
     setFuncoes((prev) => prev.filter((f) => f.id !== id));
-  }
-
-  function iniciarEdicao(f: FuncaoMinisterio) {
-    setEditandoId(f.id);
-    setEdicaoIcone(f.icone);
-    setEdicaoNome(f.nome);
-  }
-
-  function salvarEdicao() {
-    if (!editandoId || !edicaoNome.trim()) return;
-    setFuncoes((prev) =>
-      prev.map((f) =>
-        f.id === editandoId ? { ...f, nome: edicaoNome.trim(), icone: edicaoIcone.trim() || '🎵' } : f
-      )
-    );
-    setEditandoId(null);
   }
 
   function handleSalvarMinisterio() {
@@ -109,6 +97,18 @@ export function AdicionarMinisterioTela({ onBack, onConcluir }: Props) {
     } else {
       onBack();
     }
+  }
+
+  if (funcaoEditor) {
+    return (
+      <FuncaoEditorTela
+        titulo={funcaoEditor.id ? 'Editar função' : 'Nova função'}
+        nomeInicial={funcaoEditor.nome}
+        iconeInicial={funcaoEditor.icone}
+        onVoltar={() => setFuncaoEditor(null)}
+        onSalvar={salvarFuncaoEditor}
+      />
+    );
   }
 
   return (
@@ -301,82 +301,36 @@ export function AdicionarMinisterioTela({ onBack, onConcluir }: Props) {
             </div>
 
             <button
-              onClick={() => setFormNovaFuncaoAberto((v) => !v)}
+              onClick={abrirNovaFuncao}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--accent)]"
             >
               <Plus size={15} /> Adicionar função
             </button>
 
-            {formNovaFuncaoAberto && (
-              <div className="mt-2 flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2">
-                <input
-                  value={novoIcone}
-                  onChange={(e) => setNovoIcone(e.target.value)}
-                  maxLength={2}
-                  className="w-11 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 py-2 text-center text-sm"
-                />
-                <input
-                  value={novoNome}
-                  onChange={(e) => setNovoNome(e.target.value)}
-                  placeholder="Nome da função"
-                  className="flex-1 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 py-2 text-sm outline-none focus:border-[var(--accent)]"
-                />
-                <button
-                  onClick={adicionarFuncao}
-                  disabled={!novoNome.trim()}
-                  className="rounded-md bg-[var(--accent)] px-3 py-2 text-xs font-semibold text-[var(--accent-fg)] disabled:opacity-40"
-                >
-                  Adicionar
-                </button>
-              </div>
-            )}
-
             <ul className="mt-3 flex flex-col gap-2">
-              {funcoes.map((f) =>
-                editandoId === f.id ? (
-                  <li key={f.id} className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2">
-                    <input
-                      value={edicaoIcone}
-                      onChange={(e) => setEdicaoIcone(e.target.value)}
-                      maxLength={2}
-                      className="w-11 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 py-2 text-center text-sm"
-                    />
-                    <input
-                      value={edicaoNome}
-                      onChange={(e) => setEdicaoNome(e.target.value)}
-                      className="flex-1 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 py-2 text-sm outline-none focus:border-[var(--accent)]"
-                    />
-                    <button
-                      onClick={salvarEdicao}
-                      className="rounded-md bg-[var(--accent)] px-3 py-2 text-xs font-semibold text-[var(--accent-fg)]"
-                    >
-                      Ok
-                    </button>
-                  </li>
-                ) : (
-                  <li
-                    key={f.id}
-                    className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5"
+              {funcoes.map((f) => (
+                <li
+                  key={f.id}
+                  className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5"
+                >
+                  <span className="text-lg">{f.icone}</span>
+                  <span className="flex-1 text-sm font-medium">{f.nome}</span>
+                  <button
+                    onClick={() => abrirEdicaoFuncao(f)}
+                    aria-label="Editar função"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--bg)]"
                   >
-                    <span className="text-lg">{f.icone}</span>
-                    <span className="flex-1 text-sm font-medium">{f.nome}</span>
-                    <button
-                      onClick={() => iniciarEdicao(f)}
-                      aria-label="Editar função"
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--bg)]"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      onClick={() => removerFuncao(f.id)}
-                      aria-label="Remover função"
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-red-500 hover:bg-[var(--bg)]"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </li>
-                )
-              )}
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() => removerFuncao(f.id)}
+                    aria-label="Remover função"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-red-500 hover:bg-[var(--bg)]"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </li>
+              ))}
             </ul>
           </>
         )}
