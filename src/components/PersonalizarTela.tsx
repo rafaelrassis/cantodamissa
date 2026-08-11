@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Cake, Check, ChevronLeft, LogOut, Moon, Palette, Sun } from 'lucide-react';
+import { Cake, Check, ChevronLeft, ChevronRight, ListPlus, LogOut, Moon, Palette, Sun } from 'lucide-react';
 import type { Theme } from '../lib/useTheme';
 
 interface Props {
@@ -14,6 +14,7 @@ interface Props {
   onDefinirCorPersonalizada: (hex: string | null) => void;
   onSair: () => void;
   onFechar: () => void;
+  onCriarCifra: () => void;
 }
 
 const CORES_SUGERIDAS = [
@@ -39,6 +40,7 @@ export function PersonalizarTela({
   onDefinirCorPersonalizada,
   onSair,
   onFechar,
+  onCriarCifra,
 }: Props) {
   const [editandoFoto, setEditandoFoto] = useState(false);
   const [fotoRascunho, setFotoRascunho] = useState(foto ?? '🙂');
@@ -65,6 +67,15 @@ export function PersonalizarTela({
           </button>
           <p className="text-lg font-bold">{userName}</p>
         </div>
+
+        <button
+          onClick={onCriarCifra}
+          className="mt-4 flex w-full items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5 text-left"
+        >
+          <ListPlus size={18} className="shrink-0 text-[var(--accent)]" />
+          <span className="flex-1 text-sm font-semibold">Criar nova cifra</span>
+          <ChevronRight size={16} className="shrink-0 text-[var(--muted)]" />
+        </button>
 
         {editandoFoto && (
           <div className="mt-3 flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">

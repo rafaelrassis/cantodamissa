@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarDays, ChevronRight, Home as HomeIcon, ListMusic, Plus, Search, Users, X } from 'lucide-react';
+import { CalendarDays, ChevronRight, Home as HomeIcon, ListMusic, Search, Users, X } from 'lucide-react';
 import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
 import type { Cantor } from '../types/cantor';
 import {
@@ -206,12 +206,6 @@ export function Home({
             </nav>
           </div>
           <div className="flex shrink-0 items-center gap-3">
-            <button
-              onClick={() => setFormularioAberto(true)}
-              className="flex items-center gap-1.5 rounded-full bg-white/16 px-3.5 py-1.5 text-sm font-semibold"
-            >
-              <Plus size={15} /> Sugerir música
-            </button>
             <HeaderUsuario
               isLoggedIn={isLoggedIn}
               userName={userName}
@@ -490,13 +484,6 @@ export function Home({
       )}
 
       {/* Bottom navigation (mobile) */}
-      <button
-        onClick={() => setFormularioAberto(true)}
-        aria-label="Sugerir música"
-        className="fixed bottom-20 right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)] lg:hidden"
-      >
-        <Plus size={22} />
-      </button>
       <nav className="sticky bottom-0 flex items-center justify-around border-t border-[var(--border)] bg-[var(--surface)] py-2 lg:hidden">
         <TabItem icon={<HomeIcon size={18} />} label="Início" active />
         <TabItem icon={<Search size={18} />} label="Buscar" onClick={onAbrirBusca} />
@@ -548,6 +535,10 @@ export function Home({
             setPersonalizarAberto(false);
           }}
           onFechar={() => setPersonalizarAberto(false)}
+          onCriarCifra={() => {
+            setPersonalizarAberto(false);
+            setFormularioAberto(true);
+          }}
         />
       )}
 

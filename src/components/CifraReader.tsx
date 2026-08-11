@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, Flag, Moon, Pause, Play, Sun, Video } from 'lucide-react';
+import { ChevronLeft, Flag, Moon, Pause, Play, Sun, Users, Video, X } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import {
   extractChordsUsed,
@@ -69,8 +69,9 @@ export function CifraReader({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [repertorio, setRepertorio] = useState<Repertorio | null>(null);
   const [formularioCorrecaoAberto, setFormularioCorrecaoAberto] = useState(false);
+  const [colaboradoresAbertos, setColaboradoresAbertos] = useState(false);
   const [tomSeletorAberto, setTomSeletorAberto] = useState(false);
-  const { criar: criarSubmissao } = useSubmissoes();
+  const { submissoes, criar: criarSubmissao } = useSubmissoes();
   const { repertorios, adicionarMusica } = useRepertorios();
   const { registrarAbertura } = useHistoricoMusicas();
 
@@ -199,6 +200,18 @@ export function CifraReader({
   );
   const chordsUsed = useMemo(() => extractChordsUsed(transposedContent), [transposedContent]);
 
+  // Créditos: nomes de quem teve uma sugestão de correção aprovada pra essa
+  // música — dado que já existia (Submissao.autorNome), só exibido aqui
+  // agora. Sem "quem criou" porque isso ainda não é rastreado em lugar
+  // nenhum (a aprovação de sugestão hoje só muda o status, não aplica a
+  // correção nem grava autoria na música em si).
+  const colaboradores = useMemo(() => {
+    const nomes = submissoes
+      .filter((s) => s.tipo === 'correcao' && s.status === 'aprovada' && s.musicaOriginalId === musica.id)
+      .map((s) => s.autorNome);
+    return Array.from(new Set(nomes));
+  }, [submissoes, musica.id]);
+
   const semitonesLabel = semitones === 0 ? '±0' : semitones > 0 ? `+${semitones}` : String(semitones);
   const capoLabel = capo === 0 ? 'sem capo' : `${capo}ª casa`;
   const tempoLabel = musica.tempoLiturgico[0] ? LABEL_TEMPO[musica.tempoLiturgico[0]] : '';
@@ -307,12 +320,6 @@ export function CifraReader({
             )}
             <div className="flex-1" />
             <AddToRepertorioMenu repertorios={repertorios} onAdd={adicionarAoRepertorio} />
-            <button
-              onClick={() => setFormularioCorrecaoAberto(true)}
-              className="flex h-[34px] items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--surface2)]"
-            >
-              <Flag size={13} /> sugerir correção
-            </button>
             <span className="text-xs font-medium text-[var(--muted)]">
               {musica.viewsCount.toLocaleString('pt-BR')} acessos
             </span>
@@ -370,12 +377,58 @@ export function CifraReader({
               {lines.map((line, i) => (
                 <ChordLine key={i} line={line} />
               ))}
+
+              <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-[var(--border)] pb-4 pt-6 font-sans">
+                <button
+                  onClick={() => setFormularioCorrecaoAberto(true)}
+                  className="flex h-[34px] items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--surface2)]"
+                >
+                  <Flag size={13} /> sugerir correção
+                </button>
+
+                {colaboradores.length > 0 && (
+                  <button
+                    onClick={() => setColaboradoresAbertos(true)}
+                    className="flex items-center gap-1 text-xs font-semibold text-[var(--accent)] underline-offset-2 hover:underline"
+                  >
+                    <Users size={13} />
+                    Editado por {colaboradores[0]}
+                    {colaboradores.length > 1 ? ` e mais ${colaboradores.length - 1}` : ''} · ver todos
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {showDiagrams && <ChordDictionary chords={chordsUsed} />}
       </div>
+
+      {colaboradoresAbertos && (
+        <div
+          onClick={() => setColaboradoresAbertos(false)}
+          className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 font-sans lg:items-center"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-t-2xl bg-[var(--bg)] p-6 lg:rounded-2xl"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-bold text-[var(--text)]">Colaboradores desta cifra</h2>
+              <button onClick={() => setColaboradoresAbertos(false)} aria-label="Fechar" className="text-[var(--muted)]">
+                <X size={18} />
+              </button>
+            </div>
+            <ul className="divide-y divide-[var(--border)]">
+              {colaboradores.map((nome) => (
+                <li key={nome} className="py-2.5 text-sm text-[var(--text)]">
+                  {nome}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       <CifraBottomBar
         currentTone={currentTone}
