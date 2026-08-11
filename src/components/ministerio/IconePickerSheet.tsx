@@ -71,14 +71,6 @@ export function IconePickerSheet({ open, onClose, onSelecionar }: Props) {
             </button>
           ))}
         </div>
-
-        <button
-          disabled
-          title="Em breve"
-          className="mx-auto mt-4 block text-sm font-semibold text-[var(--accent)] opacity-50"
-        >
-          Sugerir novo ícone
-        </button>
       </div>
     </>
   );
