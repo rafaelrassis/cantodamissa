@@ -7,8 +7,10 @@ import type {
   Escala,
   FuncaoMinisterio,
   Indisponibilidade,
+  ItemRoteiro,
   MembroMinisterio,
 } from '../types/ministerio';
+import { mockMusicas } from './mockMusicas';
 
 export const FUNCOES: FuncaoMinisterio[] = [
   { id: 'ministro', nome: 'Ministro', icone: '🎤' },
@@ -25,11 +27,22 @@ export const FUNCOES: FuncaoMinisterio[] = [
 ];
 
 export const MEMBROS: MembroMinisterio[] = [
-  { id: 'm1', nome: 'Rafael Rodrigues', avatarCor: 'bg-teal-500', funcoes: ['violao', 'ministro'], admin: true },
-  { id: 'm2', nome: 'Ana Beatriz', avatarCor: 'bg-rose-500', funcoes: ['vocalista'] },
-  { id: 'm3', nome: 'João Pedro', avatarCor: 'bg-indigo-500', funcoes: ['teclado'] },
-  { id: 'm4', nome: 'Camila Souza', avatarCor: 'bg-amber-500', funcoes: ['backing'] },
-  { id: 'm5', nome: 'Lucas Martins', avatarCor: 'bg-emerald-500', funcoes: ['bateria', 'som'] },
+  { id: 'm1', nome: 'Rafael Rodrigues', avatarCor: 'bg-teal-500', funcoes: ['violao', 'ministro'], admin: true, aniversario: '1990-08-15' },
+  { id: 'm2', nome: 'Ana Beatriz', avatarCor: 'bg-rose-500', funcoes: ['vocalista'], aniversario: '1995-03-02' },
+  { id: 'm3', nome: 'João Pedro', avatarCor: 'bg-indigo-500', funcoes: ['teclado'], aniversario: '1988-08-05' },
+  { id: 'm4', nome: 'Camila Souza', avatarCor: 'bg-amber-500', funcoes: ['backing'], aniversario: '1999-11-20' },
+  { id: 'm5', nome: 'Lucas Martins', avatarCor: 'bg-emerald-500', funcoes: ['bateria', 'som'], aniversario: '2000-08-28' },
+];
+
+// Opções estáticas pra "Paleta de cores" da escala — reaproveita a
+// identidade visual já definida (verde da marca + cores litúrgicas),
+// sem introduzir paleta nova.
+export const PALETAS_CORES: { id: string; nome: string; cor: string }[] = [
+  { id: 'verde', nome: 'Verde', cor: '#186420' },
+  { id: 'dourado', nome: 'Dourado', cor: '#c9a227' },
+  { id: 'roxo', nome: 'Roxo litúrgico', cor: '#5b2d90' },
+  { id: 'vermelho', nome: 'Vermelho', cor: '#a3111d' },
+  { id: 'azul', nome: 'Azul', cor: '#2563eb' },
 ];
 
 // ids de música batendo com o mock/seed já usado no restante do app
@@ -54,8 +67,8 @@ export const ESCALAS: Escala[] = [
       { musicaId: 'bondade-de-deus', tom: 'G', momento: 'Comunhão' },
     ],
     roteiro: [
-      { id: 'r1', horario: '18:30', descricao: 'Passagem de som' },
-      { id: 'r2', horario: '19:00', descricao: 'Início da missa' },
+      { id: 'r1', tipo: 'evento', titulo: 'Passagem de som', icone: '🔊', descricao: '18:30' },
+      { id: 'r2', tipo: 'evento', titulo: 'Início da missa', icone: '⛪', descricao: '19:00' },
     ],
   },
   {
@@ -128,6 +141,29 @@ function proximoDomingoISO(offsetDias: number): string {
 export function formatarDataLonga(iso: string): string {
   const d = new Date(iso + 'T00:00:00');
   return d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+}
+
+export function tituloMusica(musicaId: string): string {
+  return mockMusicas.find((m) => m.id === musicaId || m.slug === musicaId)?.title ?? 'Música';
+}
+
+/**
+ * Junta os itens manuais do roteiro (tipo 'evento') com as músicas da
+ * escala, exibidas como itens tipo 'musica' — elas não ficam duplicadas
+ * no estado, são derivadas aqui na hora de renderizar (ver aviso na aba
+ * Roteiro: "adicionadas automaticamente com base na seleção em Músicas").
+ */
+export function itensRoteiroComMusicas(escala: Pick<Escala, 'roteiro' | 'musicas'>): ItemRoteiro[] {
+  const eventos = escala.roteiro.filter((r) => (r.tipo ?? 'evento') !== 'musica');
+  const musicas: ItemRoteiro[] = escala.musicas.map((m, i) => ({
+    id: `rm-${m.musicaId}-${i}`,
+    tipo: 'musica',
+    titulo: tituloMusica(m.musicaId),
+    musicaId: m.musicaId,
+    tom: m.tom,
+    momento: m.momento,
+  }));
+  return [...eventos, ...musicas];
 }
 
 export function formatarDataCurta(iso: string): string {
