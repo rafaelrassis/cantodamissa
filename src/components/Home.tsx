@@ -20,7 +20,6 @@ import {
 } from '../lib/repertorios';
 import { useRepertorios } from '../lib/useRepertorios';
 import { useSubmissoes } from '../lib/useSubmissoes';
-import { useUserAuth } from '../lib/useUserAuth';
 import type { Theme } from '../lib/useTheme';
 import type { MinisterioMock } from '../lib/useMinisterioMock';
 import { CantoresPopularesSection } from './CantoresPopularesSection';
@@ -50,6 +49,14 @@ interface Props {
   corPersonalizada: string | null;
   onDefinirCorPersonalizada: (hex: string | null) => void;
   ministerio: MinisterioMock;
+  isLoggedIn: boolean;
+  userName: string | null;
+  foto: string | null;
+  dataNascimento: string | null;
+  onLoginUsuario: (dataNascimento?: string) => void;
+  onLogoutUsuario: () => void;
+  onDefinirFoto: (emoji: string | null) => void;
+  onDefinirDataNascimento: (iso: string | null) => void;
 }
 
 const MOMENTOS: MomentoMissa[] = [
@@ -84,6 +91,14 @@ export function Home({
   corPersonalizada,
   onDefinirCorPersonalizada,
   ministerio,
+  isLoggedIn,
+  userName,
+  foto,
+  dataNascimento,
+  onLoginUsuario,
+  onLogoutUsuario,
+  onDefinirFoto,
+  onDefinirDataNascimento,
 }: Props) {
   const [query, setQuery] = useState('');
   const [artistas, setArtistas] = useState<ArtistaEmAlta[]>([]);
@@ -120,7 +135,6 @@ export function Home({
   const { criar: criarSubmissao } = useSubmissoes();
   const [formularioAberto, setFormularioAberto] = useState(false);
   const [repertoriosMobileAberto, setRepertoriosMobileAberto] = useState(false);
-  const { isLoggedIn, userName, foto, login, logout, definirFoto } = useUserAuth();
   const [loginAberto, setLoginAberto] = useState(false);
   const [personalizarAberto, setPersonalizarAberto] = useState(false);
   const notificacoes = ministerio.souAdmin ? ministerio.solicitacoes : [];
@@ -505,8 +519,9 @@ export function Home({
 
       {loginAberto && (
         <UserLoginModal
-          onLogin={() => {
-            login();
+          precisaDataNascimento={!dataNascimento}
+          onLogin={(nascimento) => {
+            onLoginUsuario(nascimento);
             setLoginAberto(false);
           }}
           onClose={() => setLoginAberto(false)}
@@ -521,13 +536,15 @@ export function Home({
         <PersonalizarTela
           userName={userName}
           foto={foto}
-          onDefinirFoto={definirFoto}
+          onDefinirFoto={onDefinirFoto}
+          dataNascimento={dataNascimento}
+          onDefinirDataNascimento={onDefinirDataNascimento}
           theme={theme}
           onToggleTheme={onToggleTheme}
           corPersonalizada={corPersonalizada}
           onDefinirCorPersonalizada={onDefinirCorPersonalizada}
           onSair={() => {
-            logout();
+            onLogoutUsuario();
             setPersonalizarAberto(false);
           }}
           onFechar={() => setPersonalizarAberto(false)}
