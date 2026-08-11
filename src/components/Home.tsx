@@ -92,7 +92,7 @@ export function Home({
   const ehHoje = diasParaDomingo === 0;
   const buscando = query.trim().length > 0;
 
-  const { repertorios, criar, adicionarMusica } = useRepertorios();
+  const { repertorios, criar, adicionarMusica, duplicar } = useRepertorios();
   const [novoNome, setNovoNome] = useState('');
   const [repertorioCompartilhado, setRepertorioCompartilhado] = useState<RepertorioTipo | null>(
     null
@@ -431,6 +431,7 @@ export function Home({
             criar={criar}
             onAbrirRepertorio={onAbrirRepertorio}
             onSelectMusica={onSelectMusica}
+            onClonar={duplicar}
           />
         </aside>
       </div>
@@ -516,6 +517,7 @@ export function Home({
                 criar={criar}
                 onAbrirRepertorio={onAbrirRepertorio}
                 onSelectMusica={onSelectMusica}
+                onClonar={duplicar}
               />
             </div>
           </div>

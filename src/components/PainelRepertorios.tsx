@@ -1,3 +1,4 @@
+import { Copy } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import type { Repertorio } from '../lib/repertorios';
 import { getMusicaById } from '../lib/musicasApi';
@@ -10,6 +11,7 @@ interface Props {
   criar: (nome: string) => void;
   onAbrirRepertorio: (id: string) => void;
   onSelectMusica: (musica: Musica, repertorioId?: string) => void;
+  onClonar?: (id: string) => void;
 }
 
 /**
@@ -26,6 +28,7 @@ export function PainelRepertorios({
   criar,
   onAbrirRepertorio,
   onSelectMusica,
+  onClonar,
 }: Props) {
   return (
     <>
@@ -65,22 +68,33 @@ export function PainelRepertorios({
       )}
 
       {repertorios.map((r) => (
-        <button
+        <div
           key={r.id}
-          onClick={() => onAbrirRepertorio(r.id)}
-          className="flex w-full items-center gap-3 rounded-xl border border-[var(--border)] p-3 text-left hover:bg-[var(--surface)]"
+          className="flex w-full items-center gap-2 rounded-xl border border-[var(--border)] p-3 hover:bg-[var(--surface)]"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-soft)] font-mono text-sm font-bold text-[var(--accent)]">
-            {r.itens.length}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-[var(--text)]">{r.nome}</p>
-            <p className="truncate text-xs text-[var(--muted)]">
-              {r.itens.length} música{r.itens.length === 1 ? '' : 's'} · {r.ritos.length} rito
-              {r.ritos.length === 1 ? '' : 's'}
-            </p>
-          </div>
-        </button>
+          <button onClick={() => onAbrirRepertorio(r.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-soft)] font-mono text-sm font-bold text-[var(--accent)]">
+              {r.itens.length}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-[var(--text)]">{r.nome}</p>
+              <p className="truncate text-xs text-[var(--muted)]">
+                {r.itens.length} música{r.itens.length === 1 ? '' : 's'} · {r.ritos.length} rito
+                {r.ritos.length === 1 ? '' : 's'}
+              </p>
+            </div>
+          </button>
+          {onClonar && (
+            <button
+              onClick={() => onClonar(r.id)}
+              title="Clonar repertório"
+              aria-label={`Clonar ${r.nome}`}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+            >
+              <Copy size={15} />
+            </button>
+          )}
+        </div>
       ))}
 
       <form
