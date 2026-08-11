@@ -14,10 +14,14 @@ export const FUNCOES: FuncaoMinisterio[] = [
   { id: 'ministro', nome: 'Ministro', icone: '🎤' },
   { id: 'vocalista', nome: 'Vocalista', icone: '🎙️' },
   { id: 'backing', nome: 'Backing vocal', icone: '🎶' },
-  { id: 'violao', nome: 'Violão', icone: '🎸' },
+  { id: 'baixo', nome: 'Baixo', icone: '🎸' },
+  { id: 'violao', nome: 'Violão', icone: '🪕' },
   { id: 'teclado', nome: 'Teclado', icone: '🎹' },
+  { id: 'guitarra', nome: 'Guitarra', icone: '🎸' },
+  { id: 'piano', nome: 'Piano', icone: '🎹' },
   { id: 'bateria', nome: 'Bateria', icone: '🥁' },
-  { id: 'som', nome: 'Som', icone: '🔊' },
+  { id: 'percussao', nome: 'Percussão', icone: '🪘' },
+  { id: 'som', nome: 'Mesa de som', icone: '🎚️' },
 ];
 
 export const MEMBROS: MembroMinisterio[] = [
