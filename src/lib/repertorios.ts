@@ -241,6 +241,58 @@ export async function removerRepertorio(id: string): Promise<void> {
   if (error) console.error('removerRepertorio:', error.message);
 }
 
+/** Cria uma cópia independente de um repertório — mesmos ritos e músicas,
+ * nome sufixado " (cópia)", sem share_token próprio (link não é herdado). */
+export async function duplicarRepertorio(id: string): Promise<Repertorio> {
+  const original = await obterRepertorio(id);
+  if (!original) throw new Error('duplicarRepertorio: repertório original não encontrado');
+  const nomeCopia = `${original.nome} (cópia)`;
+
+  if (!isSupabaseConfigured) {
+    const novo: Repertorio = {
+      id: gerarIdMock(),
+      nome: nomeCopia,
+      criadoEm: new Date().toISOString(),
+      shareToken: null,
+      ritos: [...original.ritos],
+      itens: original.itens.map((i) => ({ ...i })),
+    };
+    salvarMock([...lerMock(), novo]);
+    return novo;
+  }
+
+  const { data, error } = await supabase
+    .from('repertorios')
+    .insert({ nome: nomeCopia, device_key: getDeviceKey() })
+    .select('id')
+    .single();
+  if (error) throw new Error(`duplicarRepertorio: ${error.message}`);
+
+  if (original.ritos.length > 0) {
+    const { error: errorRitos } = await supabase
+      .from('repertorio_ritos')
+      .insert(original.ritos.map((nome, ordem) => ({ repertorio_id: data.id, nome, ordem })));
+    if (errorRitos) console.error('duplicarRepertorio (ritos):', errorRitos.message);
+  }
+
+  if (original.itens.length > 0) {
+    const { error: errorMusicas } = await supabase.from('repertorio_musicas').insert(
+      original.itens.map((item, ordem) => ({
+        repertorio_id: data.id,
+        musica_id: item.musicaId,
+        momento: item.momento,
+        tom_escolhido: item.tone,
+        ordem,
+      }))
+    );
+    if (errorMusicas) console.error('duplicarRepertorio (músicas):', errorMusicas.message);
+  }
+
+  const criado = await obterRepertorio(data.id);
+  if (!criado) throw new Error('duplicarRepertorio: falha ao recarregar após duplicar');
+  return criado;
+}
+
 // ---------- Ritos ----------
 
 export async function adicionarRito(repertorioId: string, nome: string): Promise<void> {

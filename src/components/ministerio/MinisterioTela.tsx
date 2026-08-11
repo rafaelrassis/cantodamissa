@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { BarChart3, CalendarDays, ChevronLeft, Home, Megaphone, Users } from 'lucide-react';
+import { BarChart3, CalendarDays, ChevronLeft, Home, ListMusic, Megaphone, Users } from 'lucide-react';
 import {
   AVISOS,
   ESCALAS,
   INDISPONIBILIDADES,
   MEMBROS,
 } from '../../lib/mockMinisterio';
+import { useRepertorios } from '../../lib/useRepertorios';
 import type { Aviso, Escala, Indisponibilidade } from '../../types/ministerio';
+import type { Musica } from '../../types/musica';
 import { InicioTela } from './InicioTela';
 import { EscalasTela } from './EscalasTela';
 import { EscalaDetalheTela } from './EscalaDetalheTela';
@@ -15,16 +17,20 @@ import { EquipeTela } from './EquipeTela';
 import { AvisosTela } from './AvisosTela';
 import { PanoramaTela } from './PanoramaTela';
 import { AdicionarMinisterioTela } from './AdicionarMinisterioTela';
+import { PainelRepertorios } from '../PainelRepertorios';
+import { RepertorioDetalheTela } from '../RepertorioDetalheTela';
 
 interface Props {
   onBack: () => void;
+  onAbrirMusica: (musica: Musica, repertorioId?: string | null, tom?: string | null) => void;
 }
 
-type SubTela = 'inicio' | 'escalas' | 'equipe' | 'avisos' | 'panorama';
+type SubTela = 'inicio' | 'escalas' | 'equipe' | 'avisos' | 'panorama' | 'repertorio';
 
 const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
   { id: 'inicio', label: 'Início', icon: <Home size={16} /> },
   { id: 'escalas', label: 'Escalas', icon: <CalendarDays size={16} /> },
+  { id: 'repertorio', label: 'Repertório', icon: <ListMusic size={16} /> },
   { id: 'equipe', label: 'Equipe', icon: <Users size={16} /> },
   { id: 'avisos', label: 'Avisos', icon: <Megaphone size={16} /> },
   { id: 'panorama', label: 'Panorama', icon: <BarChart3 size={16} /> },
@@ -32,12 +38,15 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
 
 /**
  * Módulo "Ministério" — mock só de UX/fluxo (dados em memória, sem
- * Supabase). Login já é exigido antes de chegar aqui (ver App.tsx).
- * Escopo fechado no chat: Início + Escalas + Equipe + Avisos + Panorama.
- * Deixado de fora de propósito: Mensagens, Metrônomo, Módulos,
- * Integrações, Classificações — ver justificativa na conversa.
+ * Supabase) PARA Início/Escalas/Equipe/Avisos/Panorama. A aba Repertório é
+ * exceção: reaproveita a feature real já existente (useRepertorios +
+ * PainelRepertorios + RepertorioDetalheTela, Supabase-backed com fallback
+ * localStorage), só trazida pra dentro do módulo — mesmos dados de
+ * "Meus repertórios" acessível pela Home, não é uma cópia nem é
+ * ministério-scoped (schema não tem esse vínculo ainda).
+ * Login já é exigido antes de chegar aqui (ver App.tsx).
  */
-export function MinisterioTela({ onBack }: Props) {
+export function MinisterioTela({ onBack, onAbrirMusica }: Props) {
   // Mock: usuário logado ainda não participa de nenhum ministério até
   // ingressar (código de convite) ou cadastrar um novo — replica o fluxo
   // do LouveApp, com o tema visual do app em vez do design de referência.
@@ -50,6 +59,10 @@ export function MinisterioTela({ onBack }: Props) {
   const [indisponibilidades, setIndisponibilidades] = useState<Indisponibilidade[]>(INDISPONIBILIDADES);
   const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(null);
   const [criandoEscala, setCriandoEscala] = useState(false);
+
+  const repertoriosApi = useRepertorios();
+  const [repertorioAbertoId, setRepertorioAbertoId] = useState<string | null>(null);
+  const [novoNomeRepertorio, setNovoNomeRepertorio] = useState('');
 
   if (!pertenceMinisterio) {
     return (
@@ -64,6 +77,7 @@ export function MinisterioTela({ onBack }: Props) {
   }
 
   const escalaAberta = escalas.find((e) => e.id === escalaAbertaId) ?? null;
+  const repertorioAberto = repertoriosApi.repertorios.find((r) => r.id === repertorioAbertoId) ?? null;
 
   if (criandoEscala) {
     return (
@@ -86,6 +100,22 @@ export function MinisterioTela({ onBack }: Props) {
         onAtualizar={(atualizada) =>
           setEscalas((prev) => prev.map((e) => (e.id === atualizada.id ? atualizada : e)))
         }
+      />
+    );
+  }
+
+  if (repertorioAberto) {
+    return (
+      <RepertorioDetalheTela
+        repertorio={repertorioAberto}
+        onBack={() => setRepertorioAbertoId(null)}
+        onSelectMusica={(m, tom) => onAbrirMusica(m, repertorioAberto.id, tom)}
+        removerMusica={repertoriosApi.removerMusica}
+        moverMusicaParaRito={repertoriosApi.moverMusicaParaRito}
+        adicionarRito={repertoriosApi.adicionarRito}
+        removerRito={repertoriosApi.removerRito}
+        reordenarRitos={repertoriosApi.reordenarRitos}
+        onExcluirRepertorio={repertoriosApi.remover}
       />
     );
   }
@@ -136,6 +166,21 @@ export function MinisterioTela({ onBack }: Props) {
             onAbrirEscala={setEscalaAbertaId}
             onCriarEscala={() => setCriandoEscala(true)}
           />
+        )}
+
+        {subTela === 'repertorio' && (
+          <div className="flex flex-col gap-3 p-4">
+            <PainelRepertorios
+              repertorios={repertoriosApi.repertorios}
+              repertorioCompartilhado={null}
+              novoNome={novoNomeRepertorio}
+              setNovoNome={setNovoNomeRepertorio}
+              criar={repertoriosApi.criar}
+              onAbrirRepertorio={setRepertorioAbertoId}
+              onSelectMusica={(m, repId) => onAbrirMusica(m, repId ?? null)}
+              onClonar={repertoriosApi.duplicar}
+            />
+          </div>
         )}
 
         {subTela === 'equipe' && (

@@ -153,7 +153,7 @@ function App() {
   }
 
   if (tela === 'ministerio' && isLoggedIn) {
-    return <MinisterioTela onBack={() => setTela('home')} />;
+    return <MinisterioTela onBack={() => setTela('home')} onAbrirMusica={abrirMusica} />;
   }
 
   if (tela === 'cantor' && cantorSlug) {

@@ -46,6 +46,15 @@ export function useRepertorios() {
     [recarregar]
   );
 
+  const duplicar = useCallback(
+    async (id: string) => {
+      const copia = await api.duplicarRepertorio(id);
+      await recarregar();
+      return copia;
+    },
+    [recarregar]
+  );
+
   const adicionarMusica = useCallback(
     async (repertorioId: string, item: ItemRepertorio) => {
       await api.adicionarMusica(repertorioId, item);
@@ -100,6 +109,7 @@ export function useRepertorios() {
     criar,
     renomear,
     remover,
+    duplicar,
     adicionarMusica,
     removerMusica,
     moverMusicaParaRito,
