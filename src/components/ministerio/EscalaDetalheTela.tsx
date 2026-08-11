@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { ChevronLeft, Clock, Info, ListMusic, Plus, Trash2, Users } from 'lucide-react';
-import { FUNCOES, MEMBROS, formatarDataLonga } from '../../lib/mockMinisterio';
-import type { Escala, StatusConfirmacao } from '../../types/ministerio';
+import { FUNCOES, MEMBROS, formatarDataLonga, itensRoteiroComMusicas, tituloMusica } from '../../lib/mockMinisterio';
+import type { Escala, ItemRoteiro, StatusConfirmacao } from '../../types/ministerio';
+import { MembrosSelecionarTela } from './MembrosSelecionarTela';
+import { MusicasSelecionarTela } from './MusicasSelecionarTela';
+import { EventoRoteiroTela } from './EventoRoteiroTela';
 
 interface Props {
   escala: Escala;
@@ -17,6 +20,9 @@ const STATUS_LABEL: Record<StatusConfirmacao, { texto: string; cor: string }> = 
 
 export function EscalaDetalheTela({ escala, onBack, onAtualizar }: Props) {
   const [aba, setAba] = useState<'detalhes' | 'participantes' | 'musicas' | 'roteiro'>('detalhes');
+  const [selecionandoMembros, setSelecionandoMembros] = useState(false);
+  const [selecionandoMusicas, setSelecionandoMusicas] = useState(false);
+  const [criandoEvento, setCriandoEvento] = useState(false);
 
   function confirmarMinhaPresenca(status: StatusConfirmacao) {
     // "Você" == m1 no mock — na versão real viria do usuário logado.
@@ -26,7 +32,60 @@ export function EscalaDetalheTela({ escala, onBack, onAtualizar }: Props) {
     onAtualizar({ ...escala, participantes });
   }
 
+  function removerItemRoteiro(item: ItemRoteiro) {
+    if (item.tipo === 'musica') {
+      onAtualizar({ ...escala, musicas: escala.musicas.filter((m) => m.musicaId !== item.musicaId) });
+    } else {
+      onAtualizar({ ...escala, roteiro: escala.roteiro.filter((r) => r.id !== item.id) });
+    }
+  }
+
   const minhaParticipacao = escala.participantes.find((p) => p.membroId === 'm1');
+  const itensRoteiro = itensRoteiroComMusicas(escala);
+
+  if (selecionandoMembros) {
+    return (
+      <MembrosSelecionarTela
+        selecionadosIniciais={escala.participantes.map((p) => p.membroId)}
+        onCancelar={() => setSelecionandoMembros(false)}
+        onConfirmar={(sel) => {
+          const participantes = sel.map((s) => {
+            const existente = escala.participantes.find((p) => p.membroId === s.membroId);
+            return existente ?? { ...s, status: 'pendente' as StatusConfirmacao };
+          });
+          onAtualizar({ ...escala, participantes });
+          setSelecionandoMembros(false);
+        }}
+      />
+    );
+  }
+
+  if (selecionandoMusicas) {
+    return (
+      <MusicasSelecionarTela
+        jaAdicionadas={escala.musicas.map((m) => m.musicaId)}
+        onCancelar={() => setSelecionandoMusicas(false)}
+        onConfirmar={(sel) => {
+          const musicas = sel.map((s) => escala.musicas.find((m) => m.musicaId === s.musicaId) ?? s);
+          onAtualizar({ ...escala, musicas });
+          setSelecionandoMusicas(false);
+        }}
+      />
+    );
+  }
+
+  if (criandoEvento) {
+    return (
+      <EventoRoteiroTela
+        nomeEscala={escala.titulo}
+        onCancelar={() => setCriandoEvento(false)}
+        onSalvar={(evento) => {
+          onAtualizar({ ...escala, roteiro: [...escala.roteiro, evento] });
+          setCriandoEvento(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
@@ -126,7 +185,10 @@ export function EscalaDetalheTela({ escala, onBack, onAtualizar }: Props) {
               );
             })}
             <li className="p-4">
-              <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]">
+              <button
+                onClick={() => setSelecionandoMembros(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+              >
                 <Plus size={16} /> Adicionar participante
               </button>
             </li>
@@ -138,16 +200,24 @@ export function EscalaDetalheTela({ escala, onBack, onAtualizar }: Props) {
             {escala.musicas.map((m, idx) => (
               <li key={idx} className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <p className="text-sm font-semibold text-[var(--text)]">Bondade de Deus</p>
+                  <p className="text-sm font-semibold text-[var(--text)]">{tituloMusica(m.musicaId)}</p>
                   <p className="text-xs text-[var(--muted)]">
                     {m.momento} · Tom: {m.tom}
                   </p>
                 </div>
-                <Trash2 size={14} className="text-[var(--muted)]" />
+                <button
+                  onClick={() => onAtualizar({ ...escala, musicas: escala.musicas.filter((_, i) => i !== idx) })}
+                  aria-label="Remover música"
+                >
+                  <Trash2 size={14} className="text-[var(--muted)]" />
+                </button>
               </li>
             ))}
             <li className="p-4">
-              <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]">
+              <button
+                onClick={() => setSelecionandoMusicas(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+              >
                 <Plus size={16} /> Adicionar música do repertório
               </button>
             </li>
@@ -156,18 +226,33 @@ export function EscalaDetalheTela({ escala, onBack, onAtualizar }: Props) {
 
         {aba === 'roteiro' && (
           <ul className="divide-y divide-[var(--border)]">
-            {escala.roteiro.length === 0 ? (
+            {itensRoteiro.length === 0 ? (
               <li className="px-4 py-8 text-center text-sm text-[var(--muted)]">Lista vazia.</li>
             ) : (
-              escala.roteiro.map((r) => (
+              itensRoteiro.map((r) => (
                 <li key={r.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className="w-12 shrink-0 font-mono text-sm text-[var(--accent)]">{r.horario}</span>
-                  <span className="text-sm text-[var(--text)]">{r.descricao}</span>
+                  <span className="w-8 shrink-0 text-center text-lg">
+                    {r.tipo === 'musica' ? <ListMusic size={16} className="mx-auto text-[var(--accent)]" /> : r.icone}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm text-[var(--text)]">{r.titulo}</span>
+                    {r.tipo === 'musica' && (
+                      <span className="block text-xs text-[var(--muted)]">
+                        {r.momento} · Tom: {r.tom}
+                      </span>
+                    )}
+                  </span>
+                  <button onClick={() => removerItemRoteiro(r)} aria-label="Remover item">
+                    <Trash2 size={14} className="text-[var(--muted)]" />
+                  </button>
                 </li>
               ))
             )}
             <li className="p-4">
-              <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]">
+              <button
+                onClick={() => setCriandoEvento(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+              >
                 <Plus size={16} /> Adicionar item ao roteiro
               </button>
             </li>

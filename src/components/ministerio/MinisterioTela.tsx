@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, CalendarDays, ChevronLeft, Megaphone, Users } from 'lucide-react';
+import { BarChart3, CalendarDays, ChevronLeft, Home, Megaphone, Users } from 'lucide-react';
 import {
   AVISOS,
   ESCALAS,
@@ -7,9 +7,10 @@ import {
   MEMBROS,
 } from '../../lib/mockMinisterio';
 import type { Aviso, Escala, Indisponibilidade } from '../../types/ministerio';
+import { InicioTela } from './InicioTela';
 import { EscalasTela } from './EscalasTela';
 import { EscalaDetalheTela } from './EscalaDetalheTela';
-import { NovaEscalaModal } from './NovaEscalaModal';
+import { NovaEscalaTela } from './NovaEscalaTela';
 import { EquipeTela } from './EquipeTela';
 import { AvisosTela } from './AvisosTela';
 import { PanoramaTela } from './PanoramaTela';
@@ -19,9 +20,10 @@ interface Props {
   onBack: () => void;
 }
 
-type SubTela = 'escalas' | 'equipe' | 'avisos' | 'panorama';
+type SubTela = 'inicio' | 'escalas' | 'equipe' | 'avisos' | 'panorama';
 
 const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
+  { id: 'inicio', label: 'Início', icon: <Home size={16} /> },
   { id: 'escalas', label: 'Escalas', icon: <CalendarDays size={16} /> },
   { id: 'equipe', label: 'Equipe', icon: <Users size={16} /> },
   { id: 'avisos', label: 'Avisos', icon: <Megaphone size={16} /> },
@@ -31,7 +33,7 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
 /**
  * Módulo "Ministério" — mock só de UX/fluxo (dados em memória, sem
  * Supabase). Login já é exigido antes de chegar aqui (ver App.tsx).
- * Escopo fechado no chat: Escalas + Equipe + Avisos + Panorama.
+ * Escopo fechado no chat: Início + Escalas + Equipe + Avisos + Panorama.
  * Deixado de fora de propósito: Mensagens, Metrônomo, Módulos,
  * Integrações, Classificações — ver justificativa na conversa.
  */
@@ -42,12 +44,12 @@ export function MinisterioTela({ onBack }: Props) {
   const [pertenceMinisterio, setPertenceMinisterio] = useState(false);
   const [nomeMinisterioAtual, setNomeMinisterioAtual] = useState('Ministério');
 
-  const [subTela, setSubTela] = useState<SubTela>('escalas');
+  const [subTela, setSubTela] = useState<SubTela>('inicio');
   const [escalas, setEscalas] = useState<Escala[]>(ESCALAS);
   const [avisos, setAvisos] = useState<Aviso[]>(AVISOS);
   const [indisponibilidades, setIndisponibilidades] = useState<Indisponibilidade[]>(INDISPONIBILIDADES);
   const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(null);
-  const [novaEscalaAberta, setNovaEscalaAberta] = useState(false);
+  const [criandoEscala, setCriandoEscala] = useState(false);
 
   if (!pertenceMinisterio) {
     return (
@@ -62,6 +64,19 @@ export function MinisterioTela({ onBack }: Props) {
   }
 
   const escalaAberta = escalas.find((e) => e.id === escalaAbertaId) ?? null;
+
+  if (criandoEscala) {
+    return (
+      <NovaEscalaTela
+        onCancelar={() => setCriandoEscala(false)}
+        onSalvar={(nova) => {
+          setEscalas((prev) => [...prev, nova]);
+          setCriandoEscala(false);
+          setEscalaAbertaId(nova.id);
+        }}
+      />
+    );
+  }
 
   if (escalaAberta) {
     return (
@@ -103,11 +118,23 @@ export function MinisterioTela({ onBack }: Props) {
       </nav>
 
       <div className="mx-auto max-w-2xl">
+        {subTela === 'inicio' && (
+          <InicioTela
+            nomeMinisterio={nomeMinisterioAtual}
+            membros={MEMBROS}
+            escalas={escalas}
+            avisos={avisos}
+            onAbrirEscala={setEscalaAbertaId}
+            onVerEscalas={() => setSubTela('escalas')}
+            onVerAvisos={() => setSubTela('avisos')}
+          />
+        )}
+
         {subTela === 'escalas' && (
           <EscalasTela
             escalas={escalas}
             onAbrirEscala={setEscalaAbertaId}
-            onCriarEscala={() => setNovaEscalaAberta(true)}
+            onCriarEscala={() => setCriandoEscala(true)}
           />
         )}
 
@@ -147,29 +174,6 @@ export function MinisterioTela({ onBack }: Props) {
           <PanoramaTela escalas={escalas} indisponibilidades={indisponibilidades} />
         )}
       </div>
-
-      {novaEscalaAberta && (
-        <NovaEscalaModal
-          onClose={() => setNovaEscalaAberta(false)}
-          onSalvar={(titulo, data, hora) => {
-            const nova: Escala = {
-              id: `e${escalas.length + 1}`,
-              titulo,
-              data,
-              hora,
-              observacoes: '',
-              publicada: false,
-              solicitarConfirmacao: true,
-              participantes: [],
-              musicas: [],
-              roteiro: [],
-            };
-            setEscalas((prev) => [...prev, nova]);
-            setNovaEscalaAberta(false);
-            setEscalaAbertaId(nova.id);
-          }}
-        />
-      )}
     </div>
   );
 }
