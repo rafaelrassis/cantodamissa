@@ -78,21 +78,32 @@ export function AddToRepertorioMenu({ musica, repertorios, onAdd }: Props) {
               <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
                 Rito em {repertorioEscolhido.nome}
               </p>
-              {repertorioEscolhido.ritos.map((rito) => (
-                <button
-                  key={rito}
-                  onClick={() => {
-                    onAdd(repertorioEscolhido.id, rito);
-                    fechar();
-                  }}
-                  className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm text-[var(--text)] hover:bg-[var(--surface)]"
-                >
-                  <span className="truncate">{rito}</span>
-                  {rito === ritoSugerido && (
-                    <span className="shrink-0 text-[10px] font-semibold text-[var(--accent)]">sugerido</span>
-                  )}
-                </button>
-              ))}
+              {(() => {
+                const ritosPreenchidos = new Set(repertorioEscolhido.itens.map((i) => i.momento));
+                const ritosDisponiveis = repertorioEscolhido.ritos.filter((r) => !ritosPreenchidos.has(r));
+                if (ritosDisponiveis.length === 0) {
+                  return (
+                    <p className="px-2 py-1.5 text-xs text-[var(--muted)]">
+                      Todos os ritos deste repertório já têm música.
+                    </p>
+                  );
+                }
+                return ritosDisponiveis.map((rito) => (
+                  <button
+                    key={rito}
+                    onClick={() => {
+                      onAdd(repertorioEscolhido.id, rito);
+                      fechar();
+                    }}
+                    className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm text-[var(--text)] hover:bg-[var(--surface)]"
+                  >
+                    <span className="truncate">{rito}</span>
+                    {rito === ritoSugerido && (
+                      <span className="shrink-0 text-[10px] font-semibold text-[var(--accent)]">sugerido</span>
+                    )}
+                  </button>
+                ));
+              })()}
             </>
           )}
         </div>
