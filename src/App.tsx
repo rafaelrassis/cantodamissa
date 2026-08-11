@@ -44,7 +44,7 @@ function App() {
   const [filtroTempo, setFiltroTempo] = useState<TempoLiturgico | undefined>();
   const [cantorSlug, setCantorSlug] = useState<string | null>(null);
   const [artistaNome, setArtistaNome] = useState<string | null>(null);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, corPersonalizada, definirCorPersonalizada } = useTheme();
   const [fontSize, setFontSize] = useState(DEFAULT_FONT);
   const { isAdmin, login, logout } = useAdminAuth();
   const { isLoggedIn, login: loginUsuario } = useUserAuth();
@@ -232,6 +232,11 @@ function App() {
           setTela('repertorio-detalhe');
         }}
         onAbrirMinisterio={abrirMinisterio}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        corPersonalizada={corPersonalizada}
+        onDefinirCorPersonalizada={definirCorPersonalizada}
+        ministerio={ministerio}
       />
 
       {loginParaMinisterioAberto && (

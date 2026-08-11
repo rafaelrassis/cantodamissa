@@ -21,10 +21,14 @@ import {
 import { useRepertorios } from '../lib/useRepertorios';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import { useUserAuth } from '../lib/useUserAuth';
+import type { Theme } from '../lib/useTheme';
+import type { MinisterioMock } from '../lib/useMinisterioMock';
 import { CantoresPopularesSection } from './CantoresPopularesSection';
+import { HeaderUsuario } from './HeaderUsuario';
 import { MusicaCard } from './MusicaCard';
 import { PaginatedCarousel } from './PaginatedCarousel';
 import { PainelRepertorios } from './PainelRepertorios';
+import { PersonalizarTela } from './PersonalizarTela';
 import { SubmissaoForm } from './SubmissaoForm';
 import { UserLoginModal } from './UserLoginModal';
 
@@ -41,6 +45,11 @@ interface Props {
   onSelectArtista?: (artista: string) => void;
   onSelectCantor?: (slug: string) => void;
   onAbrirMinisterio?: () => void;
+  theme: Theme;
+  onToggleTheme: () => void;
+  corPersonalizada: string | null;
+  onDefinirCorPersonalizada: (hex: string | null) => void;
+  ministerio: MinisterioMock;
 }
 
 const MOMENTOS: MomentoMissa[] = [
@@ -70,6 +79,11 @@ export function Home({
   onSelectCantor,
   onAbrirRepertorio,
   onAbrirMinisterio,
+  theme,
+  onToggleTheme,
+  corPersonalizada,
+  onDefinirCorPersonalizada,
+  ministerio,
 }: Props) {
   const [query, setQuery] = useState('');
   const [artistas, setArtistas] = useState<ArtistaEmAlta[]>([]);
@@ -106,8 +120,10 @@ export function Home({
   const { criar: criarSubmissao } = useSubmissoes();
   const [formularioAberto, setFormularioAberto] = useState(false);
   const [repertoriosMobileAberto, setRepertoriosMobileAberto] = useState(false);
-  const { isLoggedIn, userName, login, logout } = useUserAuth();
+  const { isLoggedIn, userName, foto, login, logout, definirFoto } = useUserAuth();
   const [loginAberto, setLoginAberto] = useState(false);
+  const [personalizarAberto, setPersonalizarAberto] = useState(false);
+  const notificacoes = ministerio.souAdmin ? ministerio.solicitacoes : [];
   const { historico, remover: removerHistorico, limpar: limparHistorico } = useHistoricoMusicas();
 
   async function abrirDoHistorico(id: string) {
@@ -182,13 +198,16 @@ export function Home({
             >
               <Plus size={15} /> Sugerir música
             </button>
-            <button
-              onClick={() => (isLoggedIn ? logout() : setLoginAberto(true))}
-              title={isLoggedIn ? 'Sair' : 'Entrar'}
-              className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[var(--accent)]"
-            >
-              {isLoggedIn ? userName : 'Entrar'}
-            </button>
+            <HeaderUsuario
+              isLoggedIn={isLoggedIn}
+              userName={userName}
+              foto={foto}
+              onEntrar={() => setLoginAberto(true)}
+              onAbrirPersonalizar={() => setPersonalizarAberto(true)}
+              notificacoes={notificacoes}
+              onAprovarNotificacao={ministerio.aprovarSolicitacao}
+              onRecusarNotificacao={ministerio.recusarSolicitacao}
+            />
           </div>
         </div>
 
@@ -198,13 +217,16 @@ export function Home({
             <img src="/logo-header.png" alt="" className="h-8 w-8" />
             Canto da Missa
           </div>
-          <button
-            onClick={() => (isLoggedIn ? logout() : setLoginAberto(true))}
-            title={isLoggedIn ? 'Sair' : 'Entrar'}
-            className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[var(--accent)]"
-          >
-            {isLoggedIn ? userName : 'Entrar'}
-          </button>
+          <HeaderUsuario
+            isLoggedIn={isLoggedIn}
+            userName={userName}
+            foto={foto}
+            onEntrar={() => setLoginAberto(true)}
+            onAbrirPersonalizar={() => setPersonalizarAberto(true)}
+            notificacoes={notificacoes}
+            onAprovarNotificacao={ministerio.aprovarSolicitacao}
+            onRecusarNotificacao={ministerio.recusarSolicitacao}
+          />
         </div>
 
         <div className="px-4 pb-5 pt-4 lg:px-10 lg:pb-6">
@@ -492,6 +514,23 @@ export function Home({
             setLoginAberto(false);
             onAbrirLoginAdmin?.();
           }}
+        />
+      )}
+
+      {personalizarAberto && userName && (
+        <PersonalizarTela
+          userName={userName}
+          foto={foto}
+          onDefinirFoto={definirFoto}
+          theme={theme}
+          onToggleTheme={onToggleTheme}
+          corPersonalizada={corPersonalizada}
+          onDefinirCorPersonalizada={onDefinirCorPersonalizada}
+          onSair={() => {
+            logout();
+            setPersonalizarAberto(false);
+          }}
+          onFechar={() => setPersonalizarAberto(false)}
         />
       )}
 
