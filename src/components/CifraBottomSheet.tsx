@@ -20,6 +20,7 @@ interface Props {
   onToggleAwake: () => void;
   musica: Musica;
   repertorios: Repertorio[];
+  onCriarRepertorio: (nome: string) => Promise<Repertorio>;
   onAddToRepertorio: (repertorioId: string, rito: string) => void;
   onCompartilhar: () => void;
 }
@@ -85,7 +86,12 @@ export function CifraBottomSheet(props: Props) {
 
       <div className="mb-4 flex items-center justify-between rounded-xl border border-[var(--border)] px-3 py-2">
         <span className="text-sm font-medium text-[var(--text)]">Adicionar ao repertório</span>
-        <AddToRepertorioMenu musica={props.musica} repertorios={props.repertorios} onAdd={props.onAddToRepertorio} />
+        <AddToRepertorioMenu
+          musica={props.musica}
+          repertorios={props.repertorios}
+          onCriar={props.onCriarRepertorio}
+          onAdd={props.onAddToRepertorio}
+        />
       </div>
 
       <button

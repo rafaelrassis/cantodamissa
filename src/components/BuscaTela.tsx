@@ -29,7 +29,7 @@ export function BuscaTela({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { historico, remover: removerHistorico, limpar: limparHistorico } = useHistoricoMusicas();
-  const { repertorios, adicionarMusica } = useRepertorios();
+  const { repertorios, criar, adicionarMusica } = useRepertorios();
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -118,7 +118,8 @@ export function BuscaTela({
                   musica={musica}
                   onClick={() => onSelectMusica(musica)}
                   repertorios={repertorios}
-                  onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
+                  onCriarRepertorio={criar}
+              onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
                 />
               ))}
             </div>

@@ -5,7 +5,6 @@ import type { Musica } from '../types/musica';
 interface Props {
   modo: 'nova' | 'correcao';
   musicaBase?: Musica;
-  userName?: string | null;
   onSubmit: (dados: {
     title: string;
     artist: string;
@@ -17,12 +16,12 @@ interface Props {
   onClose: () => void;
 }
 
-export function SubmissaoForm({ modo, musicaBase, userName = null, onSubmit, onClose }: Props) {
+export function SubmissaoForm({ modo, musicaBase, onSubmit, onClose }: Props) {
   const [title, setTitle] = useState(musicaBase?.title ?? '');
   const [artist, setArtist] = useState(musicaBase?.artist ?? '');
   const [tone, setTone] = useState(musicaBase?.originalTone ?? '');
   const [chordsContent, setChordsContent] = useState(musicaBase?.chordsContent ?? '');
-  const [autorNome, setAutorNome] = useState(userName ?? '');
+  const [autorNome, setAutorNome] = useState('');
   const [observacao, setObservacao] = useState('');
   const [enviado, setEnviado] = useState(false);
 
@@ -114,20 +113,14 @@ export function SubmissaoForm({ modo, musicaBase, userName = null, onSubmit, onC
                 />
               </Campo>
             )}
-            {userName ? (
-              <p className="text-xs text-[var(--muted)]">
-                Você vai receber crédito como <span className="font-semibold text-[var(--text)]">{userName}</span>.
-              </p>
-            ) : (
-              <Campo label="Seu nome (pra receber crédito)" required>
-                <input
-                  value={autorNome}
-                  onChange={(e) => setAutorNome(e.target.value)}
-                  required
-                  className="input-field"
-                />
-              </Campo>
-            )}
+            <Campo label="Seu nome (pra receber crédito)" required>
+              <input
+                value={autorNome}
+                onChange={(e) => setAutorNome(e.target.value)}
+                required
+                className="input-field"
+              />
+            </Campo>
 
             <button
               type="submit"

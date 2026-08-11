@@ -380,6 +380,7 @@ export function Home({
                   posicao={undefined}
                   onClick={() => onSelectMusica(musica)}
                   repertorios={repertorios}
+                  onCriarRepertorio={criar}
                   onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
                 />
               ))}
@@ -397,7 +398,8 @@ export function Home({
                       posicao={pageIndex * 5 + i + 1}
                       onClick={() => onSelectMusica(musica)}
                       repertorios={repertorios}
-                      onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
+                      onCriarRepertorio={criar}
+                  onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
                     />
                   ))}
                 </div>
@@ -498,7 +500,6 @@ export function Home({
       {formularioAberto && (
         <SubmissaoForm
           modo="nova"
-          userName={userName}
           onClose={() => setFormularioAberto(false)}
           onSubmit={(dados) => criarSubmissao({ ...dados, tipo: 'nova' })}
         />

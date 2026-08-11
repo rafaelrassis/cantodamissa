@@ -22,7 +22,7 @@ export function ArtistaTela({ artista, onBack, onSelectMusica }: Props) {
   const [musicas, setMusicas] = useState<Musica[]>([]);
   const [aba, setAba] = useState<Aba>('top');
   const [carregando, setCarregando] = useState(true);
-  const { repertorios, adicionarMusica } = useRepertorios();
+  const { repertorios, criar, adicionarMusica } = useRepertorios();
 
   useEffect(() => {
     let ativo = true;
@@ -101,6 +101,7 @@ export function ArtistaTela({ artista, onBack, onSelectMusica }: Props) {
               posicao={aba === 'top' ? i + 1 : undefined}
               onClick={() => onSelectMusica(musica)}
               repertorios={repertorios}
+              onCriarRepertorio={criar}
               onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
             />
           ))}

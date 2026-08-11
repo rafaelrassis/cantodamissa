@@ -8,6 +8,7 @@ interface Props {
   posicao?: number;
   onClick: () => void;
   repertorios?: Repertorio[];
+  onCriarRepertorio?: (nome: string) => Promise<Repertorio>;
   onAddToRepertorio?: (repertorioId: string, rito: string) => void;
 }
 
@@ -16,9 +17,10 @@ export function MusicaCard({
   posicao,
   onClick,
   repertorios,
+  onCriarRepertorio,
   onAddToRepertorio,
 }: Props) {
-  const mostrarMenu = repertorios !== undefined && onAddToRepertorio;
+  const mostrarMenu = repertorios !== undefined && onCriarRepertorio && onAddToRepertorio;
 
   async function compartilhar() {
     const texto = `${musica.title}${musica.artist ? ` - ${musica.artist}` : ''} (tom ${musica.originalTone}) · Canto da Missa`;
@@ -67,6 +69,7 @@ export function MusicaCard({
         <CifraOptionsMenu
           musica={musica}
           repertorios={repertorios}
+          onCriarRepertorio={onCriarRepertorio}
           onAdicionarAoRepertorio={onAddToRepertorio}
           onCompartilhar={compartilhar}
         />

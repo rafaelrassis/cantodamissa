@@ -45,7 +45,6 @@ interface Props {
   onAbrirCantor?: (slug: string) => void;
   onAbrirArtista?: (artista: string) => void;
   tomForcado?: string | null;
-  userName?: string | null;
 }
 
 export function CifraReader({
@@ -61,7 +60,6 @@ export function CifraReader({
   onAbrirCantor,
   onAbrirArtista,
   tomForcado = null,
-  userName = null,
 }: Props) {
   const [semitones, setSemitones] = useState(0);
   const [capo, setCapo] = useState(musica.capo);
@@ -74,7 +72,7 @@ export function CifraReader({
   const [colaboradoresAbertos, setColaboradoresAbertos] = useState(false);
   const [tomSeletorAberto, setTomSeletorAberto] = useState(false);
   const { submissoes, criar: criarSubmissao } = useSubmissoes();
-  const { repertorios, adicionarMusica } = useRepertorios();
+  const { repertorios, criar: criarRepertorio, adicionarMusica } = useRepertorios();
   const { registrarAbertura } = useHistoricoMusicas();
 
   useEffect(() => {
@@ -321,7 +319,12 @@ export function CifraReader({
               </ToolbarToggle>
             )}
             <div className="flex-1" />
-            <AddToRepertorioMenu musica={musica} repertorios={repertorios} onAdd={adicionarAoRepertorio} />
+            <AddToRepertorioMenu
+              musica={musica}
+              repertorios={repertorios}
+              onCriar={criarRepertorio}
+              onAdd={adicionarAoRepertorio}
+            />
             <span className="text-xs font-medium text-[var(--muted)]">
               {musica.viewsCount.toLocaleString('pt-BR')} acessos
             </span>
@@ -460,6 +463,7 @@ export function CifraReader({
         onToggleAwake={keepAwake.toggle}
         musica={musica}
         repertorios={repertorios}
+        onCriarRepertorio={criarRepertorio}
         onAddToRepertorio={adicionarAoRepertorio}
         onCompartilhar={compartilhar}
       />
@@ -468,7 +472,6 @@ export function CifraReader({
         <SubmissaoForm
           modo="correcao"
           musicaBase={musica}
-          userName={userName}
           onClose={() => setFormularioCorrecaoAberto(false)}
           onSubmit={(dados) =>
             criarSubmissao({ ...dados, tipo: 'correcao', musicaOriginalId: musica.id })
