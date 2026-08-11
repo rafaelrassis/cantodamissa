@@ -13,6 +13,7 @@ import { NovaEscalaModal } from './NovaEscalaModal';
 import { EquipeTela } from './EquipeTela';
 import { AvisosTela } from './AvisosTela';
 import { PanoramaTela } from './PanoramaTela';
+import { AdicionarMinisterioTela } from './AdicionarMinisterioTela';
 
 interface Props {
   onBack: () => void;
@@ -35,12 +36,30 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
  * Integrações, Classificações — ver justificativa na conversa.
  */
 export function MinisterioTela({ onBack }: Props) {
+  // Mock: usuário logado ainda não participa de nenhum ministério até
+  // ingressar (código de convite) ou cadastrar um novo — replica o fluxo
+  // do LouveApp, com o tema visual do app em vez do design de referência.
+  const [pertenceMinisterio, setPertenceMinisterio] = useState(false);
+  const [nomeMinisterioAtual, setNomeMinisterioAtual] = useState('Ministério');
+
   const [subTela, setSubTela] = useState<SubTela>('escalas');
   const [escalas, setEscalas] = useState<Escala[]>(ESCALAS);
   const [avisos, setAvisos] = useState<Aviso[]>(AVISOS);
   const [indisponibilidades, setIndisponibilidades] = useState<Indisponibilidade[]>(INDISPONIBILIDADES);
   const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(null);
   const [novaEscalaAberta, setNovaEscalaAberta] = useState(false);
+
+  if (!pertenceMinisterio) {
+    return (
+      <AdicionarMinisterioTela
+        onBack={onBack}
+        onConcluir={(nome) => {
+          if (nome) setNomeMinisterioAtual(nome);
+          setPertenceMinisterio(true);
+        }}
+      />
+    );
+  }
 
   const escalaAberta = escalas.find((e) => e.id === escalaAbertaId) ?? null;
 
@@ -62,7 +81,7 @@ export function MinisterioTela({ onBack }: Props) {
         <button onClick={onBack} className="mb-2 flex items-center gap-1 text-xs opacity-80">
           <ChevronLeft size={14} /> Voltar
         </button>
-        <h1 className="text-xl font-extrabold tracking-tight">Ministério</h1>
+        <h1 className="text-xl font-extrabold tracking-tight">{nomeMinisterioAtual}</h1>
         <p className="mt-0.5 text-sm opacity-80">{MEMBROS.length} membros · área restrita</p>
       </header>
 
