@@ -3,7 +3,6 @@ import { ChevronLeft } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import { getTop50 } from '../lib/musicasApi';
 import { useRepertorios } from '../lib/useRepertorios';
-import { ritoSugeridoParaMomento } from '../lib/repertorios';
 import { MusicaCard } from './MusicaCard';
 
 interface Props {
@@ -24,13 +23,13 @@ export function TopMusicasTela({ onBack, onSelectMusica }: Props) {
     });
   }, []);
 
-  function adicionar(repertorioId: string, musica: Musica) {
+  function adicionar(repertorioId: string, musica: Musica, rito: string) {
     adicionarMusica(repertorioId, {
       musicaId: musica.id,
       title: musica.title,
       artist: musica.artist,
       tone: musica.originalTone,
-      momento: ritoSugeridoParaMomento(musica.momento[0] ?? null),
+      momento: rito,
     });
   }
 
@@ -55,7 +54,7 @@ export function TopMusicasTela({ onBack, onSelectMusica }: Props) {
             posicao={i + 1}
             onClick={() => onSelectMusica(musica)}
             repertorios={repertorios}
-            onAddToRepertorio={(repertorioId) => adicionar(repertorioId, musica)}
+            onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
           />
         ))}
       </div>

@@ -1,26 +1,37 @@
 import { useState } from 'react';
-import { ListPlus } from 'lucide-react';
-import type { Repertorio } from '../lib/repertorios';
+import { ChevronLeft, ListPlus } from 'lucide-react';
+import { ritoSugeridoParaMomento, type Repertorio } from '../lib/repertorios';
+import type { Musica } from '../types/musica';
 
 interface Props {
+  musica: Musica;
   repertorios: Repertorio[];
-  onAdd: (repertorioId: string) => void;
+  onAdd: (repertorioId: string, rito: string) => void;
 }
 
 /**
  * Botão "+" que abre a lista de repertórios existentes pra adicionar a
- * música. Criar repertório novo só é feito na página de Repertórios — não
- * tem atalho de criação aqui de propósito (evita duplicar o fluxo em
- * vários lugares do app).
+ * música — e, escolhido o repertório, uma segunda etapa pra escolher em
+ * qual rito dele a música entra (o rito sugerido pelo momento da música
+ * já vem marcado, mas dá pra trocar). Criar repertório novo só é feito na
+ * página de Repertórios — não tem atalho de criação aqui de propósito
+ * (evita duplicar o fluxo em vários lugares do app).
  */
-export function AddToRepertorioMenu({ repertorios, onAdd }: Props) {
+export function AddToRepertorioMenu({ musica, repertorios, onAdd }: Props) {
   const [open, setOpen] = useState(false);
+  const [repertorioEscolhido, setRepertorioEscolhido] = useState<Repertorio | null>(null);
+  const ritoSugerido = ritoSugeridoParaMomento(musica.momento[0] ?? null);
+
+  function fechar() {
+    setOpen(false);
+    setRepertorioEscolhido(null);
+  }
 
   return (
     <div
       className="relative shrink-0"
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false);
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) fechar();
       }}
     >
       <button
@@ -39,24 +50,50 @@ export function AddToRepertorioMenu({ repertorios, onAdd }: Props) {
           onClick={(e) => e.stopPropagation()}
           className="absolute right-0 top-9 z-30 w-56 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-1.5 shadow-[var(--shadow)]"
         >
-          {repertorios.length === 0 ? (
-            <p className="px-2 py-1.5 text-xs text-[var(--muted)]">
-              Você ainda não tem repertórios. Crie um na aba Repertórios.
-            </p>
+          {!repertorioEscolhido ? (
+            repertorios.length === 0 ? (
+              <p className="px-2 py-1.5 text-xs text-[var(--muted)]">
+                Você ainda não tem repertórios. Crie um na aba Repertórios.
+              </p>
+            ) : (
+              repertorios.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => setRepertorioEscolhido(r)}
+                  className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm text-[var(--text)] hover:bg-[var(--surface)]"
+                >
+                  <span className="truncate">{r.nome}</span>
+                  <span className="shrink-0 text-xs text-[var(--muted)]">{r.itens.length}</span>
+                </button>
+              ))
+            )
           ) : (
-            repertorios.map((r) => (
+            <>
               <button
-                key={r.id}
-                onClick={() => {
-                  onAdd(r.id);
-                  setOpen(false);
-                }}
-                className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm text-[var(--text)] hover:bg-[var(--surface)]"
+                onClick={() => setRepertorioEscolhido(null)}
+                className="mb-1 flex items-center gap-1 px-2 py-1 text-xs font-medium text-[var(--muted)]"
               >
-                <span className="truncate">{r.nome}</span>
-                <span className="shrink-0 text-xs text-[var(--muted)]">{r.itens.length}</span>
+                <ChevronLeft size={13} /> voltar
               </button>
-            ))
+              <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                Rito em {repertorioEscolhido.nome}
+              </p>
+              {repertorioEscolhido.ritos.map((rito) => (
+                <button
+                  key={rito}
+                  onClick={() => {
+                    onAdd(repertorioEscolhido.id, rito);
+                    fechar();
+                  }}
+                  className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm text-[var(--text)] hover:bg-[var(--surface)]"
+                >
+                  <span className="truncate">{rito}</span>
+                  {rito === ritoSugerido && (
+                    <span className="shrink-0 text-[10px] font-semibold text-[var(--accent)]">sugerido</span>
+                  )}
+                </button>
+              ))}
+            </>
           )}
         </div>
       )}

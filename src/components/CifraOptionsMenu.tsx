@@ -1,31 +1,39 @@
 import { useState } from 'react';
 import { ChevronLeft, ListPlus, MoreVertical, Share2 } from 'lucide-react';
-import type { Repertorio } from '../lib/repertorios';
+import { ritoSugeridoParaMomento, type Repertorio } from '../lib/repertorios';
+import type { Musica } from '../types/musica';
 
 interface Props {
+  musica: Musica;
   repertorios: Repertorio[];
-  onAdicionarAoRepertorio: (repertorioId: string) => void;
+  onAdicionarAoRepertorio: (repertorioId: string, rito: string) => void;
   onCompartilhar: () => void;
   buttonClassName?: string;
 }
 
 /**
- * Menu "..." da cifra: compartilhar ou colocar num repertório existente.
- * Criar repertório novo não é uma opção aqui de propósito — só na página
- * de Repertórios (evita duplicar esse fluxo em vários lugares do app).
+ * Menu "..." da cifra: compartilhar ou colocar num repertório existente
+ * (escolhendo repertório e, depois, o rito dentro dele — o sugerido pelo
+ * momento da música já vem marcado). Criar repertório novo não é uma
+ * opção aqui de propósito — só na página de Repertórios (evita duplicar
+ * esse fluxo em vários lugares do app).
  */
 export function CifraOptionsMenu({
+  musica,
   repertorios,
   onAdicionarAoRepertorio,
   onCompartilhar,
   buttonClassName,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [tela, setTela] = useState<'menu' | 'repertorios'>('menu');
+  const [tela, setTela] = useState<'menu' | 'repertorios' | 'ritos'>('menu');
+  const [repertorioEscolhido, setRepertorioEscolhido] = useState<Repertorio | null>(null);
+  const ritoSugerido = ritoSugeridoParaMomento(musica.momento[0] ?? null);
 
   function fechar() {
     setOpen(false);
     setTela('menu');
+    setRepertorioEscolhido(null);
   }
 
   return (
@@ -54,7 +62,7 @@ export function CifraOptionsMenu({
           onClick={(e) => e.stopPropagation()}
           className="absolute right-0 top-9 z-30 w-60 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-1.5 shadow-[var(--shadow)]"
         >
-          {tela === 'menu' ? (
+          {tela === 'menu' && (
             <>
               <button
                 onClick={() => {
@@ -72,7 +80,9 @@ export function CifraOptionsMenu({
                 <ListPlus size={15} /> Colocar no repertório
               </button>
             </>
-          ) : (
+          )}
+
+          {tela === 'repertorios' && (
             <>
               <button
                 onClick={() => setTela('menu')}
@@ -89,8 +99,8 @@ export function CifraOptionsMenu({
                   <button
                     key={r.id}
                     onClick={() => {
-                      onAdicionarAoRepertorio(r.id);
-                      fechar();
+                      setRepertorioEscolhido(r);
+                      setTela('ritos');
                     }}
                     className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm text-[var(--text)] hover:bg-[var(--surface)]"
                   >
@@ -99,6 +109,35 @@ export function CifraOptionsMenu({
                   </button>
                 ))
               )}
+            </>
+          )}
+
+          {tela === 'ritos' && repertorioEscolhido && (
+            <>
+              <button
+                onClick={() => setTela('repertorios')}
+                className="mb-1 flex items-center gap-1 px-2 py-1 text-xs font-medium text-[var(--muted)]"
+              >
+                <ChevronLeft size={13} /> voltar
+              </button>
+              <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                Rito em {repertorioEscolhido.nome}
+              </p>
+              {repertorioEscolhido.ritos.map((rito) => (
+                <button
+                  key={rito}
+                  onClick={() => {
+                    onAdicionarAoRepertorio(repertorioEscolhido.id, rito);
+                    fechar();
+                  }}
+                  className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm text-[var(--text)] hover:bg-[var(--surface)]"
+                >
+                  <span className="truncate">{rito}</span>
+                  {rito === ritoSugerido && (
+                    <span className="shrink-0 text-[10px] font-semibold text-[var(--accent)]">sugerido</span>
+                  )}
+                </button>
+              ))}
             </>
           )}
         </div>

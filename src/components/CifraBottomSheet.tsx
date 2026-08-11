@@ -1,6 +1,7 @@
 import { Minus, Moon, Plus, Share2, Sun, Sunrise } from 'lucide-react';
 import type { Theme } from '../lib/useTheme';
 import type { Repertorio } from '../lib/repertorios';
+import type { Musica } from '../types/musica';
 import { AddToRepertorioMenu } from './AddToRepertorioMenu';
 
 interface Props {
@@ -17,8 +18,9 @@ interface Props {
   awakeActive: boolean;
   awakeSupported: boolean;
   onToggleAwake: () => void;
+  musica: Musica;
   repertorios: Repertorio[];
-  onAddToRepertorio: (repertorioId: string) => void;
+  onAddToRepertorio: (repertorioId: string, rito: string) => void;
   onCompartilhar: () => void;
 }
 
@@ -83,7 +85,7 @@ export function CifraBottomSheet(props: Props) {
 
       <div className="mb-4 flex items-center justify-between rounded-xl border border-[var(--border)] px-3 py-2">
         <span className="text-sm font-medium text-[var(--text)]">Adicionar ao repertório</span>
-        <AddToRepertorioMenu repertorios={props.repertorios} onAdd={props.onAddToRepertorio} />
+        <AddToRepertorioMenu musica={props.musica} repertorios={props.repertorios} onAdd={props.onAddToRepertorio} />
       </div>
 
       <button

@@ -15,7 +15,6 @@ import { proximoDomingoCalculado, diasAte } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
 import {
   obterRepertorioPorToken,
-  ritoSugeridoParaMomento,
   type Repertorio as RepertorioTipo,
 } from '../lib/repertorios';
 import { useRepertorios } from '../lib/useRepertorios';
@@ -145,13 +144,13 @@ export function Home({
     if (musica) onSelectMusica(musica);
   }
 
-  function adicionar(repertorioId: string, musica: Musica) {
+  function adicionar(repertorioId: string, musica: Musica, rito: string) {
     adicionarMusica(repertorioId, {
       musicaId: musica.id,
       title: musica.title,
       artist: musica.artist,
       tone: musica.originalTone,
-      momento: ritoSugeridoParaMomento(musica.momento[0] ?? null),
+      momento: rito,
     });
   }
 
@@ -381,7 +380,7 @@ export function Home({
                   posicao={undefined}
                   onClick={() => onSelectMusica(musica)}
                   repertorios={repertorios}
-                  onAddToRepertorio={(repertorioId) => adicionar(repertorioId, musica)}
+                  onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
                 />
               ))}
             </div>
@@ -398,7 +397,7 @@ export function Home({
                       posicao={pageIndex * 5 + i + 1}
                       onClick={() => onSelectMusica(musica)}
                       repertorios={repertorios}
-                      onAddToRepertorio={(repertorioId) => adicionar(repertorioId, musica)}
+                      onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
                     />
                   ))}
                 </div>

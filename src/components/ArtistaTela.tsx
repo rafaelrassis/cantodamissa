@@ -3,7 +3,6 @@ import { ChevronLeft } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import { getMusicasPorArtista } from '../lib/musicasApi';
 import { useRepertorios } from '../lib/useRepertorios';
-import { ritoSugeridoParaMomento } from '../lib/repertorios';
 import { MusicaCard } from './MusicaCard';
 
 type Aba = 'top' | 'todas';
@@ -43,13 +42,13 @@ export function ArtistaTela({ artista, onBack, onSelectMusica }: Props) {
     [musicas]
   );
 
-  function adicionar(repertorioId: string, musica: Musica) {
+  function adicionar(repertorioId: string, musica: Musica, rito: string) {
     adicionarMusica(repertorioId, {
       musicaId: musica.id,
       title: musica.title,
       artist: musica.artist,
       tone: musica.originalTone,
-      momento: ritoSugeridoParaMomento(musica.momento[0] ?? null),
+      momento: rito,
     });
   }
 
@@ -102,7 +101,7 @@ export function ArtistaTela({ artista, onBack, onSelectMusica }: Props) {
               posicao={aba === 'top' ? i + 1 : undefined}
               onClick={() => onSelectMusica(musica)}
               repertorios={repertorios}
-              onAddToRepertorio={(repertorioId) => adicionar(repertorioId, musica)}
+              onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
             />
           ))}
         {!carregando && lista.length === 0 && (

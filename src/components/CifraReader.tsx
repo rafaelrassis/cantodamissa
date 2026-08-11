@@ -12,7 +12,7 @@ import { useAutoScroll } from '../lib/useAutoScroll';
 import { useKeepAwake } from '../lib/useKeepAwake';
 import { loadReaderState, saveReaderState } from '../lib/readerState';
 import { useShowChordDiagrams } from '../lib/useShowChordDiagrams';
-import { obterRepertorio, ritoSugeridoParaMomento, type Repertorio } from '../lib/repertorios';
+import { obterRepertorio, type Repertorio } from '../lib/repertorios';
 import { getMusicaById } from '../lib/musicasApi';
 import { getCantorSlugById } from '../lib/cantoresApi';
 import { useRepertorios } from '../lib/useRepertorios';
@@ -164,13 +164,13 @@ export function CifraReader({
   // adicionar ao repertório salva o TOM ATUAL (já transposto na tela), não o
   // tom original da música — é isso que o organizador do repertório
   // escolheu pra essa missa específica
-  function adicionarAoRepertorio(repertorioId: string) {
+  function adicionarAoRepertorio(repertorioId: string, rito: string) {
     adicionarMusica(repertorioId, {
       musicaId: musica.id,
       title: musica.title,
       artist: musica.artist,
       tone: currentTone,
-      momento: ritoSugeridoParaMomento(musica.momento[0] ?? null),
+      momento: rito,
     });
   }
 
@@ -321,7 +321,7 @@ export function CifraReader({
               </ToolbarToggle>
             )}
             <div className="flex-1" />
-            <AddToRepertorioMenu repertorios={repertorios} onAdd={adicionarAoRepertorio} />
+            <AddToRepertorioMenu musica={musica} repertorios={repertorios} onAdd={adicionarAoRepertorio} />
             <span className="text-xs font-medium text-[var(--muted)]">
               {musica.viewsCount.toLocaleString('pt-BR')} acessos
             </span>
@@ -458,6 +458,7 @@ export function CifraReader({
         awakeActive={keepAwake.active}
         awakeSupported={keepAwake.supported}
         onToggleAwake={keepAwake.toggle}
+        musica={musica}
         repertorios={repertorios}
         onAddToRepertorio={adicionarAoRepertorio}
         onCompartilhar={compartilhar}

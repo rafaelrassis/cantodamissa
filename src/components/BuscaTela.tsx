@@ -4,7 +4,6 @@ import type { Musica } from '../types/musica';
 import { getMusicaById, searchMusicas } from '../lib/musicasApi';
 import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
 import { useRepertorios } from '../lib/useRepertorios';
-import { ritoSugeridoParaMomento } from '../lib/repertorios';
 import { MusicaCard } from './MusicaCard';
 
 interface Props {
@@ -59,13 +58,13 @@ export function BuscaTela({
     if (musica) onSelectMusica(musica);
   }
 
-  function adicionar(repertorioId: string, musica: Musica) {
+  function adicionar(repertorioId: string, musica: Musica, rito: string) {
     adicionarMusica(repertorioId, {
       musicaId: musica.id,
       title: musica.title,
       artist: musica.artist,
       tone: musica.originalTone,
-      momento: ritoSugeridoParaMomento(musica.momento[0] ?? null),
+      momento: rito,
     });
   }
 
@@ -119,7 +118,7 @@ export function BuscaTela({
                   musica={musica}
                   onClick={() => onSelectMusica(musica)}
                   repertorios={repertorios}
-                  onAddToRepertorio={(repertorioId) => adicionar(repertorioId, musica)}
+                  onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
                 />
               ))}
             </div>

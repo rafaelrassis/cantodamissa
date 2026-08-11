@@ -8,7 +8,7 @@ interface Props {
   posicao?: number;
   onClick: () => void;
   repertorios?: Repertorio[];
-  onAddToRepertorio?: (repertorioId: string) => void;
+  onAddToRepertorio?: (repertorioId: string, rito: string) => void;
 }
 
 export function MusicaCard({
@@ -65,6 +65,7 @@ export function MusicaCard({
 
       {mostrarMenu && (
         <CifraOptionsMenu
+          musica={musica}
           repertorios={repertorios}
           onAdicionarAoRepertorio={onAddToRepertorio}
           onCompartilhar={compartilhar}
