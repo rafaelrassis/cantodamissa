@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Check, ChevronLeft, LogOut, Moon, Palette, Sun } from 'lucide-react';
+import { Cake, Check, ChevronLeft, LogOut, Moon, Palette, Sun } from 'lucide-react';
 import type { Theme } from '../lib/useTheme';
 
 interface Props {
   userName: string;
   foto: string | null;
   onDefinirFoto: (emoji: string | null) => void;
+  dataNascimento: string | null;
+  onDefinirDataNascimento: (iso: string | null) => void;
   theme: Theme;
   onToggleTheme: () => void;
   corPersonalizada: string | null;
@@ -29,6 +31,8 @@ export function PersonalizarTela({
   userName,
   foto,
   onDefinirFoto,
+  dataNascimento,
+  onDefinirDataNascimento,
   theme,
   onToggleTheme,
   corPersonalizada,
@@ -83,6 +87,21 @@ export function PersonalizarTela({
             </button>
           </div>
         )}
+
+        <h2 className="mt-8 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+          Data de nascimento
+        </h2>
+        <div className="mt-2 flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+          <Cake size={18} className="shrink-0 text-[var(--accent)]" />
+          <input
+            type="date"
+            value={dataNascimento ?? ''}
+            onChange={(e) => onDefinirDataNascimento(e.target.value || null)}
+            max={new Date().toISOString().slice(0, 10)}
+            className="w-full bg-transparent text-sm outline-none"
+          />
+        </div>
+        <p className="mt-1 text-xs text-[var(--muted)]">Usada pro seu aniversário aparecer no Ministério.</p>
 
         <h2 className="mt-8 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Aparência</h2>
         <div className="mt-2 flex gap-2 rounded-2xl bg-[var(--surface)] p-1.5">

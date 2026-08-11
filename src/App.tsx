@@ -47,12 +47,22 @@ function App() {
   const { theme, toggleTheme, corPersonalizada, definirCorPersonalizada } = useTheme();
   const [fontSize, setFontSize] = useState(DEFAULT_FONT);
   const { isAdmin, login, logout } = useAdminAuth();
-  const { isLoggedIn, login: loginUsuario } = useUserAuth();
+  const {
+    isLoggedIn,
+    userName,
+    foto,
+    dataNascimento,
+    login: loginUsuario,
+    logout: logoutUsuario,
+    definirFoto,
+    definirDataNascimento,
+  } = useUserAuth();
   const [loginParaMinisterioAberto, setLoginParaMinisterioAberto] = useState(false);
 
   // Levantado até aqui (em vez de ficar dentro de MinisterioTela) pra
   // sobreviver à troca de tela e alimentar o alerta global abaixo.
-  const ministerio = useMinisterioMock();
+  // dataNascimento (da conta) sobrescreve o aniversário mockado de "você".
+  const ministerio = useMinisterioMock(dataNascimento);
 
   function abrirMinisterio() {
     if (isLoggedIn) {
@@ -237,12 +247,21 @@ function App() {
         corPersonalizada={corPersonalizada}
         onDefinirCorPersonalizada={definirCorPersonalizada}
         ministerio={ministerio}
+        isLoggedIn={isLoggedIn}
+        userName={userName}
+        foto={foto}
+        dataNascimento={dataNascimento}
+        onLoginUsuario={loginUsuario}
+        onLogoutUsuario={logoutUsuario}
+        onDefinirFoto={definirFoto}
+        onDefinirDataNascimento={definirDataNascimento}
       />
 
       {loginParaMinisterioAberto && (
         <UserLoginModal
-          onLogin={() => {
-            loginUsuario();
+          precisaDataNascimento={!dataNascimento}
+          onLogin={(nascimento) => {
+            loginUsuario(nascimento);
             setLoginParaMinisterioAberto(false);
             setTela('ministerio');
           }}

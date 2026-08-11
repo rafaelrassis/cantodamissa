@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MEMBROS, CODIGO_CONVITE as CODIGO_CONVITE_PADRAO } from './mockMinisterio';
 import type { MembroMinisterio, SolicitacaoIngresso } from '../types/ministerio';
 
@@ -16,8 +16,12 @@ function gerarCodigo(): string {
  * dentro de MinisterioTela) porque o alerta global de solicitação
  * pendente precisa aparecer em qualquer tela do app, mesmo com o módulo
  * Ministério desmontado. Ainda 100% mock (useState em memória).
+ *
+ * `dataNascimentoUsuario` vem da conta (useUserAuth) — sobrescreve o
+ * aniversário mockado do membro "você" assim que disponível, pra tela
+ * Início do Ministério mostrar a data real em vez da fictícia.
  */
-export function useMinisterioMock() {
+export function useMinisterioMock(dataNascimentoUsuario?: string | null) {
   const [pertence, setPertence] = useState(false);
   const [nome, setNome] = useState('Ministério');
   const [foto, setFoto] = useState<string | null>(null); // emoji — upload real fica pra quando tiver Storage ligado
@@ -25,19 +29,33 @@ export function useMinisterioMock() {
   const [codigoConvite, setCodigoConvite] = useState(CODIGO_CONVITE_PADRAO);
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoIngresso[]>([]);
 
+  // Mantém o aniversário de "você" em dia com a conta, inclusive se a data
+  // de nascimento for definida/alterada depois de já pertencer ao ministério.
+  useEffect(() => {
+    if (!dataNascimentoUsuario) return;
+    setMembros((prev) =>
+      prev.map((m) => (m.id === VOCE_ID ? { ...m, aniversario: dataNascimentoUsuario } : m))
+    );
+  }, [dataNascimentoUsuario]);
+
   const souAdmin = membros.find((m) => m.id === VOCE_ID)?.admin ?? false;
   const qtdAdmins = useMemo(() => membros.filter((m) => m.admin).length, [membros]);
 
-  const cadastrar = useCallback((nomeNovo: string) => {
-    setNome(nomeNovo);
-    setFoto(null);
-    setMembros([{ ...MEMBROS[0], admin: true }]);
-    setCodigoConvite(gerarCodigo());
-    // seed de demonstração: alguém "de fora" já pediu pra entrar, pra dar
-    // pra testar aprovação + alerta assim que o ministério existe
-    setSolicitacoes([{ id: 's1', nome: 'Marina Costa', codigoUsado: '' }]);
-    setPertence(true);
-  }, []);
+  const cadastrar = useCallback(
+    (nomeNovo: string) => {
+      setNome(nomeNovo);
+      setFoto(null);
+      setMembros([
+        { ...MEMBROS[0], admin: true, aniversario: dataNascimentoUsuario ?? MEMBROS[0].aniversario },
+      ]);
+      setCodigoConvite(gerarCodigo());
+      // seed de demonstração: alguém "de fora" já pediu pra entrar, pra dar
+      // pra testar aprovação + alerta assim que o ministério existe
+      setSolicitacoes([{ id: 's1', nome: 'Marina Costa', codigoUsado: '' }]);
+      setPertence(true);
+    },
+    [dataNascimentoUsuario]
+  );
 
   const ingressarComCodigo = useCallback(
     (codigo: string) => codigo.trim().toUpperCase() === codigoConvite,
