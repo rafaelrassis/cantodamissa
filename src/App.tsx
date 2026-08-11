@@ -12,10 +12,12 @@ import { ArtistaTela } from './components/ArtistaTela';
 import { BuscaTela } from './components/BuscaTela';
 import { MinisterioTela } from './components/ministerio/MinisterioTela';
 import { UserLoginModal } from './components/UserLoginModal';
+import { AlertaTopo } from './components/AlertaTopo';
 import { useTheme } from './lib/useTheme';
 import { useRepertorios } from './lib/useRepertorios';
 import { useAdminAuth } from './lib/useAdminAuth';
 import { useUserAuth } from './lib/useUserAuth';
+import { useMinisterioMock } from './lib/useMinisterioMock';
 import type { Musica, TempoLiturgico } from './types/musica';
 
 const MIN_FONT = 15;
@@ -47,6 +49,10 @@ function App() {
   const { isAdmin, login, logout } = useAdminAuth();
   const { isLoggedIn, login: loginUsuario } = useUserAuth();
   const [loginParaMinisterioAberto, setLoginParaMinisterioAberto] = useState(false);
+
+  // Levantado até aqui (em vez de ficar dentro de MinisterioTela) pra
+  // sobreviver à troca de tela e alimentar o alerta global abaixo.
+  const ministerio = useMinisterioMock();
 
   function abrirMinisterio() {
     if (isLoggedIn) {
@@ -90,8 +96,30 @@ function App() {
     if (slug) abrirCantor(slug);
   }, []);
 
-  if (musicaAtual) {
+  // Alerta global: admin do ministério com solicitação de ingresso
+  // pendente, visível em qualquer tela — exceto dentro do leitor de
+  // cifra (modo missa ao vivo não deve ter distração, mesma lógica do
+  // ad-slot que também some lá).
+  const mostrarAlertaGlobal = !musicaAtual && ministerio.souAdmin && ministerio.solicitacoes.length > 0;
+
+  function comAlerta(conteudo: React.ReactNode) {
     return (
+      <>
+        {mostrarAlertaGlobal && (
+          <AlertaTopo
+            mensagem={`${ministerio.solicitacoes.length} solicitação${
+              ministerio.solicitacoes.length === 1 ? '' : 'ões'
+            } pendente${ministerio.solicitacoes.length === 1 ? '' : 's'} no ${ministerio.nome}`}
+            onClick={() => setTela('ministerio')}
+          />
+        )}
+        {conteudo}
+      </>
+    );
+  }
+
+  if (musicaAtual) {
+    return comAlerta(
       <CifraReader
         musica={musicaAtual}
         onClose={() => setMusicaAtual(null)}
@@ -110,16 +138,16 @@ function App() {
   }
 
   if (tela === 'calendario') {
-    return (
+    return comAlerta(
       <CalendarioLiturgico onBack={() => setTela('home')} onFiltrarTempo={irParaHomeComFiltro} />
     );
   }
 
   if (tela === 'admin') {
     if (!isAdmin) {
-      return <AdminLogin onLogin={login} onBack={() => setTela('home')} />;
+      return comAlerta(<AdminLogin onLogin={login} onBack={() => setTela('home')} />);
     }
-    return (
+    return comAlerta(
       <AdminPanel
         onBack={() => setTela('home')}
         onLogout={() => {
@@ -131,17 +159,17 @@ function App() {
   }
 
   if (tela === 'top-musicas') {
-    return (
+    return comAlerta(
       <TopMusicasTela onBack={() => setTela('home')} onSelectMusica={(m) => abrirMusica(m)} />
     );
   }
 
   if (tela === 'top-artistas') {
-    return <TopArtistasTela onBack={() => setTela('home')} onSelectArtista={abrirArtista} />;
+    return comAlerta(<TopArtistasTela onBack={() => setTela('home')} onSelectArtista={abrirArtista} />);
   }
 
   if (tela === 'busca') {
-    return (
+    return comAlerta(
       <BuscaTela
         onBack={() => setTela('home')}
         onSelectMusica={(m) => abrirMusica(m)}
@@ -153,31 +181,25 @@ function App() {
   }
 
   if (tela === 'ministerio' && isLoggedIn) {
-    return <MinisterioTela onBack={() => setTela('home')} onAbrirMusica={abrirMusica} />;
+    return comAlerta(
+      <MinisterioTela onBack={() => setTela('home')} onAbrirMusica={abrirMusica} ministerio={ministerio} />
+    );
   }
 
   if (tela === 'cantor' && cantorSlug) {
-    return (
-      <CantorTela
-        slug={cantorSlug}
-        onBack={() => setTela('home')}
-        onSelectMusica={(m) => abrirMusica(m)}
-      />
+    return comAlerta(
+      <CantorTela slug={cantorSlug} onBack={() => setTela('home')} onSelectMusica={(m) => abrirMusica(m)} />
     );
   }
 
   if (tela === 'artista' && artistaNome) {
-    return (
-      <ArtistaTela
-        artista={artistaNome}
-        onBack={() => setTela('home')}
-        onSelectMusica={(m) => abrirMusica(m)}
-      />
+    return comAlerta(
+      <ArtistaTela artista={artistaNome} onBack={() => setTela('home')} onSelectMusica={(m) => abrirMusica(m)} />
     );
   }
 
   if (tela === 'repertorio-detalhe' && repertorioAtual) {
-    return (
+    return comAlerta(
       <RepertorioDetalheTela
         repertorio={repertorioAtual}
         onBack={() => setTela('home')}
@@ -192,7 +214,7 @@ function App() {
     );
   }
 
-  return (
+  return comAlerta(
     <>
       <Home
         onSelectMusica={(m, repId) => abrirMusica(m, repId ?? null)}

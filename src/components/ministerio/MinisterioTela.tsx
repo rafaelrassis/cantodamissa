@@ -1,12 +1,8 @@
 import { useState } from 'react';
-import { BarChart3, CalendarDays, ChevronLeft, Home, ListMusic, Megaphone, Users } from 'lucide-react';
-import {
-  AVISOS,
-  ESCALAS,
-  INDISPONIBILIDADES,
-  MEMBROS,
-} from '../../lib/mockMinisterio';
+import { BarChart3, CalendarDays, ChevronLeft, Home, ListMusic, Megaphone, Settings, Users } from 'lucide-react';
+import { AVISOS, ESCALAS, INDISPONIBILIDADES } from '../../lib/mockMinisterio';
 import { useRepertorios } from '../../lib/useRepertorios';
+import type { MinisterioMock } from '../../lib/useMinisterioMock';
 import type { Aviso, Escala, Indisponibilidade } from '../../types/ministerio';
 import type { Musica } from '../../types/musica';
 import { InicioTela } from './InicioTela';
@@ -17,12 +13,14 @@ import { EquipeTela } from './EquipeTela';
 import { AvisosTela } from './AvisosTela';
 import { PanoramaTela } from './PanoramaTela';
 import { AdicionarMinisterioTela } from './AdicionarMinisterioTela';
+import { ConfiguracoesMinisterioTela } from './ConfiguracoesMinisterioTela';
 import { PainelRepertorios } from '../PainelRepertorios';
 import { RepertorioDetalheTela } from '../RepertorioDetalheTela';
 
 interface Props {
   onBack: () => void;
   onAbrirMusica: (musica: Musica, repertorioId?: string | null, tom?: string | null) => void;
+  ministerio: MinisterioMock;
 }
 
 type SubTela = 'inicio' | 'escalas' | 'equipe' | 'avisos' | 'panorama' | 'repertorio';
@@ -37,41 +35,37 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
 ];
 
 /**
- * Módulo "Ministério" — mock só de UX/fluxo (dados em memória, sem
- * Supabase) PARA Início/Escalas/Equipe/Avisos/Panorama. A aba Repertório é
- * exceção: reaproveita a feature real já existente (useRepertorios +
- * PainelRepertorios + RepertorioDetalheTela, Supabase-backed com fallback
- * localStorage), só trazida pra dentro do módulo — mesmos dados de
- * "Meus repertórios" acessível pela Home, não é uma cópia nem é
- * ministério-scoped (schema não tem esse vínculo ainda).
+ * Módulo "Ministério" — mock só de UX/fluxo PARA Início/Escalas/Equipe/
+ * Avisos/Panorama. A identidade do ministério (pertence/nome/membros/
+ * admins/solicitações) vem de fora via prop `ministerio` (hook levantado
+ * até App.tsx — ver useMinisterioMock.ts) pra sobreviver à desmontagem
+ * deste componente e alimentar o alerta global de solicitação pendente.
+ * A aba Repertório reaproveita a feature real já existente (useRepertorios
+ * + PainelRepertorios + RepertorioDetalheTela) — não é ministério-scoped
+ * no schema ainda, só trazida pra dentro do módulo.
  * Login já é exigido antes de chegar aqui (ver App.tsx).
  */
-export function MinisterioTela({ onBack, onAbrirMusica }: Props) {
-  // Mock: usuário logado ainda não participa de nenhum ministério até
-  // ingressar (código de convite) ou cadastrar um novo — replica o fluxo
-  // do LouveApp, com o tema visual do app em vez do design de referência.
-  const [pertenceMinisterio, setPertenceMinisterio] = useState(false);
-  const [nomeMinisterioAtual, setNomeMinisterioAtual] = useState('Ministério');
-
+export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
   const [subTela, setSubTela] = useState<SubTela>('inicio');
   const [escalas, setEscalas] = useState<Escala[]>(ESCALAS);
   const [avisos, setAvisos] = useState<Aviso[]>(AVISOS);
   const [indisponibilidades, setIndisponibilidades] = useState<Indisponibilidade[]>(INDISPONIBILIDADES);
   const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(null);
   const [criandoEscala, setCriandoEscala] = useState(false);
+  const [configuracoesAbertas, setConfiguracoesAbertas] = useState(false);
 
   const repertoriosApi = useRepertorios();
   const [repertorioAbertoId, setRepertorioAbertoId] = useState<string | null>(null);
   const [novoNomeRepertorio, setNovoNomeRepertorio] = useState('');
 
-  if (!pertenceMinisterio) {
+  if (!ministerio.pertence) {
     return (
       <AdicionarMinisterioTela
         onBack={onBack}
         onConcluir={(nome) => {
-          if (nome) setNomeMinisterioAtual(nome);
-          setPertenceMinisterio(true);
+          if (nome) ministerio.cadastrar(nome);
         }}
+        validarCodigo={ministerio.ingressarComCodigo}
       />
     );
   }
@@ -120,14 +114,52 @@ export function MinisterioTela({ onBack, onAbrirMusica }: Props) {
     );
   }
 
+  if (configuracoesAbertas) {
+    return (
+      <ConfiguracoesMinisterioTela
+        nome={ministerio.nome}
+        foto={ministerio.foto}
+        souAdmin={ministerio.souAdmin}
+        qtdAdmins={ministerio.qtdAdmins}
+        codigoConvite={ministerio.codigoConvite}
+        onBack={() => setConfiguracoesAbertas(false)}
+        onRenomear={ministerio.renomear}
+        onAtualizarFoto={ministerio.atualizarFoto}
+        onRegenerarCodigo={ministerio.regenerarCodigo}
+        onSair={() => {
+          ministerio.sair();
+          setConfiguracoesAbertas(false);
+        }}
+        onExcluir={() => {
+          ministerio.excluir();
+          setConfiguracoesAbertas(false);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
       <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
-        <button onClick={onBack} className="mb-2 flex items-center gap-1 text-xs opacity-80">
-          <ChevronLeft size={14} /> Voltar
-        </button>
-        <h1 className="text-xl font-extrabold tracking-tight">{nomeMinisterioAtual}</h1>
-        <p className="mt-0.5 text-sm opacity-80">{MEMBROS.length} membros · área restrita</p>
+        <div className="mb-2 flex items-center justify-between">
+          <button onClick={onBack} className="flex items-center gap-1 text-xs opacity-80">
+            <ChevronLeft size={14} /> Voltar
+          </button>
+          <button
+            onClick={() => setConfiguracoesAbertas(true)}
+            aria-label="Configurações do ministério"
+            className="text-xs opacity-80"
+          >
+            <Settings size={16} />
+          </button>
+        </div>
+        <div className="flex items-center gap-3">
+          {ministerio.foto && <span className="text-2xl">{ministerio.foto}</span>}
+          <div>
+            <h1 className="text-xl font-extrabold tracking-tight">{ministerio.nome}</h1>
+            <p className="mt-0.5 text-sm opacity-80">{ministerio.membros.length} membros · área restrita</p>
+          </div>
+        </div>
       </header>
 
       <nav className="mx-auto flex max-w-2xl overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)]">
@@ -150,10 +182,14 @@ export function MinisterioTela({ onBack, onAbrirMusica }: Props) {
       <div className="mx-auto max-w-2xl">
         {subTela === 'inicio' && (
           <InicioTela
-            nomeMinisterio={nomeMinisterioAtual}
-            membros={MEMBROS}
+            nomeMinisterio={ministerio.nome}
+            membros={ministerio.membros}
             escalas={escalas}
             avisos={avisos}
+            souAdmin={ministerio.souAdmin}
+            solicitacoes={ministerio.solicitacoes}
+            onAprovarSolicitacao={ministerio.aprovarSolicitacao}
+            onRecusarSolicitacao={ministerio.recusarSolicitacao}
             onAbrirEscala={setEscalaAbertaId}
             onVerEscalas={() => setSubTela('escalas')}
             onVerAvisos={() => setSubTela('avisos')}
@@ -185,7 +221,7 @@ export function MinisterioTela({ onBack, onAbrirMusica }: Props) {
 
         {subTela === 'equipe' && (
           <EquipeTela
-            membros={MEMBROS}
+            membros={ministerio.membros}
             indisponibilidades={indisponibilidades}
             onAdicionarIndisponibilidade={(data, motivo) =>
               setIndisponibilidades((prev) => [
@@ -193,6 +229,14 @@ export function MinisterioTela({ onBack, onAbrirMusica }: Props) {
                 { id: `i${prev.length + 1}`, membroId: 'm1', data, motivo },
               ])
             }
+            souAdmin={ministerio.souAdmin}
+            codigoConvite={ministerio.codigoConvite}
+            solicitacoes={ministerio.solicitacoes}
+            onAprovarSolicitacao={ministerio.aprovarSolicitacao}
+            onRecusarSolicitacao={ministerio.recusarSolicitacao}
+            onTornarAdmin={ministerio.tornarAdmin}
+            onRemoverAdmin={ministerio.removerAdmin}
+            onRemoverMembro={ministerio.removerMembro}
           />
         )}
 

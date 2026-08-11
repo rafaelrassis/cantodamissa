@@ -1,34 +1,48 @@
 import { useState } from 'react';
-import { Check, Copy, Plus, Trash2, UserPlus, X } from 'lucide-react';
-import { CODIGO_CONVITE, FUNCOES, formatarDataLonga } from '../../lib/mockMinisterio';
+import { Check, Copy, MoreVertical, Plus, Shield, ShieldOff, Trash2, UserMinus, UserPlus, X } from 'lucide-react';
+import { FUNCOES, formatarDataLonga } from '../../lib/mockMinisterio';
 import type { Indisponibilidade, MembroMinisterio, SolicitacaoIngresso } from '../../types/ministerio';
 
 interface Props {
   membros: MembroMinisterio[];
   indisponibilidades: Indisponibilidade[];
   onAdicionarIndisponibilidade: (data: string, motivo: string) => void;
+  souAdmin: boolean;
+  codigoConvite: string;
+  solicitacoes: SolicitacaoIngresso[];
+  onAprovarSolicitacao: (s: SolicitacaoIngresso) => void;
+  onRecusarSolicitacao: (id: string) => void;
+  onTornarAdmin: (membroId: string) => void;
+  onRemoverAdmin: (membroId: string) => void;
+  onRemoverMembro: (membroId: string) => void;
 }
 
-const SOLICITACOES_MOCK: SolicitacaoIngresso[] = [
-  { id: 's1', nome: 'Marina Costa', codigoUsado: CODIGO_CONVITE },
-];
-
-export function EquipeTela({ membros, indisponibilidades, onAdicionarIndisponibilidade }: Props) {
+export function EquipeTela({
+  membros,
+  indisponibilidades,
+  onAdicionarIndisponibilidade,
+  souAdmin,
+  codigoConvite,
+  solicitacoes,
+  onAprovarSolicitacao,
+  onRecusarSolicitacao,
+  onTornarAdmin,
+  onRemoverAdmin,
+  onRemoverMembro,
+}: Props) {
   const [aba, setAba] = useState<'membros' | 'funcoes' | 'indisponibilidades'>('membros');
   const [convidarAberto, setConvidarAberto] = useState(false);
   const [copiado, setCopiado] = useState(false);
-  const [solicitacoes, setSolicitacoes] = useState(SOLICITACOES_MOCK);
   const [novaData, setNovaData] = useState('');
   const [novoMotivo, setNovoMotivo] = useState('');
+  const [menuMembroId, setMenuMembroId] = useState<string | null>(null);
+
+  const qtdAdmins = membros.filter((m) => m.admin).length;
 
   function copiarCodigo() {
-    navigator.clipboard?.writeText(CODIGO_CONVITE).catch(() => {});
+    navigator.clipboard?.writeText(codigoConvite).catch(() => {});
     setCopiado(true);
     setTimeout(() => setCopiado(false), 1500);
-  }
-
-  function aprovar(id: string) {
-    setSolicitacoes((s) => s.filter((x) => x.id !== id));
   }
 
   return (
@@ -49,17 +63,19 @@ export function EquipeTela({ membros, indisponibilidades, onAdicionarIndisponibi
 
       {aba === 'membros' && (
         <div className="mt-4 px-4">
-          <button
-            onClick={() => setConvidarAberto(true)}
-            className="mb-4 flex w-full items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
-          >
-            <span className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
-              <UserPlus size={16} /> Convidar membros
-            </span>
-            <span className="text-xs text-[var(--muted)]">Gerar código</span>
-          </button>
+          {souAdmin && (
+            <button
+              onClick={() => setConvidarAberto(true)}
+              className="mb-4 flex w-full items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
+            >
+              <span className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
+                <UserPlus size={16} /> Convidar membros
+              </span>
+              <span className="text-xs text-[var(--muted)]">Ver código</span>
+            </button>
+          )}
 
-          {solicitacoes.length > 0 && (
+          {souAdmin && solicitacoes.length > 0 && (
             <div className="mb-4 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent)]/10 p-3">
               <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--accent)]">
                 Solicitações pendentes ({solicitacoes.length})
@@ -69,14 +85,14 @@ export function EquipeTela({ membros, indisponibilidades, onAdicionarIndisponibi
                   <span className="text-[var(--text)]">{s.nome}</span>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => aprovar(s.id)}
+                      onClick={() => onAprovarSolicitacao(s)}
                       className="rounded-full bg-[var(--accent)] p-1.5 text-[var(--accent-fg)]"
                       aria-label="Aprovar"
                     >
                       <Check size={14} />
                     </button>
                     <button
-                      onClick={() => aprovar(s.id)}
+                      onClick={() => onRecusarSolicitacao(s.id)}
                       className="rounded-full bg-[var(--border)] p-1.5 text-[var(--muted)]"
                       aria-label="Recusar"
                     >
@@ -93,7 +109,7 @@ export function EquipeTela({ membros, indisponibilidades, onAdicionarIndisponibi
           </p>
           <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
             {membros.map((m) => (
-              <li key={m.id} className="flex items-center gap-3 px-4 py-3">
+              <li key={m.id} className="relative flex items-center gap-3 px-4 py-3">
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${m.avatarCor}`}
                 >
@@ -104,9 +120,57 @@ export function EquipeTela({ membros, indisponibilidades, onAdicionarIndisponibi
                     {m.nome} {m.admin && <span className="text-[10px] font-normal text-[var(--accent)]">· admin</span>}
                   </p>
                   <p className="truncate text-xs text-[var(--muted)]">
-                    {m.funcoes.map((f) => FUNCOES.find((x) => x.id === f)?.nome).join(', ')}
+                    {m.funcoes.map((f) => FUNCOES.find((x) => x.id === f)?.nome).join(', ') || 'Sem função'}
                   </p>
                 </div>
+
+                {souAdmin && (
+                  <button
+                    onClick={() => setMenuMembroId((atual) => (atual === m.id ? null : m.id))}
+                    aria-label="Mais opções"
+                    className="shrink-0 text-[var(--muted)]"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+                )}
+
+                {menuMembroId === m.id && (
+                  <div className="absolute right-4 top-12 z-10 w-52 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
+                    {m.admin ? (
+                      <button
+                        onClick={() => {
+                          if (qtdAdmins <= 1) return;
+                          onRemoverAdmin(m.id);
+                          setMenuMembroId(null);
+                        }}
+                        disabled={qtdAdmins <= 1}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm disabled:opacity-40"
+                      >
+                        <ShieldOff size={14} /> Remover admin
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          onTornarAdmin(m.id);
+                          setMenuMembroId(null);
+                        }}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm"
+                      >
+                        <Shield size={14} /> Tornar admin
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        onRemoverMembro(m.id);
+                        setMenuMembroId(null);
+                      }}
+                      disabled={m.admin && qtdAdmins <= 1}
+                      className="flex w-full items-center gap-2 border-t border-[var(--border)] px-4 py-2.5 text-left text-sm text-red-500 disabled:opacity-40"
+                    >
+                      <UserMinus size={14} /> Remover do ministério
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -198,7 +262,7 @@ export function EquipeTela({ membros, indisponibilidades, onAdicionarIndisponibi
             </p>
             <div className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
               <span className="font-mono text-lg font-bold tracking-wider text-[var(--text)]">
-                {CODIGO_CONVITE}
+                {codigoConvite}
               </span>
               <button onClick={copiarCodigo} className="text-[var(--accent)]" aria-label="Copiar código">
                 <Copy size={18} />

@@ -12,13 +12,14 @@ import {
   Send,
   Trash2,
 } from 'lucide-react';
-import { CODIGO_CONVITE, FUNCOES } from '../../lib/mockMinisterio';
+import { FUNCOES } from '../../lib/mockMinisterio';
 import type { FuncaoMinisterio } from '../../types/ministerio';
 import { FuncaoEditorTela } from './FuncaoEditorTela';
 
 interface Props {
   onBack: () => void;
   onConcluir: (nomeMinisterio?: string) => void;
+  validarCodigo: (codigo: string) => boolean;
 }
 
 type Passo = 'opcoes' | 'ingressar' | 'cadastrar';
@@ -33,7 +34,7 @@ type Passo = 'opcoes' | 'ingressar' | 'cadastrar';
  * Mock: a personalização de funções feita aqui é só cosmética nesta
  * etapa — não é persistida em nenhum lugar ainda (sem Supabase).
  */
-export function AdicionarMinisterioTela({ onBack, onConcluir }: Props) {
+export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo }: Props) {
   const [passo, setPasso] = useState<Passo>('opcoes');
 
   // ---- Ingressar ----
@@ -43,7 +44,7 @@ export function AdicionarMinisterioTela({ onBack, onConcluir }: Props) {
   const [passoAPassoAberto, setPassoAPassoAberto] = useState(true);
 
   function handleSolicitarEntrada() {
-    if (codigo.trim().toUpperCase() === CODIGO_CONVITE) {
+    if (validarCodigo(codigo)) {
       setSolicitacaoEnviada(true);
     } else {
       setErroCodigo('Código inválido. Confira com o administrador do ministério.');

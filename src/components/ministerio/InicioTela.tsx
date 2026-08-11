@@ -1,12 +1,16 @@
-import { CalendarDays, Cake, ChevronRight, Megaphone, Music2, Users } from 'lucide-react';
+import { Bell, CalendarDays, Cake, Check, ChevronRight, Megaphone, Music2, Users, X } from 'lucide-react';
 import { formatarDataCurta } from '../../lib/mockMinisterio';
-import type { Aviso, Escala, MembroMinisterio } from '../../types/ministerio';
+import type { Aviso, Escala, MembroMinisterio, SolicitacaoIngresso } from '../../types/ministerio';
 
 interface Props {
   nomeMinisterio: string;
   membros: MembroMinisterio[];
   escalas: Escala[];
   avisos: Aviso[];
+  souAdmin: boolean;
+  solicitacoes: SolicitacaoIngresso[];
+  onAprovarSolicitacao: (s: SolicitacaoIngresso) => void;
+  onRecusarSolicitacao: (id: string) => void;
   onAbrirEscala: (id: string) => void;
   onVerEscalas: () => void;
   onVerAvisos: () => void;
@@ -17,7 +21,19 @@ const MESES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 
-export function InicioTela({ nomeMinisterio, membros, escalas, avisos, onAbrirEscala, onVerEscalas, onVerAvisos }: Props) {
+export function InicioTela({
+  nomeMinisterio,
+  membros,
+  escalas,
+  avisos,
+  souAdmin,
+  solicitacoes,
+  onAprovarSolicitacao,
+  onRecusarSolicitacao,
+  onAbrirEscala,
+  onVerEscalas,
+  onVerAvisos,
+}: Props) {
   const hoje = new Date();
   const hojeISO = hoje.toISOString().slice(0, 10);
   const mesAtual = hoje.getMonth();
@@ -48,6 +64,35 @@ export function InicioTela({ nomeMinisterio, membros, escalas, avisos, onAbrirEs
           </span>
         </div>
       </div>
+
+      {souAdmin && solicitacoes.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-[var(--accent)]/40 bg-[var(--accent)]/10 p-4">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--accent)]">
+            <Bell size={13} /> Solicitações pendentes ({solicitacoes.length})
+          </p>
+          {solicitacoes.map((s) => (
+            <div key={s.id} className="flex items-center justify-between py-1.5 text-sm">
+              <span>{s.nome}</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onAprovarSolicitacao(s)}
+                  className="rounded-full bg-[var(--accent)] p-1.5 text-[var(--accent-fg)]"
+                  aria-label="Aprovar"
+                >
+                  <Check size={14} />
+                </button>
+                <button
+                  onClick={() => onRecusarSolicitacao(s.id)}
+                  className="rounded-full bg-[var(--border)] p-1.5 text-[var(--muted)]"
+                  aria-label="Recusar"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <Secao titulo="Avisos" contagem={`${avisosDestaque.length}`} subtitulo="Em destaque" onVerTodos={onVerAvisos}>
         {avisosDestaque.length === 0 ? (
