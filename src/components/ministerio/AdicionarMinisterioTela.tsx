@@ -7,11 +7,9 @@ import {
   ChevronUp,
   Info,
   LogIn,
-  Music,
   Pencil,
   Plus,
   Send,
-  SlidersHorizontal,
   Trash2,
 } from 'lucide-react';
 import { CODIGO_CONVITE, FUNCOES } from '../../lib/mockMinisterio';
@@ -29,13 +27,11 @@ type Passo = 'opcoes' | 'ingressar' | 'cadastrar';
  * Estado exibido quando o usuário está logado mas ainda não pertence a
  * nenhum ministério — mesmo fluxo do LouveApp (ingressar por código de
  * convite, com solicitação sujeita a aprovação do admin; ou cadastrar um
- * ministério novo, com modelo/módulos/funções iniciais), com o tema
- * visual do Canto da Missa em vez de copiar o design de referência.
+ * ministério novo, com nome e funções iniciais), com o tema visual do
+ * Canto da Missa em vez de copiar o design de referência.
  *
  * Mock: a personalização de funções feita aqui é só cosmética nesta
- * etapa — não é persistida em nenhum lugar ainda (sem Supabase). Módulos
- * e modelo de ministério são exibidos mas ainda não configuráveis
- * (fica pra quando o módulo Repertório for integrado de verdade).
+ * etapa — não é persistida em nenhum lugar ainda (sem Supabase).
  */
 export function AdicionarMinisterioTela({ onBack, onConcluir }: Props) {
   const [passo, setPasso] = useState<Passo>('opcoes');
@@ -257,37 +253,6 @@ export function AdicionarMinisterioTela({ onBack, onConcluir }: Props) {
               placeholder="Nome do ministério *"
               className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
             />
-
-            <h3 className="mt-6 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-              Modelo de ministério
-            </h3>
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              Selecione uma configuração inicial para o ministério
-            </p>
-            <div className="mt-3 flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent-light,var(--surface))] text-[var(--accent)]">
-                <Music size={18} />
-              </span>
-              <span className="flex-1">
-                <span className="block text-sm font-semibold">Louvor</span>
-                <span className="mt-0.5 block text-xs text-[var(--muted)]">
-                  Ministérios de música em geral, bandas e equipes de louvor.
-                </span>
-              </span>
-              <ChevronDown size={16} className="shrink-0 text-[var(--muted)]" />
-            </div>
-
-            <div className="mt-6 flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-              <span>
-                <span className="block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                  Módulos <span className="ml-1 rounded-full bg-[var(--bg)] px-1.5 py-0.5 text-[10px]">1</span>
-                </span>
-                <span className="mt-0.5 block text-sm">Repertório</span>
-              </span>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)]" title="Em breve">
-                <SlidersHorizontal size={16} />
-              </span>
-            </div>
 
             <div className="mt-6 flex items-center justify-between">
               <span>
