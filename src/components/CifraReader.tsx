@@ -45,6 +45,7 @@ interface Props {
   onAbrirCantor?: (slug: string) => void;
   onAbrirArtista?: (artista: string) => void;
   tomForcado?: string | null;
+  userName?: string | null;
 }
 
 export function CifraReader({
@@ -60,6 +61,7 @@ export function CifraReader({
   onAbrirCantor,
   onAbrirArtista,
   tomForcado = null,
+  userName = null,
 }: Props) {
   const [semitones, setSemitones] = useState(0);
   const [capo, setCapo] = useState(musica.capo);
@@ -465,6 +467,7 @@ export function CifraReader({
         <SubmissaoForm
           modo="correcao"
           musicaBase={musica}
+          userName={userName}
           onClose={() => setFormularioCorrecaoAberto(false)}
           onSubmit={(dados) =>
             criarSubmissao({ ...dados, tipo: 'correcao', musicaOriginalId: musica.id })

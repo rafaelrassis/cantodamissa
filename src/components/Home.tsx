@@ -499,6 +499,7 @@ export function Home({
       {formularioAberto && (
         <SubmissaoForm
           modo="nova"
+          userName={userName}
           onClose={() => setFormularioAberto(false)}
           onSubmit={(dados) => criarSubmissao({ ...dados, tipo: 'nova' })}
         />

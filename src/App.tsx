@@ -143,6 +143,7 @@ function App() {
         onSelectMusica={(m) => abrirMusica(m, repertorioId)}
         onAbrirCantor={abrirCantor}
         onAbrirArtista={abrirArtista}
+        userName={userName}
       />
     );
   }
