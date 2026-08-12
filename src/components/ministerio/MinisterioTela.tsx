@@ -17,7 +17,7 @@ import { AvisosTela } from './AvisosTela';
 import { PanoramaTela } from './PanoramaTela';
 import { AdicionarMinisterioTela } from './AdicionarMinisterioTela';
 import { ConfiguracoesMinisterioTela } from './ConfiguracoesMinisterioTela';
-import { PainelRepertorios } from '../PainelRepertorios';
+import { MinisterioRepertoriosTela } from './MinisterioRepertoriosTela';
 import { RepertorioDetalheTela } from '../RepertorioDetalheTela';
 
 interface Props {
@@ -46,12 +46,13 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
  * desmontagem deste componente e alimentar o alerta global de
  * solicitação pendente.
  * A aba Repertório reaproveita a feature real já existente (useRepertorios
- * + PainelRepertorios + RepertorioDetalheTela) — não é ministério-scoped
- * no schema ainda, só trazida pra dentro do módulo. Além dela, cada Escala
- * também pode ganhar seu próprio repertório vinculado (escalaId) — aba
- * "Músicas" de cada Escala (ver EscalaDetalheTela). `repertoriosApi` é
- * instanciado aqui uma única vez e passado adiante pras duas pontas, pra
- * não duplicar a busca.
+ * + RepertorioDetalheTela) — não é ministério-scoped no schema ainda, só
+ * trazida pra dentro do módulo. Todo repertório aqui nasce vinculado a uma
+ * Escala (ver MinisterioRepertoriosTela e garantirRepertorioDaEscala); é a
+ * mesma amarração usada na aba "Músicas" de cada Escala (ver
+ * EscalaDetalheTela) — 1 escala = 1 repertório, então os dois caminhos
+ * sempre abrem o mesmo registro. `repertoriosApi` é instanciado aqui uma
+ * única vez e passado adiante pras duas pontas, pra não duplicar a busca.
  * Login já é exigido antes de chegar aqui (ver App.tsx).
  */
 export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
@@ -67,7 +68,6 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
 
   const repertoriosApi = useRepertorios();
   const [repertorioAbertoId, setRepertorioAbertoId] = useState<string | null>(null);
-  const [novoNomeRepertorio, setNovoNomeRepertorio] = useState('');
 
   if (!ministerio.pertence) {
     return (
@@ -233,18 +233,13 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         )}
 
         {subTela === 'repertorio' && (
-          <div className="flex flex-col gap-3 p-4">
-            <PainelRepertorios
-              repertorios={repertoriosApi.repertorios}
-              repertorioCompartilhado={null}
-              novoNome={novoNomeRepertorio}
-              setNovoNome={setNovoNomeRepertorio}
-              criar={repertoriosApi.criar}
-              onAbrirRepertorio={setRepertorioAbertoId}
-              onSelectMusica={(m, repId) => onAbrirMusica(m, repId ?? null)}
-              onClonar={repertoriosApi.duplicar}
-            />
-          </div>
+          <MinisterioRepertoriosTela
+            repertorios={repertoriosApi.repertorios}
+            escalas={escalasApi.escalas}
+            garantirRepertorioDaEscala={repertoriosApi.garantirRepertorioDaEscala}
+            onAbrirRepertorio={setRepertorioAbertoId}
+            onIrParaEscalas={() => setSubTela('escalas')}
+          />
         )}
 
         {subTela === 'equipe' && (
