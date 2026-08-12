@@ -22,12 +22,35 @@ export function useRepertorios() {
   }, [recarregar]);
 
   const criar = useCallback(
-    async (nome: string) => {
-      const novo = await api.criarRepertorio(nome);
+    async (nome: string, escalaId: string | null = null) => {
+      const novo = await api.criarRepertorio(nome, escalaId);
       await recarregar();
       return novo;
     },
     [recarregar]
+  );
+
+  /** Repertório já vinculado a uma escala, se existir — busca na lista em
+   * memória primeiro (evita ida ao servidor pra um dado que já temos). */
+  const obterPorEscala = useCallback(
+    (escalaId: string) => repertorios.find((r) => r.escalaId === escalaId) ?? null,
+    [repertorios]
+  );
+
+  /** Garante que a escala tem um repertório vinculado — usa o existente ou
+   * cria um na hora (nome = título da escala). 1 escala = 1 repertório. */
+  const garantirRepertorioDaEscala = useCallback(
+    async (escalaId: string, nomeEscala: string) => {
+      const existente = repertorios.find((r) => r.escalaId === escalaId);
+      if (existente) return existente;
+      const doServidor = await api.obterRepertorioPorEscala(escalaId);
+      if (doServidor) {
+        await recarregar();
+        return doServidor;
+      }
+      return criar(nomeEscala, escalaId);
+    },
+    [repertorios, criar, recarregar]
   );
 
   const renomear = useCallback(
@@ -110,6 +133,8 @@ export function useRepertorios() {
     renomear,
     remover,
     duplicar,
+    obterPorEscala,
+    garantirRepertorioDaEscala,
     adicionarMusica,
     removerMusica,
     moverMusicaParaRito,
@@ -118,3 +143,5 @@ export function useRepertorios() {
     reordenarRitos,
   };
 }
+
+export type RepertoriosApi = ReturnType<typeof useRepertorios>;

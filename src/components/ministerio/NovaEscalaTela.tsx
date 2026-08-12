@@ -7,6 +7,7 @@ import {
   Eye,
   Info,
   ListMusic,
+  Lock,
   Music,
   Palette,
   Plus,
@@ -16,10 +17,9 @@ import {
   UsersRound,
   X,
 } from 'lucide-react';
-import { MEMBROS, FUNCOES, PALETAS_CORES, tituloMusica, itensRoteiroComMusicas } from '../../lib/mockMinisterio';
-import type { Escala, EscalaMusica, ItemRoteiro, ParticipanteEscala } from '../../types/ministerio';
+import { MEMBROS, FUNCOES, PALETAS_CORES, itensRoteiroComMusicas } from '../../lib/mockMinisterio';
+import type { Escala, ItemRoteiro, ParticipanteEscala } from '../../types/ministerio';
 import { MembrosSelecionarTela } from './MembrosSelecionarTela';
-import { MusicasSelecionarTela } from './MusicasSelecionarTela';
 import { EventoRoteiroTela } from './EventoRoteiroTela';
 
 interface Props {
@@ -42,18 +42,15 @@ export function NovaEscalaTela({ onCancelar, onSalvar }: Props) {
   const [seletorPaletaAberto, setSeletorPaletaAberto] = useState(false);
 
   const [participantes, setParticipantes] = useState<ParticipanteEscala[]>([]);
-  const [musicas, setMusicas] = useState<EscalaMusica[]>([]);
   const [roteiroEventos, setRoteiroEventos] = useState<ItemRoteiro[]>([]);
   const [avisoRoteiroDispensado, setAvisoRoteiroDispensado] = useState(false);
 
   const [selecionandoMembros, setSelecionandoMembros] = useState(false);
-  const [selecionandoMusicas, setSelecionandoMusicas] = useState(false);
   const [criandoEvento, setCriandoEvento] = useState(false);
 
-  const itensRoteiro = useMemo(
-    () => itensRoteiroComMusicas({ roteiro: roteiroEventos, musicas }),
-    [roteiroEventos, musicas]
-  );
+  // Sem repertório ainda (só existe depois de salvar — ver aba Músicas),
+  // então o roteiro aqui só tem os eventos manuais.
+  const itensRoteiro = useMemo(() => itensRoteiroComMusicas(roteiroEventos, null), [roteiroEventos]);
 
   const podeSalvar = titulo.trim() && data;
 
@@ -69,17 +66,12 @@ export function NovaEscalaTela({ onCancelar, onSalvar }: Props) {
       solicitarConfirmacao,
       corPaleta,
       participantes,
-      musicas,
       roteiro: roteiroEventos,
     });
   }
 
   function removerItemRoteiro(item: ItemRoteiro) {
-    if (item.tipo === 'musica') {
-      setMusicas((prev) => prev.filter((m) => m.musicaId !== item.musicaId));
-    } else {
-      setRoteiroEventos((prev) => prev.filter((r) => r.id !== item.id));
-    }
+    setRoteiroEventos((prev) => prev.filter((r) => r.id !== item.id));
   }
 
   if (selecionandoMembros) {
@@ -90,19 +82,6 @@ export function NovaEscalaTela({ onCancelar, onSalvar }: Props) {
         onConfirmar={(sel) => {
           setParticipantes(sel.map((s) => ({ ...s, status: 'pendente' })));
           setSelecionandoMembros(false);
-        }}
-      />
-    );
-  }
-
-  if (selecionandoMusicas) {
-    return (
-      <MusicasSelecionarTela
-        jaAdicionadas={musicas.map((m) => m.musicaId)}
-        onCancelar={() => setSelecionandoMusicas(false)}
-        onConfirmar={(sel) => {
-          setMusicas(sel);
-          setSelecionandoMusicas(false);
         }}
       />
     );
@@ -149,7 +128,6 @@ export function NovaEscalaTela({ onCancelar, onSalvar }: Props) {
           />
           <TabBtn
             icon={<Music size={18} />}
-            count={musicas.length}
             label="Músicas"
             active={aba === 'musicas'}
             onClick={() => setAba('musicas')}
@@ -328,66 +306,10 @@ export function NovaEscalaTela({ onCancelar, onSalvar }: Props) {
         )}
 
         {aba === 'musicas' && (
-          <div className="mt-4">
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSelecionandoMusicas(true)}
-                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)]"
-              >
-                <Plus size={16} /> Adicionar
-              </button>
-              <button
-                disabled
-                title="Em breve"
-                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)] opacity-50"
-              >
-                <Shuffle size={16} /> Sortear
-              </button>
-            </div>
-
-            {musicas.length === 0 ? (
-              <EmptyState icon={<Music size={40} />} texto="Para adicionar uma música, toque no botão: ( + Adicionar )" />
-            ) : (
-              <ul className="mt-4 flex flex-col gap-1">
-                {musicas.map((m, i) => (
-                  <li key={`${m.musicaId}-${i}`} className="flex items-center gap-3 rounded-lg px-2 py-2.5">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--accent)]">
-                      <ListMusic size={16} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold">{tituloMusica(m.musicaId)}</span>
-                      <span className="flex items-center gap-2 text-xs text-[var(--muted)]">
-                        <input
-                          value={m.momento}
-                          onChange={(e) =>
-                            setMusicas((prev) =>
-                              prev.map((x, idx) => (idx === i ? { ...x, momento: e.target.value } : x))
-                            )
-                          }
-                          className="w-24 rounded border border-[var(--border)] bg-[var(--bg)] px-1.5 py-0.5 text-xs"
-                        />
-                        · Tom:
-                        <input
-                          value={m.tom}
-                          onChange={(e) =>
-                            setMusicas((prev) => prev.map((x, idx) => (idx === i ? { ...x, tom: e.target.value } : x)))
-                          }
-                          className="w-10 rounded border border-[var(--border)] bg-[var(--bg)] px-1.5 py-0.5 text-xs"
-                        />
-                      </span>
-                    </span>
-                    <button
-                      onClick={() => setMusicas((prev) => prev.filter((_, idx) => idx !== i))}
-                      aria-label="Remover música"
-                      className="text-[var(--muted)]"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <EmptyState
+            icon={<Lock size={36} />}
+            texto="Salve os detalhes da escala primeiro — o repertório (organizado por rito) fica disponível depois, na tela da escala já salva."
+          />
         )}
 
         {aba === 'roteiro' && (

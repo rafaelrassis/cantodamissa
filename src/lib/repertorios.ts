@@ -50,6 +50,7 @@ export interface Repertorio {
   nome: string;
   criadoEm: string; // ISO
   shareToken: string | null;
+  escalaId: string | null; // vínculo com a Escala do Ministério que o criou
   ritos: string[]; // ordenados
   itens: ItemRepertorio[];
 }
@@ -91,6 +92,7 @@ interface LinhaRepertorioSupabase {
   nome: string;
   created_at: string;
   share_token: string | null;
+  escala_id: string | null;
   repertorio_ritos: { nome: string; ordem: number }[];
   repertorio_musicas: {
     musica_id: string;
@@ -102,7 +104,7 @@ interface LinhaRepertorioSupabase {
 }
 
 const SELECT_REPERTORIO =
-  'id, nome, created_at, share_token, ' +
+  'id, nome, created_at, share_token, escala_id, ' +
   'repertorio_ritos(nome, ordem), ' +
   'repertorio_musicas(musica_id, momento, tom_escolhido, ordem, musicas(title, artist, original_tone))';
 
@@ -124,6 +126,7 @@ function mapearRepertorio(row: LinhaRepertorioSupabase): Repertorio {
     nome: row.nome,
     criadoEm: row.created_at,
     shareToken: row.share_token,
+    escalaId: row.escala_id,
     ritos,
     itens,
   };
@@ -183,7 +186,7 @@ export async function obterRepertorio(id: string): Promise<Repertorio | null> {
   return data ? mapearRepertorio(data as unknown as LinhaRepertorioSupabase) : null;
 }
 
-export async function criarRepertorio(nome: string): Promise<Repertorio> {
+export async function criarRepertorio(nome: string, escalaId: string | null = null): Promise<Repertorio> {
   const nomeFinal = nome.trim() || 'Repertório sem nome';
 
   if (!isSupabaseConfigured) {
@@ -192,6 +195,7 @@ export async function criarRepertorio(nome: string): Promise<Repertorio> {
       nome: nomeFinal,
       criadoEm: new Date().toISOString(),
       shareToken: null,
+      escalaId,
       ritos: [...RITOS_PADRAO],
       itens: [],
     };
@@ -201,7 +205,7 @@ export async function criarRepertorio(nome: string): Promise<Repertorio> {
 
   const { data, error } = await supabase
     .from('repertorios')
-    .insert({ nome: nomeFinal, device_key: getDeviceKey() })
+    .insert({ nome: nomeFinal, device_key: getDeviceKey(), escala_id: escalaId })
     .select('id')
     .single();
 
@@ -216,6 +220,25 @@ export async function criarRepertorio(nome: string): Promise<Repertorio> {
   const criado = await obterRepertorio(data.id);
   if (!criado) throw new Error('criarRepertorio: falha ao recarregar após criar');
   return criado;
+}
+
+/** Busca o repertório já vinculado a uma escala (1 escala = 1 repertório). */
+export async function obterRepertorioPorEscala(escalaId: string): Promise<Repertorio | null> {
+  if (!isSupabaseConfigured) {
+    return lerMock().find((r) => r.escalaId === escalaId) ?? null;
+  }
+
+  const { data, error } = await supabase
+    .from('repertorios')
+    .select(SELECT_REPERTORIO)
+    .eq('escala_id', escalaId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('obterRepertorioPorEscala:', error.message);
+    return null;
+  }
+  return data ? mapearRepertorio(data as unknown as LinhaRepertorioSupabase) : null;
 }
 
 export async function renomearRepertorio(id: string, nome: string): Promise<void> {
@@ -242,7 +265,8 @@ export async function removerRepertorio(id: string): Promise<void> {
 }
 
 /** Cria uma cópia independente de um repertório — mesmos ritos e músicas,
- * nome sufixado " (cópia)", sem share_token próprio (link não é herdado). */
+ * nome sufixado " (cópia)", sem share_token nem escalaId próprios (link e
+ * vínculo com escala não são herdados — a cópia nasce solta). */
 export async function duplicarRepertorio(id: string): Promise<Repertorio> {
   const original = await obterRepertorio(id);
   if (!original) throw new Error('duplicarRepertorio: repertório original não encontrado');
@@ -254,6 +278,7 @@ export async function duplicarRepertorio(id: string): Promise<Repertorio> {
       nome: nomeCopia,
       criadoEm: new Date().toISOString(),
       shareToken: null,
+      escalaId: null,
       ritos: [...original.ritos],
       itens: original.itens.map((i) => ({ ...i })),
     };

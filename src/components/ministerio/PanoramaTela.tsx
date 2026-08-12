@@ -1,12 +1,14 @@
 import { MEMBROS } from '../../lib/mockMinisterio';
+import type { Repertorio } from '../../lib/repertorios';
 import type { Escala, Indisponibilidade } from '../../types/ministerio';
 
 interface Props {
   escalas: Escala[];
+  repertorios: Repertorio[];
   indisponibilidades: Indisponibilidade[];
 }
 
-export function PanoramaTela({ escalas, indisponibilidades }: Props) {
+export function PanoramaTela({ escalas, repertorios, indisponibilidades }: Props) {
   const totalEscalacoes = escalas.reduce((acc, e) => acc + e.participantes.length, 0);
   const totalConfirmados = escalas.reduce(
     (acc, e) => acc + e.participantes.filter((p) => p.status === 'confirmado').length,
@@ -20,8 +22,13 @@ export function PanoramaTela({ escalas, indisponibilidades }: Props) {
   const pctEscalados = Math.round((membrosEscalados.size / MEMBROS.length) * 100);
   const pctConfirmacao = totalEscalacoes ? Math.round((totalConfirmados / totalEscalacoes) * 100) : 0;
 
-  const musicasCount: Record<string, number> = {};
-  escalas.forEach((e) => e.musicas.forEach((m) => (musicasCount[m.musicaId] = (musicasCount[m.musicaId] ?? 0) + 1)));
+  const musicasCount: Record<string, { title: string; count: number }> = {};
+  repertorios.forEach((r) =>
+    r.itens.forEach((item) => {
+      const atual = musicasCount[item.musicaId] ?? { title: item.title, count: 0 };
+      musicasCount[item.musicaId] = { title: atual.title, count: atual.count + 1 };
+    })
+  );
 
   return (
     <div className="grid grid-cols-2 gap-3 px-4 py-4">
@@ -38,10 +45,10 @@ export function PanoramaTela({ escalas, indisponibilidades }: Props) {
           <p className="text-sm text-[var(--muted)]">Nenhuma música escalada ainda.</p>
         ) : (
           <ul className="space-y-1.5">
-            {Object.entries(musicasCount).map(([id, count]) => (
+            {Object.entries(musicasCount).map(([id, info]) => (
               <li key={id} className="flex items-center justify-between text-sm">
-                <span className="text-[var(--text)]">Bondade de Deus</span>
-                <span className="font-semibold text-[var(--accent)]">{count}x</span>
+                <span className="text-[var(--text)]">{info.title}</span>
+                <span className="font-semibold text-[var(--accent)]">{info.count}x</span>
               </li>
             ))}
           </ul>

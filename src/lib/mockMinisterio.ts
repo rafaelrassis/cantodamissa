@@ -10,7 +10,7 @@ import type {
   ItemRoteiro,
   MembroMinisterio,
 } from '../types/ministerio';
-import { mockMusicas } from './mockMusicas';
+import type { Repertorio } from './repertorios';
 
 export const FUNCOES: FuncaoMinisterio[] = [
   { id: 'ministro', nome: 'Ministro', icone: '🎤' },
@@ -45,8 +45,8 @@ export const PALETAS_CORES: { id: string; nome: string; cor: string }[] = [
   { id: 'azul', nome: 'Azul', cor: '#2563eb' },
 ];
 
-// ids de música batendo com o mock/seed já usado no restante do app
-// ("Bondade de Deus" aparece nos prints de referência do LouveApp).
+// Seed de escalas mockadas — cada uma ganha seu Repertorio real na hora
+// (garantirRepertorioDaEscala), não tem mais "musicas" solta aqui.
 export const ESCALAS: Escala[] = [
   {
     id: 'e1',
@@ -61,10 +61,6 @@ export const ESCALAS: Escala[] = [
       { membroId: 'm2', funcaoId: 'vocalista', status: 'confirmado' },
       { membroId: 'm3', funcaoId: 'teclado', status: 'pendente' },
       { membroId: 'm5', funcaoId: 'som', status: 'pendente' },
-    ],
-    musicas: [
-      { musicaId: 'bondade-de-deus', tom: 'D', momento: 'Entrada' },
-      { musicaId: 'bondade-de-deus', tom: 'G', momento: 'Comunhão' },
     ],
     roteiro: [
       { id: 'r1', tipo: 'evento', titulo: 'Passagem de som', icone: '🔊', descricao: '18:30' },
@@ -83,7 +79,6 @@ export const ESCALAS: Escala[] = [
       { membroId: 'm1', funcaoId: 'ministro', status: 'confirmado' },
       { membroId: 'm4', funcaoId: 'backing', status: 'pendente' },
     ],
-    musicas: [{ musicaId: 'bondade-de-deus', tom: 'D', momento: 'Entrada' }],
     roteiro: [],
   },
   {
@@ -99,7 +94,6 @@ export const ESCALAS: Escala[] = [
       { membroId: 'm2', funcaoId: 'vocalista', status: 'confirmado' },
       { membroId: 'm5', funcaoId: 'bateria', status: 'recusado' },
     ],
-    musicas: [{ musicaId: 'bondade-de-deus', tom: 'D', momento: 'Entrada' }],
     roteiro: [],
   },
 ];
@@ -143,25 +137,23 @@ export function formatarDataLonga(iso: string): string {
   return d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
 }
 
-export function tituloMusica(musicaId: string): string {
-  return mockMusicas.find((m) => m.id === musicaId || m.slug === musicaId)?.title ?? 'Música';
-}
-
 /**
- * Junta os itens manuais do roteiro (tipo 'evento') com as músicas da
- * escala, exibidas como itens tipo 'musica' — elas não ficam duplicadas
- * no estado, são derivadas aqui na hora de renderizar (ver aviso na aba
- * Roteiro: "adicionadas automaticamente com base na seleção em Músicas").
+ * Junta os itens manuais do roteiro (tipo 'evento') com as músicas do
+ * Repertorio vinculado à escala, exibidas como itens tipo 'musica' — elas
+ * não ficam duplicadas no estado, são derivadas aqui na hora de renderizar
+ * (ver aviso na aba Roteiro: "adicionadas automaticamente com base na
+ * seleção em Músicas"). `repertorio` é null enquanto ele ainda não existe
+ * (escala em rascunho, antes de salvar).
  */
-export function itensRoteiroComMusicas(escala: Pick<Escala, 'roteiro' | 'musicas'>): ItemRoteiro[] {
-  const eventos = escala.roteiro.filter((r) => (r.tipo ?? 'evento') !== 'musica');
-  const musicas: ItemRoteiro[] = escala.musicas.map((m, i) => ({
-    id: `rm-${m.musicaId}-${i}`,
+export function itensRoteiroComMusicas(roteiro: ItemRoteiro[], repertorio: Repertorio | null): ItemRoteiro[] {
+  const eventos = roteiro.filter((r) => (r.tipo ?? 'evento') !== 'musica');
+  const musicas: ItemRoteiro[] = (repertorio?.itens ?? []).map((item, i) => ({
+    id: `rm-${item.musicaId}-${i}`,
     tipo: 'musica',
-    titulo: tituloMusica(m.musicaId),
-    musicaId: m.musicaId,
-    tom: m.tom,
-    momento: m.momento,
+    titulo: item.title,
+    musicaId: item.musicaId,
+    tom: item.tone,
+    momento: item.momento ?? undefined,
   }));
   return [...eventos, ...musicas];
 }
