@@ -1,4 +1,5 @@
-// Camada de dados real do Ministério (Supabase).
+// Camada de dados real do Ministério (Supabase) — substitui o estado
+// levantado em memória do protótipo original.
 //
 // Sem auth ainda (ver ADR no chat "remover auth"): cada dispositivo tem uma
 // device_key (mesma função getDeviceKey() de repertorios.ts) que funciona
@@ -228,5 +229,20 @@ export async function aprovarSolicitacao(ministerioId: string, solicitacao: Soli
 
 export async function recusarSolicitacao(id: string) {
   const { error } = await supabase.from('solicitacoes_ingresso').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function criarFuncao(ministerioId: string, nome: string, icone: string) {
+  const { error } = await supabase.from('funcoes').insert({ ministerio_id: ministerioId, nome, icone });
+  if (error) throw error;
+}
+
+export async function editarFuncao(funcaoId: string, nome: string, icone: string) {
+  const { error } = await supabase.from('funcoes').update({ nome, icone }).eq('id', funcaoId);
+  if (error) throw error;
+}
+
+export async function removerFuncao(funcaoId: string) {
+  const { error } = await supabase.from('funcoes').delete().eq('id', funcaoId);
   if (error) throw error;
 }

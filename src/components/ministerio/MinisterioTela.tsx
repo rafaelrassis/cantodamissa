@@ -39,7 +39,7 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
  * Módulo "Ministério" — mock só de UX/fluxo PARA Início/Escalas/Equipe/
  * Avisos/Panorama. A identidade do ministério (pertence/nome/membros/
  * admins/solicitações) vem de fora via prop `ministerio` (hook levantado
- * até App.tsx — ver useMinisterioMock.ts) pra sobreviver à desmontagem
+ * até App.tsx — ver useMinisterio.ts) pra sobreviver à desmontagem
  * deste componente e alimentar o alerta global de solicitação pendente.
  * A aba Repertório reaproveita a feature real já existente (useRepertorios
  * + PainelRepertorios + RepertorioDetalheTela) — não é ministério-scoped
@@ -256,6 +256,9 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
             onTornarAdmin={ministerio.tornarAdmin}
             onRemoverAdmin={ministerio.removerAdmin}
             onRemoverMembro={ministerio.removerMembro}
+            onCriarFuncao={ministerio.criarFuncao}
+            onEditarFuncao={ministerio.editarFuncao}
+            onRemoverFuncao={ministerio.removerFuncao}
           />
         )}
 

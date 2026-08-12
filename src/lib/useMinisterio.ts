@@ -4,7 +4,8 @@ import type { MinisterioIdentidade } from './ministerioApi';
 import type { SolicitacaoIngresso } from '../types/ministerio';
 
 /**
- * Substitui useMinisterioMock.ts — mesma interface de retorno (pra não
+ * Hook real do módulo Ministério (Supabase) — mesma interface antes usada
+ * pelo protótipo mockado (pra não
  * quebrar Home.tsx/MinisterioTela.tsx), agora lendo/gravando no Supabase
  * via ministerioApi.ts. Sem auth ainda: "eu" é identificado por
  * device_key (ver getDeviceKey em repertorios.ts).
@@ -125,6 +126,31 @@ export function useMinisterio(dataNascimentoUsuario?: string | null) {
     setMinisterio((prev) => (prev ? { ...prev, codigoConvite: codigo } : prev));
   }, [ministerio]);
 
+  const criarFuncao = useCallback(
+    async (nome: string, icone: string) => {
+      if (!ministerio) return;
+      await api.criarFuncao(ministerio.id, nome, icone);
+      await recarregar();
+    },
+    [ministerio, recarregar]
+  );
+
+  const editarFuncao = useCallback(
+    async (funcaoId: string, nome: string, icone: string) => {
+      await api.editarFuncao(funcaoId, nome, icone);
+      await recarregar();
+    },
+    [recarregar]
+  );
+
+  const removerFuncao = useCallback(
+    async (funcaoId: string) => {
+      await api.removerFuncao(funcaoId);
+      await recarregar();
+    },
+    [recarregar]
+  );
+
   return {
     carregando,
     pertence,
@@ -150,6 +176,9 @@ export function useMinisterio(dataNascimentoUsuario?: string | null) {
     aprovarSolicitacao,
     recusarSolicitacao,
     regenerarCodigo,
+    criarFuncao,
+    editarFuncao,
+    removerFuncao,
   };
 }
 

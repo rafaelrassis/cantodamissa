@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check, Copy, MoreVertical, Plus, Shield, ShieldOff, Trash2, UserMinus, UserPlus, X } from 'lucide-react';
 import { formatarDataLonga } from '../../lib/ministerioUtils';
 import type { FuncaoMinisterio, Indisponibilidade, MembroMinisterio, SolicitacaoIngresso } from '../../types/ministerio';
+import { FuncaoEditorTela } from './FuncaoEditorTela';
 
 interface Props {
   membros: MembroMinisterio[];
@@ -16,6 +17,9 @@ interface Props {
   onTornarAdmin: (membroId: string) => void;
   onRemoverAdmin: (membroId: string) => void;
   onRemoverMembro: (membroId: string) => void;
+  onCriarFuncao: (nome: string, icone: string) => void;
+  onEditarFuncao: (funcaoId: string, nome: string, icone: string) => void;
+  onRemoverFuncao: (funcaoId: string) => void;
 }
 
 export function EquipeTela({
@@ -31,6 +35,9 @@ export function EquipeTela({
   onTornarAdmin,
   onRemoverAdmin,
   onRemoverMembro,
+  onCriarFuncao,
+  onEditarFuncao,
+  onRemoverFuncao,
 }: Props) {
   const [aba, setAba] = useState<'membros' | 'funcoes' | 'indisponibilidades'>('membros');
   const [convidarAberto, setConvidarAberto] = useState(false);
@@ -38,6 +45,7 @@ export function EquipeTela({
   const [novaData, setNovaData] = useState('');
   const [novoMotivo, setNovoMotivo] = useState('');
   const [menuMembroId, setMenuMembroId] = useState<string | null>(null);
+  const [funcaoEditor, setFuncaoEditor] = useState<{ id: string | null; nome: string; icone: string } | null>(null);
 
   const qtdAdmins = membros.filter((m) => m.admin).length;
 
@@ -45,6 +53,22 @@ export function EquipeTela({
     navigator.clipboard?.writeText(codigoConvite).catch(() => {});
     setCopiado(true);
     setTimeout(() => setCopiado(false), 1500);
+  }
+
+  if (funcaoEditor) {
+    return (
+      <FuncaoEditorTela
+        titulo={funcaoEditor.id ? 'Editar função' : 'Nova função'}
+        nomeInicial={funcaoEditor.nome}
+        iconeInicial={funcaoEditor.icone}
+        onVoltar={() => setFuncaoEditor(null)}
+        onSalvar={(nome, icone) => {
+          if (funcaoEditor.id) onEditarFuncao(funcaoEditor.id, nome, icone);
+          else onCriarFuncao(nome, icone);
+          setFuncaoEditor(null);
+        }}
+      />
+    );
   }
 
   return (
@@ -184,14 +208,22 @@ export function EquipeTela({
           <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
             {funcoes.map((f) => (
               <li key={f.id} className="flex items-center justify-between px-4 py-3">
-                <span className="flex items-center gap-2 text-sm text-[var(--text)]">
+                <button
+                  onClick={() => setFuncaoEditor({ id: f.id, nome: f.nome, icone: f.icone })}
+                  className="flex flex-1 items-center gap-2 text-left text-sm text-[var(--text)]"
+                >
                   <span>{f.icone}</span> {f.nome}
-                </span>
-                <Trash2 size={14} className="text-[var(--muted)]" />
+                </button>
+                <button onClick={() => onRemoverFuncao(f.id)} aria-label={`Remover ${f.nome}`}>
+                  <Trash2 size={14} className="text-[var(--muted)]" />
+                </button>
               </li>
             ))}
           </ul>
-          <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]">
+          <button
+            onClick={() => setFuncaoEditor({ id: null, nome: '', icone: '🎵' })}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+          >
             <Plus size={16} /> Adicionar função
           </button>
         </div>
