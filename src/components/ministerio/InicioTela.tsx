@@ -1,11 +1,13 @@
 import { Bell, CalendarDays, Cake, Check, ChevronRight, Megaphone, Music2, Users, X } from 'lucide-react';
 import { formatarDataCurta } from '../../lib/mockMinisterio';
+import type { Repertorio } from '../../lib/repertorios';
 import type { Aviso, Escala, MembroMinisterio, SolicitacaoIngresso } from '../../types/ministerio';
 
 interface Props {
   nomeMinisterio: string;
   membros: MembroMinisterio[];
   escalas: Escala[];
+  repertorios: Repertorio[];
   avisos: Aviso[];
   souAdmin: boolean;
   solicitacoes: SolicitacaoIngresso[];
@@ -25,6 +27,7 @@ export function InicioTela({
   nomeMinisterio,
   membros,
   escalas,
+  repertorios,
   avisos,
   souAdmin,
   solicitacoes,
@@ -43,7 +46,7 @@ export function InicioTela({
     .filter((e) => e.data >= hojeISO)
     .sort((a, b) => a.data.localeCompare(b.data))
     .slice(0, 3);
-  const totalMusicas = new Set(escalas.flatMap((e) => e.musicas.map((m) => m.musicaId))).size;
+  const totalMusicas = new Set(repertorios.flatMap((r) => r.itens.map((i) => i.musicaId))).size;
   const aniversariantes = membros
     .filter((m) => m.aniversario && new Date(m.aniversario + 'T00:00:00').getMonth() === mesAtual)
     .sort((a, b) => new Date(a.aniversario!).getDate() - new Date(b.aniversario!).getDate());

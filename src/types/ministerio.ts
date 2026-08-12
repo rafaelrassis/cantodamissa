@@ -26,8 +26,9 @@ export type ParticipanteEscala = {
 };
 
 // tipo 'evento' = item manual (Título/Descrição/Duração/Ícone);
-// tipo 'musica' = espelha uma entrada de EscalaMusica, adicionada
-// automaticamente pela aba Músicas (não editável direto aqui).
+// tipo 'musica' = espelha uma entrada de ItemRepertorio (lib/repertorios.ts),
+// adicionada automaticamente com base no Repertorio vinculado à escala
+// (não editável direto aqui — ver itensRoteiroComMusicas).
 // Campos opcionais mantêm compatibilidade com itens antigos do mock
 // (só horario+descricao, sem tipo).
 export type ItemRoteiro = {
@@ -43,12 +44,6 @@ export type ItemRoteiro = {
   momento?: string;
 };
 
-export type EscalaMusica = {
-  musicaId: string;
-  tom: string;
-  momento: string; // texto livre, ex: "Entrada"
-};
-
 export type Escala = {
   id: string;
   titulo: string;
@@ -59,7 +54,11 @@ export type Escala = {
   solicitarConfirmacao: boolean;
   corPaleta?: string; // id de PALETAS_CORES (mockMinisterio.ts)
   participantes: ParticipanteEscala[];
-  musicas: EscalaMusica[];
+  // Músicas NÃO ficam mais aqui — a escala pode ter um Repertorio real
+  // vinculado por escalaId (ver lib/repertorios.ts,
+  // useRepertorios().garantirRepertorioDaEscala). "musicas" existiu antes
+  // como lista paralela solta; unificado pra evitar dois sistemas
+  // divergentes representando a mesma coisa.
   roteiro: ItemRoteiro[]; // só os itens manuais (tipo 'evento')
 };
 

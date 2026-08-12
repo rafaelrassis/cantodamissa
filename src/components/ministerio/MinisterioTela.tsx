@@ -42,7 +42,11 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
  * deste componente e alimentar o alerta global de solicitação pendente.
  * A aba Repertório reaproveita a feature real já existente (useRepertorios
  * + PainelRepertorios + RepertorioDetalheTela) — não é ministério-scoped
- * no schema ainda, só trazida pra dentro do módulo.
+ * no schema ainda, só trazida pra dentro do módulo. Além dela, cada Escala
+ * também pode ganhar seu próprio repertório vinculado (escalaId) — aba
+ * "Músicas" de cada Escala (ver EscalaDetalheTela). `repertoriosApi` é
+ * instanciado aqui uma única vez e passado adiante pras duas pontas, pra
+ * não duplicar a busca.
  * Login já é exigido antes de chegar aqui (ver App.tsx).
  */
 export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
@@ -94,6 +98,8 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         onAtualizar={(atualizada) =>
           setEscalas((prev) => prev.map((e) => (e.id === atualizada.id ? atualizada : e)))
         }
+        onAbrirMusica={onAbrirMusica}
+        repertoriosApi={repertoriosApi}
       />
     );
   }
@@ -185,6 +191,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
             nomeMinisterio={ministerio.nome}
             membros={ministerio.membros}
             escalas={escalas}
+            repertorios={repertoriosApi.repertorios}
             avisos={avisos}
             souAdmin={ministerio.souAdmin}
             solicitacoes={ministerio.solicitacoes}
@@ -260,7 +267,11 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         )}
 
         {subTela === 'panorama' && (
-          <PanoramaTela escalas={escalas} indisponibilidades={indisponibilidades} />
+          <PanoramaTela
+            escalas={escalas}
+            repertorios={repertoriosApi.repertorios}
+            indisponibilidades={indisponibilidades}
+          />
         )}
       </div>
     </div>

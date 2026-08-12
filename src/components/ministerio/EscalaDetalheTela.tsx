@@ -1,15 +1,19 @@
-import { useState } from 'react';
-import { ChevronLeft, Clock, Info, ListMusic, Plus, Trash2, Users } from 'lucide-react';
-import { FUNCOES, MEMBROS, formatarDataLonga, itensRoteiroComMusicas, tituloMusica } from '../../lib/mockMinisterio';
+import { useEffect, useState } from 'react';
+import { ChevronLeft, Clock, Info, ListMusic, Lock, Plus, Trash2, Users } from 'lucide-react';
+import { FUNCOES, MEMBROS, formatarDataLonga, itensRoteiroComMusicas } from '../../lib/mockMinisterio';
+import type { RepertoriosApi } from '../../lib/useRepertorios';
 import type { Escala, ItemRoteiro, StatusConfirmacao } from '../../types/ministerio';
+import type { Musica } from '../../types/musica';
 import { MembrosSelecionarTela } from './MembrosSelecionarTela';
-import { MusicasSelecionarTela } from './MusicasSelecionarTela';
 import { EventoRoteiroTela } from './EventoRoteiroTela';
+import { RepertorioDetalheTela } from '../RepertorioDetalheTela';
 
 interface Props {
   escala: Escala;
   onBack: () => void;
   onAtualizar: (escala: Escala) => void;
+  onAbrirMusica: (musica: Musica, repertorioId?: string | null, tom?: string | null) => void;
+  repertoriosApi: RepertoriosApi;
 }
 
 const STATUS_LABEL: Record<StatusConfirmacao, { texto: string; cor: string }> = {
@@ -18,11 +22,27 @@ const STATUS_LABEL: Record<StatusConfirmacao, { texto: string; cor: string }> = 
   recusado: { texto: 'Recusado', cor: 'text-rose-500' },
 };
 
-export function EscalaDetalheTela({ escala, onBack, onAtualizar }: Props) {
+/**
+ * Aba "Músicas" NÃO é mais uma lista própria da escala — é a tela real do
+ * Repertorio vinculado a ela (1 escala = 1 repertório, ver
+ * useRepertorios().garantirRepertorioDaEscala). Se a escala ainda não tem
+ * um (ex: criada antes dessa mudança), um repertório vazio é criado na
+ * hora, na primeira vez que essa tela monta.
+ */
+export function EscalaDetalheTela({ escala, onBack, onAtualizar, onAbrirMusica, repertoriosApi }: Props) {
   const [aba, setAba] = useState<'detalhes' | 'participantes' | 'musicas' | 'roteiro'>('detalhes');
   const [selecionandoMembros, setSelecionandoMembros] = useState(false);
-  const [selecionandoMusicas, setSelecionandoMusicas] = useState(false);
   const [criandoEvento, setCriandoEvento] = useState(false);
+  const [verRepertorio, setVerRepertorio] = useState(false);
+
+  const repertorioDaEscala = repertoriosApi.obterPorEscala(escala.id);
+
+  useEffect(() => {
+    if (!repertoriosApi.carregando && !repertorioDaEscala) {
+      repertoriosApi.garantirRepertorioDaEscala(escala.id, escala.titulo);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [repertoriosApi.carregando, repertorioDaEscala, escala.id]);
 
   function confirmarMinhaPresenca(status: StatusConfirmacao) {
     // "Você" == m1 no mock — na versão real viria do usuário logado.
@@ -34,14 +54,14 @@ export function EscalaDetalheTela({ escala, onBack, onAtualizar }: Props) {
 
   function removerItemRoteiro(item: ItemRoteiro) {
     if (item.tipo === 'musica') {
-      onAtualizar({ ...escala, musicas: escala.musicas.filter((m) => m.musicaId !== item.musicaId) });
+      if (repertorioDaEscala) repertoriosApi.removerMusica(repertorioDaEscala.id, item.musicaId!);
     } else {
       onAtualizar({ ...escala, roteiro: escala.roteiro.filter((r) => r.id !== item.id) });
     }
   }
 
   const minhaParticipacao = escala.participantes.find((p) => p.membroId === 'm1');
-  const itensRoteiro = itensRoteiroComMusicas(escala);
+  const itensRoteiro = itensRoteiroComMusicas(escala.roteiro, repertorioDaEscala);
 
   if (selecionandoMembros) {
     return (
@@ -60,20 +80,6 @@ export function EscalaDetalheTela({ escala, onBack, onAtualizar }: Props) {
     );
   }
 
-  if (selecionandoMusicas) {
-    return (
-      <MusicasSelecionarTela
-        jaAdicionadas={escala.musicas.map((m) => m.musicaId)}
-        onCancelar={() => setSelecionandoMusicas(false)}
-        onConfirmar={(sel) => {
-          const musicas = sel.map((s) => escala.musicas.find((m) => m.musicaId === s.musicaId) ?? s);
-          onAtualizar({ ...escala, musicas });
-          setSelecionandoMusicas(false);
-        }}
-      />
-    );
-  }
-
   if (criandoEvento) {
     return (
       <EventoRoteiroTela
@@ -83,6 +89,23 @@ export function EscalaDetalheTela({ escala, onBack, onAtualizar }: Props) {
           onAtualizar({ ...escala, roteiro: [...escala.roteiro, evento] });
           setCriandoEvento(false);
         }}
+      />
+    );
+  }
+
+  if (verRepertorio && repertorioDaEscala) {
+    return (
+      <RepertorioDetalheTela
+        repertorio={repertorioDaEscala}
+        onBack={() => setVerRepertorio(false)}
+        onSelectMusica={(m, tom) => onAbrirMusica(m, repertorioDaEscala.id, tom)}
+        removerMusica={repertoriosApi.removerMusica}
+        moverMusicaParaRito={repertoriosApi.moverMusicaParaRito}
+        adicionarRito={repertoriosApi.adicionarRito}
+        removerRito={repertoriosApi.removerRito}
+        reordenarRitos={repertoriosApi.reordenarRitos}
+        onExcluirRepertorio={repertoriosApi.remover}
+        ocultarExcluir
       />
     );
   }
@@ -110,13 +133,13 @@ export function EscalaDetalheTela({ escala, onBack, onAtualizar }: Props) {
           />
           <AbaBtn
             icon={<ListMusic size={14} />}
-            label={`Músicas (${escala.musicas.length})`}
+            label={`Músicas (${repertorioDaEscala?.itens.length ?? 0})`}
             active={aba === 'musicas'}
             onClick={() => setAba('musicas')}
           />
           <AbaBtn
             icon={<Clock size={14} />}
-            label={`Roteiro (${escala.roteiro.length})`}
+            label={`Roteiro (${itensRoteiro.length})`}
             active={aba === 'roteiro'}
             onClick={() => setAba('roteiro')}
           />
@@ -196,32 +219,29 @@ export function EscalaDetalheTela({ escala, onBack, onAtualizar }: Props) {
         )}
 
         {aba === 'musicas' && (
-          <ul className="divide-y divide-[var(--border)]">
-            {escala.musicas.map((m, idx) => (
-              <li key={idx} className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="text-sm font-semibold text-[var(--text)]">{tituloMusica(m.musicaId)}</p>
-                  <p className="text-xs text-[var(--muted)]">
-                    {m.momento} · Tom: {m.tom}
-                  </p>
-                </div>
-                <button
-                  onClick={() => onAtualizar({ ...escala, musicas: escala.musicas.filter((_, i) => i !== idx) })}
-                  aria-label="Remover música"
-                >
-                  <Trash2 size={14} className="text-[var(--muted)]" />
-                </button>
-              </li>
-            ))}
-            <li className="p-4">
+          <div className="p-4">
+            {!repertorioDaEscala ? (
+              <p className="flex items-center gap-2 py-8 text-center text-sm text-[var(--muted)]">
+                <Lock size={16} /> Preparando o repertório desta escala…
+              </p>
+            ) : (
               <button
-                onClick={() => setSelecionandoMusicas(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+                onClick={() => setVerRepertorio(true)}
+                className="flex w-full items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left"
               >
-                <Plus size={16} /> Adicionar música do repertório
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                  <ListMusic size={18} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">{repertorioDaEscala.nome}</span>
+                  <span className="block text-xs text-[var(--muted)]">
+                    {repertorioDaEscala.itens.length} música{repertorioDaEscala.itens.length === 1 ? '' : 's'} ·{' '}
+                    {repertorioDaEscala.ritos.length} ritos — organizar por rito
+                  </span>
+                </span>
               </button>
-            </li>
-          </ul>
+            )}
+          </div>
         )}
 
         {aba === 'roteiro' && (

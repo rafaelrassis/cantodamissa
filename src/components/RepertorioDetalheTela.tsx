@@ -15,6 +15,10 @@ interface Props {
   removerRito: (repertorioId: string, nome: string) => void;
   reordenarRitos: (repertorioId: string, nomesOrdenados: string[]) => void;
   onExcluirRepertorio: (repertorioId: string) => Promise<void>;
+  /** Esconde o botão de excluir — usado quando aberto a partir de uma
+   * Escala (o repertório é dela; excluir deixaria a escala sem repertório
+   * até a próxima abertura recriar um vazio, o que só confunde). */
+  ocultarExcluir?: boolean;
 }
 
 /**
@@ -33,6 +37,7 @@ export function RepertorioDetalheTela({
   removerRito,
   reordenarRitos,
   onExcluirRepertorio,
+  ocultarExcluir,
 }: Props) {
   const [novoRito, setNovoRito] = useState('');
   const [ordem, setOrdem] = useState<string[]>(repertorio.ritos);
@@ -180,16 +185,18 @@ export function RepertorioDetalheTela({
             >
               <Download size={16} />
             </button>
-            <button
-              onClick={excluir}
-              onBlur={() => setConfirmandoExclusao(false)}
-              aria-label="Excluir repertório"
-              className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                confirmandoExclusao ? 'bg-red-500' : 'bg-white/16'
-              }`}
-            >
-              <Trash2 size={16} />
-            </button>
+            {!ocultarExcluir && (
+              <button
+                onClick={excluir}
+                onBlur={() => setConfirmandoExclusao(false)}
+                aria-label="Excluir repertório"
+                className={`flex h-9 w-9 items-center justify-center rounded-full ${
+                  confirmandoExclusao ? 'bg-red-500' : 'bg-white/16'
+                }`}
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
         </div>
         {linkCopiado && <p className="mt-1 text-xs opacity-90">Link copiado!</p>}
