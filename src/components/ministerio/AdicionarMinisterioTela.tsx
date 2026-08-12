@@ -31,8 +31,9 @@ type Passo = 'opcoes' | 'ingressar' | 'cadastrar';
  * ministério novo, com nome e funções iniciais), com o tema visual do
  * Canto da Missa em vez de copiar o design de referência.
  *
- * Mock: a personalização de funções feita aqui é só cosmética nesta
- * etapa — não é persistida em nenhum lugar ainda (sem Supabase).
+ * A personalização de funções feita aqui é enviada como lista inicial de
+ * funções do ministério (ver ministerioApi.ts → criarMinisterio) quando
+ * o formulário é salvo.
  */
 export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo }: Props) {
   const [passo, setPasso] = useState<Passo>('opcoes');

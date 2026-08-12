@@ -38,11 +38,13 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
 ];
 
 /**
- * Módulo "Ministério" — mock só de UX/fluxo PARA Início/Escalas/Equipe/
- * Avisos/Panorama. A identidade do ministério (pertence/nome/membros/
- * admins/solicitações) vem de fora via prop `ministerio` (hook levantado
- * até App.tsx — ver useMinisterio.ts) pra sobreviver à desmontagem
- * deste componente e alimentar o alerta global de solicitação pendente.
+ * Módulo "Ministério" — Início/Escalas/Equipe/Avisos/Panorama rodam 100%
+ * sobre Supabase (ver useEscalas/useAvisos/useIndisponibilidades/
+ * useEquipes/useModelosRoteiro). A identidade do ministério (pertence/
+ * nome/membros/admins/solicitações) vem de fora via prop `ministerio`
+ * (hook levantado até App.tsx — ver useMinisterio.ts) pra sobreviver à
+ * desmontagem deste componente e alimentar o alerta global de
+ * solicitação pendente.
  * A aba Repertório reaproveita a feature real já existente (useRepertorios
  * + PainelRepertorios + RepertorioDetalheTela) — não é ministério-scoped
  * no schema ainda, só trazida pra dentro do módulo. Além dela, cada Escala
