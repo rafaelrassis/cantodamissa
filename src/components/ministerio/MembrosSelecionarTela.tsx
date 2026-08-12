@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Check, ChevronLeft, Search } from 'lucide-react';
-import { FUNCOES, MEMBROS } from '../../lib/mockMinisterio';
 import { normalizar } from '../../lib/musicasApi';
+import type { FuncaoMinisterio, MembroMinisterio } from '../../types/ministerio';
 
 interface Props {
+  membros: MembroMinisterio[];
+  funcoes: FuncaoMinisterio[];
   selecionadosIniciais: string[]; // ids de membro já na escala
   onCancelar: () => void;
   onConfirmar: (selecionados: { membroId: string; funcaoId: string }[]) => void;
@@ -11,21 +13,21 @@ interface Props {
 
 type AbaLista = 'todos' | 'selecionados' | 'funcoes';
 
-export function MembrosSelecionarTela({ selecionadosIniciais, onCancelar, onConfirmar }: Props) {
+export function MembrosSelecionarTela({ membros, funcoes, selecionadosIniciais, onCancelar, onConfirmar }: Props) {
   const [busca, setBusca] = useState('');
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set(selecionadosIniciais));
   const [aba, setAba] = useState<AbaLista>('todos');
 
   const filtrados = useMemo(() => {
     const termo = normalizar(busca);
-    if (!termo) return MEMBROS;
-    return MEMBROS.filter((m) => {
-      const nomesFuncoes = m.funcoes.map((fid) => FUNCOES.find((f) => f.id === fid)?.nome ?? '');
+    if (!termo) return membros;
+    return membros.filter((m) => {
+      const nomesFuncoes = m.funcoes.map((fid) => funcoes.find((f) => f.id === fid)?.nome ?? '');
       return normalizar(m.nome).includes(termo) || nomesFuncoes.some((n) => normalizar(n).includes(termo));
     });
-  }, [busca]);
+  }, [busca, membros, funcoes]);
 
-  const listaExibida = aba === 'selecionados' ? MEMBROS.filter((m) => selecionados.has(m.id)) : filtrados;
+  const listaExibida = aba === 'selecionados' ? membros.filter((m) => selecionados.has(m.id)) : filtrados;
 
   function toggle(id: string) {
     setSelecionados((prev) => {
@@ -45,7 +47,7 @@ export function MembrosSelecionarTela({ selecionadosIniciais, onCancelar, onConf
   }
 
   function toggleFuncao(funcaoId: string) {
-    const membrosDaFuncao = MEMBROS.filter((m) => m.funcoes.includes(funcaoId)).map((m) => m.id);
+    const membrosDaFuncao = membros.filter((m) => m.funcoes.includes(funcaoId)).map((m) => m.id);
     const todosJaSelecionados = membrosDaFuncao.every((id) => selecionados.has(id));
     setSelecionados((prev) => {
       const novo = new Set(prev);
@@ -84,9 +86,9 @@ export function MembrosSelecionarTela({ selecionadosIniciais, onCancelar, onConf
         <div className="mt-3 flex rounded-full bg-[var(--surface)] p-1 text-xs font-semibold">
           {(
             [
-              ['todos', `Todos (${MEMBROS.length})`],
+              ['todos', `Todos (${membros.length})`],
               ['selecionados', `Selecionados (${selecionados.size})`],
-              ['funcoes', `Funções (${FUNCOES.length})`],
+              ['funcoes', `Funções (${funcoes.length})`],
             ] as [AbaLista, string][]
           ).map(([id, label]) => (
             <button
@@ -132,8 +134,8 @@ export function MembrosSelecionarTela({ selecionadosIniciais, onCancelar, onConf
           </ul>
         ) : (
           <ul className="mt-3 flex flex-col gap-1">
-            {FUNCOES.map((f) => {
-              const membrosDaFuncao = MEMBROS.filter((m) => m.funcoes.includes(f.id));
+            {funcoes.map((f) => {
+              const membrosDaFuncao = membros.filter((m) => m.funcoes.includes(f.id));
               const todosSelecionados =
                 membrosDaFuncao.length > 0 && membrosDaFuncao.every((m) => selecionados.has(m.id));
               return (
@@ -163,7 +165,7 @@ export function MembrosSelecionarTela({ selecionadosIniciais, onCancelar, onConf
             onConfirmar(
               Array.from(selecionados).map((id) => ({
                 membroId: id,
-                funcaoId: MEMBROS.find((m) => m.id === id)?.funcoes[0] ?? FUNCOES[0].id,
+                funcaoId: membros.find((m) => m.id === id)?.funcoes[0] ?? funcoes[0]?.id ?? '',
               }))
             )
           }

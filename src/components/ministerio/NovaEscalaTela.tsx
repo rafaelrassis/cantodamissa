@@ -17,19 +17,21 @@ import {
   UsersRound,
   X,
 } from 'lucide-react';
-import { MEMBROS, FUNCOES, PALETAS_CORES, itensRoteiroComMusicas } from '../../lib/mockMinisterio';
-import type { Escala, ItemRoteiro, ParticipanteEscala } from '../../types/ministerio';
+import { PALETAS_CORES, itensRoteiroComMusicas } from '../../lib/mockMinisterio';
+import type { Escala, FuncaoMinisterio, ItemRoteiro, MembroMinisterio, ParticipanteEscala } from '../../types/ministerio';
 import { MembrosSelecionarTela } from './MembrosSelecionarTela';
 import { EventoRoteiroTela } from './EventoRoteiroTela';
 
 interface Props {
+  membros: MembroMinisterio[];
+  funcoes: FuncaoMinisterio[];
   onCancelar: () => void;
   onSalvar: (escala: Escala) => void;
 }
 
 type Aba = 'detalhes' | 'participantes' | 'musicas' | 'roteiro';
 
-export function NovaEscalaTela({ onCancelar, onSalvar }: Props) {
+export function NovaEscalaTela({ membros, funcoes, onCancelar, onSalvar }: Props) {
   const [aba, setAba] = useState<Aba>('detalhes');
 
   const [titulo, setTitulo] = useState('');
@@ -77,6 +79,8 @@ export function NovaEscalaTela({ onCancelar, onSalvar }: Props) {
   if (selecionandoMembros) {
     return (
       <MembrosSelecionarTela
+        membros={membros}
+        funcoes={funcoes}
         selecionadosIniciais={participantes.map((p) => p.membroId)}
         onCancelar={() => setSelecionandoMembros(false)}
         onConfirmar={(sel) => {
@@ -274,8 +278,8 @@ export function NovaEscalaTela({ onCancelar, onSalvar }: Props) {
             ) : (
               <ul className="mt-4 flex flex-col gap-1">
                 {participantes.map((p) => {
-                  const membro = MEMBROS.find((m) => m.id === p.membroId);
-                  const funcao = FUNCOES.find((f) => f.id === p.funcaoId);
+                  const membro = membros.find((m) => m.id === p.membroId);
+                  const funcao = funcoes.find((f) => f.id === p.funcaoId);
                   if (!membro) return null;
                   return (
                     <li key={p.membroId} className="flex items-center gap-3 rounded-lg px-2 py-2.5">

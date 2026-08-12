@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, Clock, Info, ListMusic, Lock, Plus, Trash2, Users } from 'lucide-react';
-import { FUNCOES, MEMBROS, formatarDataLonga, itensRoteiroComMusicas } from '../../lib/mockMinisterio';
+import { formatarDataLonga, itensRoteiroComMusicas } from '../../lib/mockMinisterio';
 import type { RepertoriosApi } from '../../lib/useRepertorios';
-import type { Escala, ItemRoteiro, StatusConfirmacao } from '../../types/ministerio';
+import type { Escala, FuncaoMinisterio, ItemRoteiro, MembroMinisterio, StatusConfirmacao } from '../../types/ministerio';
 import type { Musica } from '../../types/musica';
 import { MembrosSelecionarTela } from './MembrosSelecionarTela';
 import { EventoRoteiroTela } from './EventoRoteiroTela';
@@ -10,6 +10,9 @@ import { RepertorioDetalheTela } from '../RepertorioDetalheTela';
 
 interface Props {
   escala: Escala;
+  membros: MembroMinisterio[];
+  funcoes: FuncaoMinisterio[];
+  meuMembroId: string | null;
   onBack: () => void;
   onAtualizar: (escala: Escala) => void;
   onAbrirMusica: (musica: Musica, repertorioId?: string | null, tom?: string | null) => void;
@@ -29,7 +32,7 @@ const STATUS_LABEL: Record<StatusConfirmacao, { texto: string; cor: string }> = 
  * um (ex: criada antes dessa mudança), um repertório vazio é criado na
  * hora, na primeira vez que essa tela monta.
  */
-export function EscalaDetalheTela({ escala, onBack, onAtualizar, onAbrirMusica, repertoriosApi }: Props) {
+export function EscalaDetalheTela({ escala, membros, funcoes, meuMembroId, onBack, onAtualizar, onAbrirMusica, repertoriosApi }: Props) {
   const [aba, setAba] = useState<'detalhes' | 'participantes' | 'musicas' | 'roteiro'>('detalhes');
   const [selecionandoMembros, setSelecionandoMembros] = useState(false);
   const [criandoEvento, setCriandoEvento] = useState(false);
@@ -45,9 +48,8 @@ export function EscalaDetalheTela({ escala, onBack, onAtualizar, onAbrirMusica, 
   }, [repertoriosApi.carregando, repertorioDaEscala, escala.id]);
 
   function confirmarMinhaPresenca(status: StatusConfirmacao) {
-    // "Você" == m1 no mock — na versão real viria do usuário logado.
     const participantes = escala.participantes.map((p) =>
-      p.membroId === 'm1' ? { ...p, status } : p
+      p.membroId === meuMembroId ? { ...p, status } : p
     );
     onAtualizar({ ...escala, participantes });
   }
@@ -60,12 +62,14 @@ export function EscalaDetalheTela({ escala, onBack, onAtualizar, onAbrirMusica, 
     }
   }
 
-  const minhaParticipacao = escala.participantes.find((p) => p.membroId === 'm1');
+  const minhaParticipacao = escala.participantes.find((p) => p.membroId === meuMembroId);
   const itensRoteiro = itensRoteiroComMusicas(escala.roteiro, repertorioDaEscala);
 
   if (selecionandoMembros) {
     return (
       <MembrosSelecionarTela
+        membros={membros}
+        funcoes={funcoes}
         selecionadosIniciais={escala.participantes.map((p) => p.membroId)}
         onCancelar={() => setSelecionandoMembros(false)}
         onConfirmar={(sel) => {
@@ -185,8 +189,8 @@ export function EscalaDetalheTela({ escala, onBack, onAtualizar, onAbrirMusica, 
         {aba === 'participantes' && (
           <ul className="divide-y divide-[var(--border)]">
             {escala.participantes.map((p) => {
-              const membro = MEMBROS.find((m) => m.id === p.membroId);
-              const funcao = FUNCOES.find((f) => f.id === p.funcaoId);
+              const membro = membros.find((m) => m.id === p.membroId);
+              const funcao = funcoes.find((f) => f.id === p.funcaoId);
               if (!membro) return null;
               return (
                 <li key={p.membroId} className="flex items-center gap-3 px-4 py-3">

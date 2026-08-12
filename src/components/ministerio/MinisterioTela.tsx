@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { BarChart3, CalendarDays, ChevronLeft, Home, ListMusic, Megaphone, Settings, Users } from 'lucide-react';
-import { AVISOS, ESCALAS, INDISPONIBILIDADES } from '../../lib/mockMinisterio';
+import { AVISOS, INDISPONIBILIDADES } from '../../lib/mockMinisterio';
 import { useRepertorios } from '../../lib/useRepertorios';
+import { useEscalas } from '../../lib/useEscalas';
 import type { Ministerio } from '../../lib/useMinisterio';
-import type { Aviso, Escala, Indisponibilidade } from '../../types/ministerio';
+import type { Aviso, Indisponibilidade } from '../../types/ministerio';
 import type { Musica } from '../../types/musica';
 import { InicioTela } from './InicioTela';
 import { EscalasTela } from './EscalasTela';
@@ -38,7 +39,7 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
  * Módulo "Ministério" — mock só de UX/fluxo PARA Início/Escalas/Equipe/
  * Avisos/Panorama. A identidade do ministério (pertence/nome/membros/
  * admins/solicitações) vem de fora via prop `ministerio` (hook levantado
- * até App.tsx — ver useMinisterio.ts) pra sobreviver à desmontagem
+ * até App.tsx — ver useMinisterioMock.ts) pra sobreviver à desmontagem
  * deste componente e alimentar o alerta global de solicitação pendente.
  * A aba Repertório reaproveita a feature real já existente (useRepertorios
  * + PainelRepertorios + RepertorioDetalheTela) — não é ministério-scoped
@@ -51,7 +52,7 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
  */
 export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
   const [subTela, setSubTela] = useState<SubTela>('inicio');
-  const [escalas, setEscalas] = useState<Escala[]>(ESCALAS);
+  const escalasApi = useEscalas(ministerio.id);
   const [avisos, setAvisos] = useState<Aviso[]>(AVISOS);
   const [indisponibilidades, setIndisponibilidades] = useState<Indisponibilidade[]>(INDISPONIBILIDADES);
   const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(null);
@@ -74,17 +75,23 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
     );
   }
 
-  const escalaAberta = escalas.find((e) => e.id === escalaAbertaId) ?? null;
+  const escalaAberta = escalasApi.escalas.find((e) => e.id === escalaAbertaId) ?? null;
   const repertorioAberto = repertoriosApi.repertorios.find((r) => r.id === repertorioAbertoId) ?? null;
 
   if (criandoEscala) {
     return (
       <NovaEscalaTela
+        membros={ministerio.membros}
+        funcoes={ministerio.funcoes}
         onCancelar={() => setCriandoEscala(false)}
-        onSalvar={(nova) => {
-          setEscalas((prev) => [...prev, nova]);
-          setCriandoEscala(false);
-          setEscalaAbertaId(nova.id);
+        onSalvar={(rascunho) => {
+          escalasApi
+            .criar(rascunho)
+            .then((nova) => {
+              setCriandoEscala(false);
+              setEscalaAbertaId(nova.id);
+            })
+            .catch((e) => console.error('Falha ao criar escala', e));
         }}
       />
     );
@@ -94,9 +101,12 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
     return (
       <EscalaDetalheTela
         escala={escalaAberta}
+        membros={ministerio.membros}
+        funcoes={ministerio.funcoes}
+        meuMembroId={ministerio.meuMembroId}
         onBack={() => setEscalaAbertaId(null)}
         onAtualizar={(atualizada) =>
-          setEscalas((prev) => prev.map((e) => (e.id === atualizada.id ? atualizada : e)))
+          escalasApi.atualizar(atualizada).catch((e) => console.error('Falha ao atualizar escala', e))
         }
         onAbrirMusica={onAbrirMusica}
         repertoriosApi={repertoriosApi}
@@ -190,7 +200,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
           <InicioTela
             nomeMinisterio={ministerio.nome}
             membros={ministerio.membros}
-            escalas={escalas}
+            escalas={escalasApi.escalas}
             repertorios={repertoriosApi.repertorios}
             avisos={avisos}
             souAdmin={ministerio.souAdmin}
@@ -205,7 +215,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
 
         {subTela === 'escalas' && (
           <EscalasTela
-            escalas={escalas}
+            escalas={escalasApi.escalas}
             onAbrirEscala={setEscalaAbertaId}
             onCriarEscala={() => setCriandoEscala(true)}
           />
@@ -269,7 +279,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
 
         {subTela === 'panorama' && (
           <PanoramaTela
-            escalas={escalas}
+            escalas={escalasApi.escalas}
             repertorios={repertoriosApi.repertorios}
             indisponibilidades={indisponibilidades}
           />

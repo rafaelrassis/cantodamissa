@@ -29,13 +29,15 @@ export function useMinisterio(dataNascimentoUsuario?: string | null) {
   }, [recarregar]);
 
   const pertence = ministerio !== null;
+  const id = ministerio?.id ?? null;
+  const meuMembroId = ministerio?.meuMembroId ?? null;
   const nome = ministerio?.nome ?? 'Ministério';
   const foto = ministerio?.foto ?? null;
   const membros = ministerio?.membros ?? [];
   const funcoes = ministerio?.funcoes ?? [];
   const codigoConvite = ministerio?.codigoConvite ?? '';
   const solicitacoes = ministerio?.solicitacoes ?? [];
-  const souAdmin = membros.find((m) => m.id === ministerio?.meuMembroId)?.admin ?? false;
+  const souAdmin = membros.find((m) => m.id === meuMembroId)?.admin ?? false;
   const qtdAdmins = membros.filter((m) => m.admin).length;
 
   const cadastrar = useCallback(
@@ -126,6 +128,8 @@ export function useMinisterio(dataNascimentoUsuario?: string | null) {
   return {
     carregando,
     pertence,
+    id,
+    meuMembroId,
     nome,
     foto,
     membros,
