@@ -23,7 +23,7 @@ interface Props {
   indisponibilidades: Indisponibilidade[];
   escalaExistente?: Escala;
   onCancelar: () => void;
-  onSalvar: (escala: Escala) => void;
+  onSalvar: (escala: Escala) => void | Promise<void>;
 }
 
 type Aba = 'detalhes' | 'participantes';
@@ -44,6 +44,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
   const [participantes, setParticipantes] = useState<ParticipanteEscala[]>(escalaExistente?.participantes ?? []);
 
   const [selecionandoMembros, setSelecionandoMembros] = useState(false);
+  const [salvando, setSalvando] = useState(false);
 
   const podeSalvar = titulo.trim() && data;
 
@@ -54,8 +55,8 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
 
   const participantesIndisponiveis = participantes.filter((p) => indisponiveisIds.has(p.membroId));
 
-  function handleSalvar() {
-    if (!podeSalvar) return;
+  async function handleSalvar() {
+    if (!podeSalvar || salvando) return;
     if (participantesIndisponiveis.length > 0) {
       const nomes = participantesIndisponiveis
         .map((p) => membros.find((m) => m.id === p.membroId)?.nome ?? '?')
@@ -64,18 +65,25 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
       setAba('participantes');
       return;
     }
-    onSalvar({
-      id: escalaExistente?.id ?? `e${Date.now()}`,
-      titulo: titulo.trim(),
-      data,
-      hora,
-      observacoes,
-      publicada,
-      solicitarConfirmacao,
-      corPaleta,
-      participantes,
-      roteiro: escalaExistente?.roteiro ?? [], // Roteiro (e Músicas, via repertório) fica pra tela da escala já salva.
-    });
+    setSalvando(true);
+    try {
+      await onSalvar({
+        id: escalaExistente?.id ?? `e${Date.now()}`,
+        titulo: titulo.trim(),
+        data,
+        hora,
+        observacoes,
+        publicada,
+        solicitarConfirmacao,
+        corPaleta,
+        participantes,
+        roteiro: escalaExistente?.roteiro ?? [], // Roteiro (e Músicas, via repertório) fica pra tela da escala já salva.
+      });
+    } catch {
+      // Falha já é logada/tratada no chamador (ver MinisterioTela) — aqui
+      // só liberamos o botão de novo pra permitir tentar salvar outra vez.
+      setSalvando(false);
+    }
   }
 
   function sortear() {
@@ -122,10 +130,10 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
         </h1>
         <button
           onClick={handleSalvar}
-          disabled={!podeSalvar || participantesIndisponiveis.length > 0}
+          disabled={!podeSalvar || participantesIndisponiveis.length > 0 || salvando}
           className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-4 py-1.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-40"
         >
-          <Check size={15} /> Salvar
+          <Check size={15} /> {salvando ? 'Salvando...' : 'Salvar'}
         </button>
       </header>
 
