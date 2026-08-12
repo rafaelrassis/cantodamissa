@@ -18,7 +18,7 @@ import { FuncaoEditorTela } from './FuncaoEditorTela';
 
 interface Props {
   onBack: () => void;
-  onConcluir: (nomeMinisterio?: string, funcoesCustom?: { nome: string; icone: string }[]) => void;
+  onConcluir: (nomeMinisterio?: string, funcoesCustom?: { nome: string; icone: string }[]) => void | Promise<void>;
   validarCodigo: (codigo: string) => Promise<boolean>;
   erroCadastro?: string | null;
 }
@@ -92,12 +92,20 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
     setFuncoes((prev) => prev.filter((f) => f.id !== id));
   }
 
-  function handleSalvarMinisterio() {
-    if (nomeMinisterio.trim()) {
-      onConcluir(
+  const [salvandoMinisterio, setSalvandoMinisterio] = useState(false);
+
+  async function handleSalvarMinisterio() {
+    if (!nomeMinisterio.trim() || salvandoMinisterio) return;
+    setSalvandoMinisterio(true);
+    try {
+      await onConcluir(
         nomeMinisterio.trim(),
         funcoes.map((f) => ({ nome: f.nome, icone: f.icone }))
       );
+    } catch {
+      // Erro já é tratado/exibido pelo chamador (erroCadastro) — aqui só
+      // liberamos o botão de novo pra permitir tentar salvar outra vez.
+      setSalvandoMinisterio(false);
     }
   }
 
@@ -138,10 +146,10 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
         {passo === 'cadastrar' && (
           <button
             onClick={handleSalvarMinisterio}
-            disabled={!nomeMinisterio.trim()}
+            disabled={!nomeMinisterio.trim() || salvandoMinisterio}
             className="ml-auto flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-4 py-1.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-40"
           >
-            <Check size={15} /> Salvar
+            <Check size={15} /> {salvandoMinisterio ? 'Salvando...' : 'Salvar'}
           </button>
         )}
       </header>
