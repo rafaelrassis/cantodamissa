@@ -18,21 +18,45 @@ import {
   X,
 } from 'lucide-react';
 import { PALETAS_CORES, itensRoteiroComMusicas } from '../../lib/ministerioUtils';
-import type { Escala, FuncaoMinisterio, ItemRoteiro, MembroMinisterio, ParticipanteEscala } from '../../types/ministerio';
+import type {
+  Equipe,
+  Escala,
+  FuncaoMinisterio,
+  ItemRoteiro,
+  MembroMinisterio,
+  ModeloRoteiro,
+  ParticipanteEscala,
+} from '../../types/ministerio';
 import { MembrosSelecionarTela } from './MembrosSelecionarTela';
 import { EventoRoteiroTela } from './EventoRoteiroTela';
+import { ModelosRoteiroSheet } from './ModelosRoteiroSheet';
 
 interface Props {
   membros: MembroMinisterio[];
   funcoes: FuncaoMinisterio[];
+  equipes: Equipe[];
+  modelos: ModeloRoteiro[];
+  onCriarModelo: (nome: string, itens: ItemRoteiro[]) => void;
+  onExcluirModelo: (id: string) => void;
   onCancelar: () => void;
   onSalvar: (escala: Escala) => void;
 }
 
 type Aba = 'detalhes' | 'participantes' | 'musicas' | 'roteiro';
 
-export function NovaEscalaTela({ membros, funcoes, onCancelar, onSalvar }: Props) {
+export function NovaEscalaTela({
+  membros,
+  funcoes,
+  equipes,
+  modelos,
+  onCriarModelo,
+  onExcluirModelo,
+  onCancelar,
+  onSalvar,
+}: Props) {
   const [aba, setAba] = useState<Aba>('detalhes');
+  const [abaMembrosSelecionar, setAbaMembrosSelecionar] = useState<'todos' | 'equipes'>('todos');
+  const [modelosAbertos, setModelosAbertos] = useState(false);
 
   const [titulo, setTitulo] = useState('');
   const [data, setData] = useState('');
@@ -76,11 +100,28 @@ export function NovaEscalaTela({ membros, funcoes, onCancelar, onSalvar }: Props
     setRoteiroEventos((prev) => prev.filter((r) => r.id !== item.id));
   }
 
+  function sortear() {
+    const jaSelecionados = new Set(participantes.map((p) => p.membroId));
+    const disponiveis = membros.filter((m) => !jaSelecionados.has(m.id));
+    if (disponiveis.length === 0) return;
+    const escolhidos = [...disponiveis].sort(() => Math.random() - 0.5).slice(0, Math.min(4, disponiveis.length));
+    setParticipantes((prev) => [
+      ...prev,
+      ...escolhidos.map((m) => ({
+        membroId: m.id,
+        funcaoId: m.funcoes[0] ?? funcoes[0]?.id ?? '',
+        status: 'pendente' as const,
+      })),
+    ]);
+  }
+
   if (selecionandoMembros) {
     return (
       <MembrosSelecionarTela
         membros={membros}
         funcoes={funcoes}
+        equipes={equipes}
+        abaInicial={abaMembrosSelecionar}
         selecionadosIniciais={participantes.map((p) => p.membroId)}
         onCancelar={() => setSelecionandoMembros(false)}
         onConfirmar={(sel) => {
@@ -249,22 +290,26 @@ export function NovaEscalaTela({ membros, funcoes, onCancelar, onSalvar }: Props
           <div className="mt-4">
             <div className="flex gap-2">
               <button
-                onClick={() => setSelecionandoMembros(true)}
+                onClick={() => {
+                  setAbaMembrosSelecionar('todos');
+                  setSelecionandoMembros(true);
+                }}
                 className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)]"
               >
                 <Plus size={16} /> Adicionar
               </button>
               <button
-                disabled
-                title="Em breve"
-                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)] opacity-50"
+                onClick={() => {
+                  setAbaMembrosSelecionar('equipes');
+                  setSelecionandoMembros(true);
+                }}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
               >
                 <UsersRound size={16} /> Equipes
               </button>
               <button
-                disabled
-                title="Em breve"
-                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)] opacity-50"
+                onClick={sortear}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
               >
                 <Shuffle size={16} /> Sortear
               </button>
@@ -326,9 +371,8 @@ export function NovaEscalaTela({ membros, funcoes, onCancelar, onSalvar }: Props
                 <Plus size={16} /> Evento
               </button>
               <button
-                disabled
-                title="Em breve"
-                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)] opacity-50"
+                onClick={() => setModelosAbertos(true)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
               >
                 Modelos
               </button>
@@ -375,6 +419,23 @@ export function NovaEscalaTela({ membros, funcoes, onCancelar, onSalvar }: Props
           </div>
         )}
       </div>
+
+      {modelosAbertos && (
+        <ModelosRoteiroSheet
+          modelos={modelos}
+          roteiroAtual={roteiroEventos}
+          onUsar={(modelo) => {
+            setRoteiroEventos((prev) => [
+              ...prev,
+              ...modelo.itens.map((item, i) => ({ ...item, id: `rm-${modelo.id}-${Date.now()}-${i}` })),
+            ]);
+            setModelosAbertos(false);
+          }}
+          onSalvarComoModelo={(nome) => onCriarModelo(nome, roteiroEventos)}
+          onExcluirModelo={onExcluirModelo}
+          onClose={() => setModelosAbertos(false)}
+        />
+      )}
     </div>
   );
 }

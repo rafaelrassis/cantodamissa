@@ -1,21 +1,34 @@
 import { useEffect, useState } from 'react';
-import { ChevronLeft, Clock, Info, ListMusic, Lock, Plus, Trash2, Users } from 'lucide-react';
+import { ChevronLeft, Clock, Info, ListMusic, Lock, Plus, Shuffle, Trash2, Users, UsersRound } from 'lucide-react';
 import { formatarDataLonga, itensRoteiroComMusicas } from '../../lib/ministerioUtils';
 import type { RepertoriosApi } from '../../lib/useRepertorios';
-import type { Escala, FuncaoMinisterio, ItemRoteiro, MembroMinisterio, StatusConfirmacao } from '../../types/ministerio';
+import type {
+  Equipe,
+  Escala,
+  FuncaoMinisterio,
+  ItemRoteiro,
+  MembroMinisterio,
+  ModeloRoteiro,
+  StatusConfirmacao,
+} from '../../types/ministerio';
 import type { Musica } from '../../types/musica';
 import { MembrosSelecionarTela } from './MembrosSelecionarTela';
 import { EventoRoteiroTela } from './EventoRoteiroTela';
+import { ModelosRoteiroSheet } from './ModelosRoteiroSheet';
 import { RepertorioDetalheTela } from '../RepertorioDetalheTela';
 
 interface Props {
   escala: Escala;
   membros: MembroMinisterio[];
   funcoes: FuncaoMinisterio[];
+  equipes: Equipe[];
+  modelos: ModeloRoteiro[];
   meuMembroId: string | null;
   onBack: () => void;
   onAtualizar: (escala: Escala) => void;
   onAbrirMusica: (musica: Musica, repertorioId?: string | null, tom?: string | null) => void;
+  onCriarModelo: (nome: string, itens: ItemRoteiro[]) => void;
+  onExcluirModelo: (id: string) => void;
   repertoriosApi: RepertoriosApi;
 }
 
@@ -32,11 +45,26 @@ const STATUS_LABEL: Record<StatusConfirmacao, { texto: string; cor: string }> = 
  * um (ex: criada antes dessa mudança), um repertório vazio é criado na
  * hora, na primeira vez que essa tela monta.
  */
-export function EscalaDetalheTela({ escala, membros, funcoes, meuMembroId, onBack, onAtualizar, onAbrirMusica, repertoriosApi }: Props) {
+export function EscalaDetalheTela({
+  escala,
+  membros,
+  funcoes,
+  equipes,
+  modelos,
+  meuMembroId,
+  onBack,
+  onAtualizar,
+  onAbrirMusica,
+  onCriarModelo,
+  onExcluirModelo,
+  repertoriosApi,
+}: Props) {
   const [aba, setAba] = useState<'detalhes' | 'participantes' | 'musicas' | 'roteiro'>('detalhes');
   const [selecionandoMembros, setSelecionandoMembros] = useState(false);
+  const [abaMembrosSelecionar, setAbaMembrosSelecionar] = useState<'todos' | 'equipes'>('todos');
   const [criandoEvento, setCriandoEvento] = useState(false);
   const [verRepertorio, setVerRepertorio] = useState(false);
+  const [modelosAbertos, setModelosAbertos] = useState(false);
 
   const repertorioDaEscala = repertoriosApi.obterPorEscala(escala.id);
 
@@ -62,6 +90,22 @@ export function EscalaDetalheTela({ escala, membros, funcoes, meuMembroId, onBac
     }
   }
 
+  function sortear() {
+    const jaSelecionados = new Set(escala.participantes.map((p) => p.membroId));
+    const disponiveis = membros.filter((m) => !jaSelecionados.has(m.id));
+    if (disponiveis.length === 0) return;
+    const escolhidos = [...disponiveis].sort(() => Math.random() - 0.5).slice(0, Math.min(4, disponiveis.length));
+    const participantes = [
+      ...escala.participantes,
+      ...escolhidos.map((m) => ({
+        membroId: m.id,
+        funcaoId: m.funcoes[0] ?? funcoes[0]?.id ?? '',
+        status: 'pendente' as StatusConfirmacao,
+      })),
+    ];
+    onAtualizar({ ...escala, participantes });
+  }
+
   const minhaParticipacao = escala.participantes.find((p) => p.membroId === meuMembroId);
   const itensRoteiro = itensRoteiroComMusicas(escala.roteiro, repertorioDaEscala);
 
@@ -70,6 +114,8 @@ export function EscalaDetalheTela({ escala, membros, funcoes, meuMembroId, onBac
       <MembrosSelecionarTela
         membros={membros}
         funcoes={funcoes}
+        equipes={equipes}
+        abaInicial={abaMembrosSelecionar}
         selecionadosIniciais={escala.participantes.map((p) => p.membroId)}
         onCancelar={() => setSelecionandoMembros(false)}
         onConfirmar={(sel) => {
@@ -187,39 +233,60 @@ export function EscalaDetalheTela({ escala, membros, funcoes, meuMembroId, onBac
         )}
 
         {aba === 'participantes' && (
-          <ul className="divide-y divide-[var(--border)]">
-            {escala.participantes.map((p) => {
-              const membro = membros.find((m) => m.id === p.membroId);
-              const funcao = funcoes.find((f) => f.id === p.funcaoId);
-              if (!membro) return null;
-              return (
-                <li key={p.membroId} className="flex items-center gap-3 px-4 py-3">
-                  <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${membro.avatarCor}`}
-                  >
-                    {membro.nome[0]}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-[var(--text)]">{membro.nome}</p>
-                    <p className="truncate text-xs text-[var(--muted)]">
-                      {funcao?.icone} {funcao?.nome}
-                    </p>
-                  </div>
-                  <span className={`text-xs font-semibold ${STATUS_LABEL[p.status].cor}`}>
-                    {STATUS_LABEL[p.status].texto}
-                  </span>
-                </li>
-              );
-            })}
-            <li className="p-4">
+          <div>
+            <div className="flex gap-2 p-4 pb-0">
               <button
-                onClick={() => setSelecionandoMembros(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+                onClick={() => {
+                  setAbaMembrosSelecionar('todos');
+                  setSelecionandoMembros(true);
+                }}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)]"
               >
-                <Plus size={16} /> Adicionar participante
+                <Plus size={16} /> Adicionar
               </button>
-            </li>
-          </ul>
+              <button
+                onClick={() => {
+                  setAbaMembrosSelecionar('equipes');
+                  setSelecionandoMembros(true);
+                }}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
+              >
+                <UsersRound size={16} /> Equipes
+              </button>
+              <button
+                onClick={sortear}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
+              >
+                <Shuffle size={16} /> Sortear
+              </button>
+            </div>
+
+            <ul className="mt-2 divide-y divide-[var(--border)]">
+              {escala.participantes.map((p) => {
+                const membro = membros.find((m) => m.id === p.membroId);
+                const funcao = funcoes.find((f) => f.id === p.funcaoId);
+                if (!membro) return null;
+                return (
+                  <li key={p.membroId} className="flex items-center gap-3 px-4 py-3">
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${membro.avatarCor}`}
+                    >
+                      {membro.nome[0]}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[var(--text)]">{membro.nome}</p>
+                      <p className="truncate text-xs text-[var(--muted)]">
+                        {funcao?.icone} {funcao?.nome}
+                      </p>
+                    </div>
+                    <span className={`text-xs font-semibold ${STATUS_LABEL[p.status].cor}`}>
+                      {STATUS_LABEL[p.status].texto}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         )}
 
         {aba === 'musicas' && (
@@ -249,40 +316,68 @@ export function EscalaDetalheTela({ escala, membros, funcoes, meuMembroId, onBac
         )}
 
         {aba === 'roteiro' && (
-          <ul className="divide-y divide-[var(--border)]">
-            {itensRoteiro.length === 0 ? (
-              <li className="px-4 py-8 text-center text-sm text-[var(--muted)]">Lista vazia.</li>
-            ) : (
-              itensRoteiro.map((r) => (
-                <li key={r.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className="w-8 shrink-0 text-center text-lg">
-                    {r.tipo === 'musica' ? <ListMusic size={16} className="mx-auto text-[var(--accent)]" /> : r.icone}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm text-[var(--text)]">{r.titulo}</span>
-                    {r.tipo === 'musica' && (
-                      <span className="block text-xs text-[var(--muted)]">
-                        {r.momento} · Tom: {r.tom}
-                      </span>
-                    )}
-                  </span>
-                  <button onClick={() => removerItemRoteiro(r)} aria-label="Remover item">
-                    <Trash2 size={14} className="text-[var(--muted)]" />
-                  </button>
-                </li>
-              ))
-            )}
-            <li className="p-4">
+          <div>
+            <div className="flex gap-2 p-4 pb-0">
               <button
                 onClick={() => setCriandoEvento(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)]"
               >
-                <Plus size={16} /> Adicionar item ao roteiro
+                <Plus size={16} /> Evento
               </button>
-            </li>
-          </ul>
+              <button
+                onClick={() => setModelosAbertos(true)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
+              >
+                Modelos
+              </button>
+            </div>
+
+            <ul className="mt-2 divide-y divide-[var(--border)]">
+              {itensRoteiro.length === 0 ? (
+                <li className="px-4 py-8 text-center text-sm text-[var(--muted)]">Lista vazia.</li>
+              ) : (
+                itensRoteiro.map((r) => (
+                  <li key={r.id} className="flex items-center gap-3 px-4 py-3">
+                    <span className="w-8 shrink-0 text-center text-lg">
+                      {r.tipo === 'musica' ? <ListMusic size={16} className="mx-auto text-[var(--accent)]" /> : r.icone}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm text-[var(--text)]">{r.titulo}</span>
+                      {r.tipo === 'musica' && (
+                        <span className="block text-xs text-[var(--muted)]">
+                          {r.momento} · Tom: {r.tom}
+                        </span>
+                      )}
+                    </span>
+                    <button onClick={() => removerItemRoteiro(r)} aria-label="Remover item">
+                      <Trash2 size={14} className="text-[var(--muted)]" />
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
         )}
+
       </div>
+
+      {modelosAbertos && (
+        <ModelosRoteiroSheet
+          modelos={modelos}
+          roteiroAtual={escala.roteiro}
+          onUsar={(modelo) => {
+            const novosItens = modelo.itens.map((item, i) => ({
+              ...item,
+              id: `rm-${modelo.id}-${Date.now()}-${i}`,
+            }));
+            onAtualizar({ ...escala, roteiro: [...escala.roteiro, ...novosItens] });
+            setModelosAbertos(false);
+          }}
+          onSalvarComoModelo={(nome) => onCriarModelo(nome, escala.roteiro)}
+          onExcluirModelo={onExcluirModelo}
+          onClose={() => setModelosAbertos(false)}
+        />
+      )}
     </div>
   );
 }
