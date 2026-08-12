@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ChevronLeft, Info, Pencil, Plus, Shuffle, Trash2, Users, UsersRound } from 'lucide-react';
 import { formatarDataLonga } from '../../lib/ministerioUtils';
-import type { Equipe, Escala, FuncaoMinisterio, MembroMinisterio, StatusConfirmacao } from '../../types/ministerio';
+import type { Equipe, Escala, FuncaoMinisterio, Indisponibilidade, MembroMinisterio, StatusConfirmacao } from '../../types/ministerio';
 import { MembrosSelecionarTela } from './MembrosSelecionarTela';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
   membros: MembroMinisterio[];
   funcoes: FuncaoMinisterio[];
   equipes: Equipe[];
+  indisponibilidades: Indisponibilidade[];
   meuMembroId: string | null;
   onBack: () => void;
   onAtualizar: (escala: Escala) => void;
@@ -33,6 +34,7 @@ export function EscalaDetalheTela({
   membros,
   funcoes,
   equipes,
+  indisponibilidades,
   meuMembroId,
   onBack,
   onAtualizar,
@@ -43,6 +45,11 @@ export function EscalaDetalheTela({
   const [selecionandoMembros, setSelecionandoMembros] = useState(false);
   const [abaMembrosSelecionar, setAbaMembrosSelecionar] = useState<'todos' | 'equipes'>('todos');
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+
+  const indisponiveisIds = useMemo(
+    () => new Set(indisponibilidades.filter((i) => i.data === escala.data).map((i) => i.membroId)),
+    [indisponibilidades, escala.data]
+  );
 
   async function excluir() {
     if (!confirmandoExclusao) {
@@ -68,7 +75,7 @@ export function EscalaDetalheTela({
 
   function sortear() {
     const jaSelecionados = new Set(escala.participantes.map((p) => p.membroId));
-    const disponiveis = membros.filter((m) => !jaSelecionados.has(m.id));
+    const disponiveis = membros.filter((m) => !jaSelecionados.has(m.id) && !indisponiveisIds.has(m.id));
     if (disponiveis.length === 0) return;
     const escolhidos = [...disponiveis].sort(() => Math.random() - 0.5).slice(0, Math.min(4, disponiveis.length));
     const participantes = [
@@ -92,6 +99,7 @@ export function EscalaDetalheTela({
         equipes={equipes}
         abaInicial={abaMembrosSelecionar}
         selecionadosIniciais={escala.participantes.map((p) => p.membroId)}
+        indisponiveisIds={indisponiveisIds}
         onCancelar={() => setSelecionandoMembros(false)}
         onConfirmar={(sel) => {
           const participantes = sel.map((s) => {

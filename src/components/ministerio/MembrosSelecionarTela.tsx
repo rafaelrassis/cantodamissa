@@ -8,6 +8,10 @@ interface Props {
   funcoes: FuncaoMinisterio[];
   equipes: Equipe[];
   selecionadosIniciais: string[]; // ids de membro já na escala
+  /** ids de membro com indisponibilidade cadastrada pra data da escala —
+   * ficam bloqueados pra adicionar (mas dá pra remover se já tiverem sido
+   * adicionados antes da indisponibilidade existir). */
+  indisponiveisIds?: Set<string>;
   abaInicial?: AbaLista;
   onCancelar: () => void;
   onConfirmar: (selecionados: { membroId: string; funcaoId: string }[]) => void;
@@ -20,6 +24,7 @@ export function MembrosSelecionarTela({
   funcoes,
   equipes,
   selecionadosIniciais,
+  indisponiveisIds = new Set(),
   abaInicial = 'todos',
   onCancelar,
   onConfirmar,
@@ -40,6 +45,7 @@ export function MembrosSelecionarTela({
   const listaExibida = aba === 'selecionados' ? membros.filter((m) => selecionados.has(m.id)) : filtrados;
 
   function toggle(id: string) {
+    if (indisponiveisIds.has(id) && !selecionados.has(id)) return; // indisponível: só permite remover, não adicionar
     setSelecionados((prev) => {
       const novo = new Set(prev);
       if (novo.has(id)) novo.delete(id);
@@ -49,7 +55,7 @@ export function MembrosSelecionarTela({
   }
 
   function selecionarTodos() {
-    setSelecionados((prev) => new Set([...prev, ...filtrados.map((m) => m.id)]));
+    setSelecionados((prev) => new Set([...prev, ...filtrados.filter((m) => !indisponiveisIds.has(m.id)).map((m) => m.id)]));
   }
 
   function limpar() {
@@ -61,7 +67,10 @@ export function MembrosSelecionarTela({
     const todosJaSelecionados = membrosDaFuncao.every((id) => selecionados.has(id));
     setSelecionados((prev) => {
       const novo = new Set(prev);
-      membrosDaFuncao.forEach((id) => (todosJaSelecionados ? novo.delete(id) : novo.add(id)));
+      membrosDaFuncao.forEach((id) => {
+        if (todosJaSelecionados) novo.delete(id);
+        else if (!indisponiveisIds.has(id)) novo.add(id);
+      });
       return novo;
     });
   }
@@ -70,7 +79,10 @@ export function MembrosSelecionarTela({
     const todosJaSelecionados = equipe.membroIds.every((id) => selecionados.has(id));
     setSelecionados((prev) => {
       const novo = new Set(prev);
-      equipe.membroIds.forEach((id) => (todosJaSelecionados ? novo.delete(id) : novo.add(id)));
+      equipe.membroIds.forEach((id) => {
+        if (todosJaSelecionados) novo.delete(id);
+        else if (!indisponiveisIds.has(id)) novo.add(id);
+      });
       return novo;
     });
   }
@@ -128,29 +140,42 @@ export function MembrosSelecionarTela({
             {listaExibida.length === 0 && (
               <li className="py-8 text-center text-sm text-[var(--muted)]">Nenhum membro encontrado.</li>
             )}
-            {listaExibida.map((m) => (
-              <li key={m.id} className="flex items-center gap-3 rounded-lg px-2 py-2.5">
-                <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${m.avatarCor}`}
-                >
-                  {m.nome[0]}
-                </span>
-                <span className="flex-1 text-sm font-medium">{m.nome}</span>
-                <button
-                  onClick={() => toggle(m.id)}
-                  aria-label={selecionados.has(m.id) ? 'Remover' : 'Adicionar'}
-                  className={`h-6 w-11 shrink-0 rounded-full transition ${
-                    selecionados.has(m.id) ? 'bg-[var(--accent)]' : 'border border-[var(--border)] bg-[var(--surface)]'
-                  }`}
-                >
+            {listaExibida.map((m) => {
+              const indisponivel = indisponiveisIds.has(m.id);
+              return (
+                <li key={m.id} className="flex items-center gap-3 rounded-lg px-2 py-2.5">
                   <span
-                    className={`block h-5 w-5 rounded-full bg-white shadow transition ${
-                      selecionados.has(m.id) ? 'translate-x-5' : 'translate-x-0.5'
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${m.avatarCor} ${
+                      indisponivel ? 'opacity-40' : ''
                     }`}
-                  />
-                </button>
-              </li>
-            ))}
+                  >
+                    {m.nome[0]}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className={`block text-sm font-medium ${indisponivel ? 'text-[var(--muted)]' : ''}`}>
+                      {m.nome}
+                    </span>
+                    {indisponivel && (
+                      <span className="block text-xs text-amber-500">Indisponível nesta data</span>
+                    )}
+                  </span>
+                  <button
+                    onClick={() => toggle(m.id)}
+                    disabled={indisponivel && !selecionados.has(m.id)}
+                    aria-label={selecionados.has(m.id) ? 'Remover' : 'Adicionar'}
+                    className={`h-6 w-11 shrink-0 rounded-full transition disabled:opacity-30 ${
+                      selecionados.has(m.id) ? 'bg-[var(--accent)]' : 'border border-[var(--border)] bg-[var(--surface)]'
+                    }`}
+                  >
+                    <span
+                      className={`block h-5 w-5 rounded-full bg-white shadow transition ${
+                        selecionados.has(m.id) ? 'translate-x-5' : 'translate-x-0.5'
+                      }`}
+                    />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         ) : aba === 'funcoes' ? (
           <ul className="mt-3 flex flex-col gap-1">
