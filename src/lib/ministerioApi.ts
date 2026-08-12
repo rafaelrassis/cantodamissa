@@ -10,6 +10,7 @@
 
 import { supabase } from './supabase';
 import { getDeviceKey } from './repertorios';
+import { garantirSessaoAnonima } from './supabaseAuth';
 import type { FuncaoMinisterio, MembroMinisterio, SolicitacaoIngresso } from '../types/ministerio';
 
 export const FUNCOES_PADRAO: Omit<FuncaoMinisterio, 'id'>[] = [
@@ -51,16 +52,24 @@ function gerarCodigo(): string {
  * nenhum ministério.
  */
 export async function buscarMeuMinisterio(): Promise<MinisterioIdentidade | null> {
+  const authUid = await garantirSessaoAnonima();
   const deviceKey = getDeviceKey();
 
   const { data: meuMembro, error: erroMembro } = await supabase
     .from('ministerio_membros')
-    .select('ministerio_id')
+    .select('id, ministerio_id, auth_uid')
     .eq('device_key', deviceKey)
     .limit(1)
     .maybeSingle();
   if (erroMembro) throw erroMembro;
   if (!meuMembro) return null;
+
+  // Vincula esta sessão anônima ao membro (self-heal pra linhas criadas
+  // antes da migração de RLS, ver 0011_ministerio_rls_admin.sql) — sem
+  // isso as policies de admin não reconhecem este device.
+  if (authUid && meuMembro.auth_uid !== authUid) {
+    await supabase.from('ministerio_membros').update({ auth_uid: authUid }).eq('id', meuMembro.id);
+  }
 
   return carregarMinisterio(meuMembro.ministerio_id);
 }
@@ -119,6 +128,7 @@ export async function criarMinisterio(
   dataNascimento?: string | null,
   funcoesCustom?: { nome: string; icone: string }[]
 ): Promise<MinisterioIdentidade> {
+  const authUid = await garantirSessaoAnonima();
   const deviceKey = getDeviceKey();
   const codigoConvite = gerarCodigo();
 
@@ -132,6 +142,7 @@ export async function criarMinisterio(
   const { error: erroMembro } = await supabase.from('ministerio_membros').insert({
     ministerio_id: ministerio.id,
     device_key: deviceKey,
+    auth_uid: authUid,
     nome: 'Você',
     avatar_cor: 'bg-teal-500',
     admin: true,
@@ -150,6 +161,7 @@ export async function criarMinisterio(
 
 /** Confere se o código existe; se sim, cria a solicitação de ingresso. */
 export async function solicitarIngresso(codigo: string, nomeSolicitante: string): Promise<boolean> {
+  const authUid = await garantirSessaoAnonima();
   const codigoNormalizado = codigo.trim().toUpperCase();
   const { data: ministerio, error: erroBusca } = await supabase
     .from('ministerios')
@@ -162,6 +174,7 @@ export async function solicitarIngresso(codigo: string, nomeSolicitante: string)
   const { error: erroInsert } = await supabase.from('solicitacoes_ingresso').insert({
     ministerio_id: ministerio.id,
     device_key: getDeviceKey(),
+    auth_uid: authUid,
     nome: nomeSolicitante,
     codigo_usado: codigoNormalizado,
   });
@@ -209,7 +222,7 @@ export async function removerMembro(membroId: string) {
 export async function aprovarSolicitacao(ministerioId: string, solicitacao: SolicitacaoIngresso) {
   const { data: solicitacaoRaw, error: erroBusca } = await supabase
     .from('solicitacoes_ingresso')
-    .select('device_key')
+    .select('device_key, auth_uid')
     .eq('id', solicitacao.id)
     .single();
   if (erroBusca) throw erroBusca;
@@ -217,6 +230,7 @@ export async function aprovarSolicitacao(ministerioId: string, solicitacao: Soli
   const { error: erroMembro } = await supabase.from('ministerio_membros').insert({
     ministerio_id: ministerioId,
     device_key: solicitacaoRaw.device_key,
+    auth_uid: solicitacaoRaw.auth_uid,
     nome: solicitacao.nome,
     avatar_cor: 'bg-slate-500',
     admin: false,

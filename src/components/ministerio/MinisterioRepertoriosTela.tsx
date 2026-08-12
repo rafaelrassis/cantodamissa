@@ -10,6 +10,7 @@ interface Props {
   garantirRepertorioDaEscala: (escalaId: string, nomeEscala: string) => Promise<Repertorio>;
   onAbrirRepertorio: (id: string) => void;
   onIrParaEscalas: () => void;
+  souAdmin: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ export function MinisterioRepertoriosTela({
   garantirRepertorioDaEscala,
   onAbrirRepertorio,
   onIrParaEscalas,
+  souAdmin,
 }: Props) {
   const [escolhendoEvento, setEscolhendoEvento] = useState(false);
   const [criandoParaId, setCriandoParaId] = useState<string | null>(null);
@@ -85,7 +87,7 @@ export function MinisterioRepertoriosTela({
         </button>
       ))}
 
-      {escalas.length === 0 ? (
+      {!souAdmin ? null : escalas.length === 0 ? (
         <button
           onClick={onIrParaEscalas}
           className="rounded-xl border border-dashed border-[var(--border)] p-3 text-center text-sm font-semibold text-[var(--accent)]"

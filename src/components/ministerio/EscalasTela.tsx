@@ -7,11 +7,12 @@ interface Props {
   escalas: Escala[];
   onAbrirEscala: (id: string) => void;
   onCriarEscala: () => void;
+  souAdmin: boolean;
 }
 
 const LIMITE_LISTA = 10;
 
-export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala }: Props) {
+export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala, souAdmin }: Props) {
   const [aba, setAba] = useState<'proximas' | 'anteriores'>('proximas');
   const [verTudo, setVerTudo] = useState(false);
   const hoje = new Date().toISOString().slice(0, 10);
@@ -99,13 +100,15 @@ export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala }: Props) {
         </ul>
       )}
 
-      <button
-        onClick={onCriarEscala}
-        aria-label="Nova escala"
-        className="fixed bottom-24 right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)]"
-      >
-        <Plus size={22} />
-      </button>
+      {souAdmin && (
+        <button
+          onClick={onCriarEscala}
+          aria-label="Nova escala"
+          className="fixed bottom-24 right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)]"
+        >
+          <Plus size={22} />
+        </button>
+      )}
     </div>
   );
 }

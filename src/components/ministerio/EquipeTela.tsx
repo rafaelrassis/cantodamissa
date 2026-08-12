@@ -67,7 +67,7 @@ export function EquipeTela({
     setTimeout(() => setCopiado(false), 1500);
   }
 
-  if (funcaoEditor) {
+  if (funcaoEditor && souAdmin) {
     return (
       <FuncaoEditorTela
         titulo={funcaoEditor.id ? 'Editar função' : 'Nova função'}
@@ -83,7 +83,7 @@ export function EquipeTela({
     );
   }
 
-  if (equipeEditor) {
+  if (equipeEditor && souAdmin) {
     return (
       <EquipeEditorTela
         titulo={equipeEditor.id ? 'Editar equipe' : 'Nova equipe'}
@@ -237,24 +237,34 @@ export function EquipeTela({
           <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
             {funcoes.map((f) => (
               <li key={f.id} className="flex items-center justify-between px-4 py-3">
-                <button
-                  onClick={() => setFuncaoEditor({ id: f.id, nome: f.nome, icone: f.icone })}
-                  className="flex flex-1 items-center gap-2 text-left text-sm text-[var(--text)]"
-                >
-                  <span>{f.icone}</span> {f.nome}
-                </button>
-                <button onClick={() => onRemoverFuncao(f.id)} aria-label={`Remover ${f.nome}`}>
-                  <Trash2 size={14} className="text-[var(--muted)]" />
-                </button>
+                {souAdmin ? (
+                  <button
+                    onClick={() => setFuncaoEditor({ id: f.id, nome: f.nome, icone: f.icone })}
+                    className="flex flex-1 items-center gap-2 text-left text-sm text-[var(--text)]"
+                  >
+                    <span>{f.icone}</span> {f.nome}
+                  </button>
+                ) : (
+                  <span className="flex flex-1 items-center gap-2 text-sm text-[var(--text)]">
+                    <span>{f.icone}</span> {f.nome}
+                  </span>
+                )}
+                {souAdmin && (
+                  <button onClick={() => onRemoverFuncao(f.id)} aria-label={`Remover ${f.nome}`}>
+                    <Trash2 size={14} className="text-[var(--muted)]" />
+                  </button>
+                )}
               </li>
             ))}
           </ul>
-          <button
-            onClick={() => setFuncaoEditor({ id: null, nome: '', icone: '🎵' })}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
-          >
-            <Plus size={16} /> Adicionar função
-          </button>
+          {souAdmin && (
+            <button
+              onClick={() => setFuncaoEditor({ id: null, nome: '', icone: '🎵' })}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+            >
+              <Plus size={16} /> Adicionar função
+            </button>
+          )}
         </div>
       )}
 
@@ -266,26 +276,37 @@ export function EquipeTela({
             <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
               {equipes.map((eq) => (
                 <li key={eq.id} className="flex items-center justify-between px-4 py-3">
-                  <button
-                    onClick={() => setEquipeEditor({ id: eq.id, nome: eq.nome, membroIds: eq.membroIds })}
-                    className="flex-1 text-left"
-                  >
-                    <span className="block text-sm font-semibold text-[var(--text)]">{eq.nome}</span>
-                    <span className="block text-xs text-[var(--muted)]">{eq.membroIds.length} membros</span>
-                  </button>
-                  <button onClick={() => onRemoverEquipe(eq.id)} aria-label={`Excluir ${eq.nome}`}>
-                    <Trash2 size={14} className="text-[var(--muted)]" />
-                  </button>
+                  {souAdmin ? (
+                    <button
+                      onClick={() => setEquipeEditor({ id: eq.id, nome: eq.nome, membroIds: eq.membroIds })}
+                      className="flex-1 text-left"
+                    >
+                      <span className="block text-sm font-semibold text-[var(--text)]">{eq.nome}</span>
+                      <span className="block text-xs text-[var(--muted)]">{eq.membroIds.length} membros</span>
+                    </button>
+                  ) : (
+                    <span className="flex-1">
+                      <span className="block text-sm font-semibold text-[var(--text)]">{eq.nome}</span>
+                      <span className="block text-xs text-[var(--muted)]">{eq.membroIds.length} membros</span>
+                    </span>
+                  )}
+                  {souAdmin && (
+                    <button onClick={() => onRemoverEquipe(eq.id)} aria-label={`Excluir ${eq.nome}`}>
+                      <Trash2 size={14} className="text-[var(--muted)]" />
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
           )}
-          <button
-            onClick={() => setEquipeEditor({ id: null, nome: '', membroIds: [] })}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
-          >
-            <Plus size={16} /> Nova equipe
-          </button>
+          {souAdmin && (
+            <button
+              onClick={() => setEquipeEditor({ id: null, nome: '', membroIds: [] })}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+            >
+              <Plus size={16} /> Nova equipe
+            </button>
+          )}
         </div>
       )}
 

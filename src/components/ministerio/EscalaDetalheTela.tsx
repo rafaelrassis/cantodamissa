@@ -11,6 +11,7 @@ interface Props {
   equipes: Equipe[];
   indisponibilidades: Indisponibilidade[];
   meuMembroId: string | null;
+  souAdmin: boolean;
   onBack: () => void;
   onAtualizar: (escala: Escala) => void;
   onEditar: () => void;
@@ -36,6 +37,7 @@ export function EscalaDetalheTela({
   equipes,
   indisponibilidades,
   meuMembroId,
+  souAdmin,
   onBack,
   onAtualizar,
   onEditar,
@@ -120,14 +122,16 @@ export function EscalaDetalheTela({
           <button onClick={onBack} className="flex items-center gap-1 text-xs opacity-80">
             <ChevronLeft size={14} /> Voltar
           </button>
-          <div className="flex items-center gap-4">
-            <button onClick={onEditar} aria-label="Editar escala" className="opacity-80">
-              <Pencil size={16} />
-            </button>
-            <button onClick={excluir} aria-label="Excluir escala" className="opacity-80">
-              <Trash2 size={16} />
-            </button>
-          </div>
+          {souAdmin && (
+            <div className="flex items-center gap-4">
+              <button onClick={onEditar} aria-label="Editar escala" className="opacity-80">
+                <Pencil size={16} />
+              </button>
+              <button onClick={excluir} aria-label="Excluir escala" className="opacity-80">
+                <Trash2 size={16} />
+              </button>
+            </div>
+          )}
         </div>
         <h1 className="text-xl font-extrabold tracking-tight">{escala.titulo}</h1>
         <p className="mt-0.5 text-sm capitalize opacity-80">
@@ -196,32 +200,34 @@ export function EscalaDetalheTela({
 
         {aba === 'participantes' && (
           <div>
-            <div className="flex gap-2 p-4 pb-0">
-              <button
-                onClick={() => {
-                  setAbaMembrosSelecionar('todos');
-                  setSelecionandoMembros(true);
-                }}
-                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)]"
-              >
-                <Plus size={16} /> Adicionar
-              </button>
-              <button
-                onClick={() => {
-                  setAbaMembrosSelecionar('equipes');
-                  setSelecionandoMembros(true);
-                }}
-                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
-              >
-                <UsersRound size={16} /> Equipes
-              </button>
-              <button
-                onClick={sortear}
-                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
-              >
-                <Shuffle size={16} /> Sortear
-              </button>
-            </div>
+            {souAdmin && (
+              <div className="flex gap-2 p-4 pb-0">
+                <button
+                  onClick={() => {
+                    setAbaMembrosSelecionar('todos');
+                    setSelecionandoMembros(true);
+                  }}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)]"
+                >
+                  <Plus size={16} /> Adicionar
+                </button>
+                <button
+                  onClick={() => {
+                    setAbaMembrosSelecionar('equipes');
+                    setSelecionandoMembros(true);
+                  }}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
+                >
+                  <UsersRound size={16} /> Equipes
+                </button>
+                <button
+                  onClick={sortear}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
+                >
+                  <Shuffle size={16} /> Sortear
+                </button>
+              </div>
+            )}
 
             <ul className="mt-2 divide-y divide-[var(--border)]">
               {escala.participantes.map((p) => {

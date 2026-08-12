@@ -3,11 +3,12 @@ import { Megaphone, Plus, X } from 'lucide-react';
 import type { Aviso } from '../../types/ministerio';
 
 interface Props {
+  souAdmin: boolean;
   avisos: Aviso[];
   onCriar: (titulo: string, descricao: string, emDestaque: boolean) => void;
 }
 
-export function AvisosTela({ avisos, onCriar }: Props) {
+export function AvisosTela({ avisos, onCriar, souAdmin }: Props) {
   const [formAberto, setFormAberto] = useState(false);
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -46,15 +47,17 @@ export function AvisosTela({ avisos, onCriar }: Props) {
         </ul>
       )}
 
-      <button
-        onClick={() => setFormAberto(true)}
-        aria-label="Novo aviso"
-        className="fixed bottom-24 right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)]"
-      >
-        <Plus size={22} />
-      </button>
+      {souAdmin && (
+        <button
+          onClick={() => setFormAberto(true)}
+          aria-label="Novo aviso"
+          className="fixed bottom-24 right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)]"
+        >
+          <Plus size={22} />
+        </button>
+      )}
 
-      {formAberto && (
+      {souAdmin && formAberto && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 lg:items-center">
           <div className="w-full max-w-sm rounded-t-2xl bg-[var(--bg)] p-6 lg:rounded-2xl">
             <div className="mb-4 flex items-center justify-between">

@@ -121,6 +121,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         funcoes={ministerio.funcoes}
         equipes={equipesApi.equipes}
         meuMembroId={ministerio.meuMembroId}
+        souAdmin={ministerio.souAdmin}
         indisponibilidades={indisponibilidadesApi.indisponibilidades}
         onBack={() => setEscalaAbertaId(null)}
         onAtualizar={(atualizada) =>
@@ -144,6 +145,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         removerRito={repertoriosApi.removerRito}
         reordenarRitos={repertoriosApi.reordenarRitos}
         onExcluirRepertorio={repertoriosApi.remover}
+        podeEditar={ministerio.souAdmin}
       />
     );
   }
@@ -236,6 +238,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
             escalas={escalasApi.escalas}
             onAbrirEscala={setEscalaAbertaId}
             onCriarEscala={() => setFormularioEscala('nova')}
+            souAdmin={ministerio.souAdmin}
           />
         )}
 
@@ -246,6 +249,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
             garantirRepertorioDaEscala={repertoriosApi.garantirRepertorioDaEscala}
             onAbrirRepertorio={setRepertorioAbertoId}
             onIrParaEscalas={() => setSubTela('escalas')}
+            souAdmin={ministerio.souAdmin}
           />
         )}
 
@@ -285,6 +289,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
             onCriar={(titulo, descricao, emDestaque) =>
               avisosApi.criar(titulo, descricao, emDestaque).catch((e) => console.error('Falha ao criar aviso', e))
             }
+            souAdmin={ministerio.souAdmin}
           />
         )}
 

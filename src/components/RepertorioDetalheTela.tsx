@@ -19,6 +19,10 @@ interface Props {
    * Escala (o repertório é dela; excluir deixaria a escala sem repertório
    * até a próxima abertura recriar um vazio, o que só confunde). */
   ocultarExcluir?: boolean;
+  /** Só leitura — esconde excluir/reordenar/criar/mover/remover rito e
+   * música. Usado quando um membro não-admin abre o repertório pela aba
+   * Ministério. Default true (demais usos do app seguem editáveis). */
+  podeEditar?: boolean;
 }
 
 /**
@@ -38,6 +42,7 @@ export function RepertorioDetalheTela({
   reordenarRitos,
   onExcluirRepertorio,
   ocultarExcluir,
+  podeEditar = true,
 }: Props) {
   const [novoRito, setNovoRito] = useState('');
   const [ordem, setOrdem] = useState<string[]>(repertorio.ritos);
@@ -185,7 +190,7 @@ export function RepertorioDetalheTela({
             >
               <Download size={16} />
             </button>
-            {!ocultarExcluir && (
+            {podeEditar && !ocultarExcluir && (
               <button
                 onClick={excluir}
                 onBlur={() => setConfirmandoExclusao(false)}
@@ -210,8 +215,8 @@ export function RepertorioDetalheTela({
       <div className="mx-auto max-w-2xl px-4 py-4 lg:px-10">
         {gruposParaExibir.map((nomeRito) => {
           const itens = itensPorRito.get(nomeRito) ?? [];
-          const removivel = nomeRito !== RITO_SEM_SECAO;
-          const reordenavel = ordem.includes(nomeRito);
+          const removivel = podeEditar && nomeRito !== RITO_SEM_SECAO;
+          const reordenavel = podeEditar && ordem.includes(nomeRito);
 
           return (
             <div
@@ -276,27 +281,31 @@ export function RepertorioDetalheTela({
                       <span className="shrink-0 rounded-md bg-[var(--accent-soft)] px-2 py-1 font-mono text-xs font-bold text-[var(--accent)]">
                         {item.tone}
                       </span>
-                      <select
-                        value={nomeRito}
-                        onChange={(e) =>
-                          moverMusicaParaRito(repertorio.id, item.musicaId, e.target.value)
-                        }
-                        aria-label="Mover pra outro rito"
-                        className="shrink-0 rounded-md border border-[var(--border)] bg-[var(--bg)] px-1 py-1 text-[10px] text-[var(--text)]"
-                      >
-                        {opcoesDeRito.map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => removerMusica(repertorio.id, item.musicaId)}
-                        aria-label="Remover música"
-                        className="shrink-0 text-[var(--muted)] hover:text-[var(--text)]"
-                      >
-                        <X size={14} />
-                      </button>
+                      {podeEditar && (
+                        <>
+                          <select
+                            value={nomeRito}
+                            onChange={(e) =>
+                              moverMusicaParaRito(repertorio.id, item.musicaId, e.target.value)
+                            }
+                            aria-label="Mover pra outro rito"
+                            className="shrink-0 rounded-md border border-[var(--border)] bg-[var(--bg)] px-1 py-1 text-[10px] text-[var(--text)]"
+                          >
+                            {opcoesDeRito.map((r) => (
+                              <option key={r} value={r}>
+                                {r}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => removerMusica(repertorio.id, item.musicaId)}
+                            aria-label="Remover música"
+                            className="shrink-0 text-[var(--muted)] hover:text-[var(--text)]"
+                          >
+                            <X size={14} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -305,29 +314,31 @@ export function RepertorioDetalheTela({
           );
         })}
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!novoRito.trim()) return;
-            adicionarRito(repertorio.id, novoRito);
-            setNovoRito('');
-          }}
-          className="flex gap-2"
-        >
-          <input
-            value={novoRito}
-            onChange={(e) => setNovoRito(e.target.value)}
-            placeholder="Novo rito (ex: Bênção Final)"
-            className="w-full rounded-xl border border-dashed border-[var(--border)] px-3 py-2 text-sm text-[var(--text)] focus:outline-none"
-          />
-          <button
-            type="submit"
-            aria-label="Adicionar rito"
-            className="flex shrink-0 items-center justify-center rounded-xl bg-[var(--accent)] px-3 text-[var(--accent-fg)]"
+        {podeEditar && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!novoRito.trim()) return;
+              adicionarRito(repertorio.id, novoRito);
+              setNovoRito('');
+            }}
+            className="flex gap-2"
           >
-            <Plus size={16} />
-          </button>
-        </form>
+            <input
+              value={novoRito}
+              onChange={(e) => setNovoRito(e.target.value)}
+              placeholder="Novo rito (ex: Bênção Final)"
+              className="w-full rounded-xl border border-dashed border-[var(--border)] px-3 py-2 text-sm text-[var(--text)] focus:outline-none"
+            />
+            <button
+              type="submit"
+              aria-label="Adicionar rito"
+              className="flex shrink-0 items-center justify-center rounded-xl bg-[var(--accent)] px-3 text-[var(--accent-fg)]"
+            >
+              <Plus size={16} />
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
