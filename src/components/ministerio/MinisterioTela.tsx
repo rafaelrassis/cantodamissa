@@ -5,7 +5,6 @@ import { useEscalas } from '../../lib/useEscalas';
 import { useAvisos } from '../../lib/useAvisos';
 import { useIndisponibilidades } from '../../lib/useIndisponibilidades';
 import { useEquipes } from '../../lib/useEquipes';
-import { useModelosRoteiro } from '../../lib/useModelosRoteiro';
 import type { Ministerio } from '../../lib/useMinisterio';
 import type { Musica } from '../../types/musica';
 import type { Escala } from '../../types/ministerio';
@@ -62,7 +61,6 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
   const avisosApi = useAvisos(ministerio.id);
   const indisponibilidadesApi = useIndisponibilidades(ministerio.id);
   const equipesApi = useEquipes(ministerio.id);
-  const modelosRoteiroApi = useModelosRoteiro(ministerio.id);
   const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(null);
   const [formularioEscala, setFormularioEscala] = useState<'nova' | Escala | null>(null);
   const [configuracoesAbertas, setConfiguracoesAbertas] = useState(false);
@@ -121,18 +119,13 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         membros={ministerio.membros}
         funcoes={ministerio.funcoes}
         equipes={equipesApi.equipes}
-        modelos={modelosRoteiroApi.modelos}
-        onCriarModelo={modelosRoteiroApi.criar}
-        onExcluirModelo={modelosRoteiroApi.excluir}
         meuMembroId={ministerio.meuMembroId}
         onBack={() => setEscalaAbertaId(null)}
         onAtualizar={(atualizada) =>
           escalasApi.atualizar(atualizada).catch((e) => console.error('Falha ao atualizar escala', e))
         }
-        onAbrirMusica={onAbrirMusica}
         onEditar={() => setFormularioEscala(escalaAberta)}
         onExcluir={(id) => escalasApi.excluir(id)}
-        repertoriosApi={repertoriosApi}
       />
     );
   }
