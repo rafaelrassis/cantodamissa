@@ -18,7 +18,7 @@ import { FuncaoEditorTela } from './FuncaoEditorTela';
 
 interface Props {
   onBack: () => void;
-  onConcluir: (nomeMinisterio?: string, funcoesCustom?: { nome: string; icone: string }[]) => void;
+  onConcluir: (nomeMinisterio: string, funcoesCustom?: { nome: string; icone: string }[]) => Promise<void>;
   validarCodigo: (codigo: string) => Promise<boolean>;
 }
 
@@ -69,6 +69,8 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo }: P
   const [funcaoEditor, setFuncaoEditor] = useState<{ id: string | null; nome: string; icone: string } | null>(
     null
   );
+  const [salvandoMinisterio, setSalvandoMinisterio] = useState(false);
+  const [erroSalvarMinisterio, setErroSalvarMinisterio] = useState('');
 
   function abrirNovaFuncao() {
     setFuncaoEditor({ id: null, nome: '', icone: '🎵' });
@@ -91,12 +93,19 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo }: P
     setFuncoes((prev) => prev.filter((f) => f.id !== id));
   }
 
-  function handleSalvarMinisterio() {
-    if (nomeMinisterio.trim()) {
-      onConcluir(
+  async function handleSalvarMinisterio() {
+    if (!nomeMinisterio.trim() || salvandoMinisterio) return;
+    setSalvandoMinisterio(true);
+    setErroSalvarMinisterio('');
+    try {
+      await onConcluir(
         nomeMinisterio.trim(),
         funcoes.map((f) => ({ nome: f.nome, icone: f.icone }))
       );
+    } catch (e) {
+      console.error('Falha ao criar ministério', e);
+      setErroSalvarMinisterio('Não foi possível criar o ministério agora. Tente de novo em instantes.');
+      setSalvandoMinisterio(false);
     }
   }
 
@@ -137,10 +146,10 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo }: P
         {passo === 'cadastrar' && (
           <button
             onClick={handleSalvarMinisterio}
-            disabled={!nomeMinisterio.trim()}
+            disabled={!nomeMinisterio.trim() || salvandoMinisterio}
             className="ml-auto flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-4 py-1.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-40"
           >
-            <Check size={15} /> Salvar
+            <Check size={15} /> {salvandoMinisterio ? 'Salvando…' : 'Salvar'}
           </button>
         )}
       </header>
@@ -269,6 +278,7 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo }: P
               placeholder="Nome do ministério *"
               className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
             />
+            {erroSalvarMinisterio && <p className="mt-2 text-xs text-red-500">{erroSalvarMinisterio}</p>}
 
             <div className="mt-6 flex items-center justify-between">
               <span>

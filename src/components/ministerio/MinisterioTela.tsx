@@ -81,9 +81,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
     return (
       <AdicionarMinisterioTela
         onBack={onBack}
-        onConcluir={(nome, funcoesCustom) => {
-          if (nome) ministerio.cadastrar(nome, funcoesCustom).catch((e) => console.error('Falha ao criar ministério', e));
-        }}
+        onConcluir={(nome, funcoesCustom) => ministerio.cadastrar(nome, funcoesCustom)}
         validarCodigo={ministerio.ingressarComCodigo}
       />
     );
