@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { BarChart3, CalendarDays, ChevronLeft, Home, ListMusic, Megaphone, Settings, Users } from 'lucide-react';
-import { AVISOS, INDISPONIBILIDADES } from '../../lib/mockMinisterio';
 import { useRepertorios } from '../../lib/useRepertorios';
 import { useEscalas } from '../../lib/useEscalas';
+import { useAvisos } from '../../lib/useAvisos';
+import { useIndisponibilidades } from '../../lib/useIndisponibilidades';
 import type { Ministerio } from '../../lib/useMinisterio';
-import type { Aviso, Indisponibilidade } from '../../types/ministerio';
 import type { Musica } from '../../types/musica';
 import { InicioTela } from './InicioTela';
 import { EscalasTela } from './EscalasTela';
@@ -53,8 +53,8 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
 export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
   const [subTela, setSubTela] = useState<SubTela>('inicio');
   const escalasApi = useEscalas(ministerio.id);
-  const [avisos, setAvisos] = useState<Aviso[]>(AVISOS);
-  const [indisponibilidades, setIndisponibilidades] = useState<Indisponibilidade[]>(INDISPONIBILIDADES);
+  const avisosApi = useAvisos(ministerio.id);
+  const indisponibilidadesApi = useIndisponibilidades(ministerio.id);
   const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(null);
   const [criandoEscala, setCriandoEscala] = useState(false);
   const [configuracoesAbertas, setConfiguracoesAbertas] = useState(false);
@@ -202,7 +202,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
             membros={ministerio.membros}
             escalas={escalasApi.escalas}
             repertorios={repertoriosApi.repertorios}
-            avisos={avisos}
+            avisos={avisosApi.avisos}
             souAdmin={ministerio.souAdmin}
             solicitacoes={ministerio.solicitacoes}
             onAprovarSolicitacao={ministerio.aprovarSolicitacao}
@@ -240,13 +240,14 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
           <EquipeTela
             membros={ministerio.membros}
             funcoes={ministerio.funcoes}
-            indisponibilidades={indisponibilidades}
-            onAdicionarIndisponibilidade={(data, motivo) =>
-              setIndisponibilidades((prev) => [
-                ...prev,
-                { id: `i${prev.length + 1}`, membroId: 'm1', data, motivo },
-              ])
-            }
+            indisponibilidades={indisponibilidadesApi.indisponibilidades}
+            onAdicionarIndisponibilidade={(data, motivo) => {
+              if (ministerio.meuMembroId) {
+                indisponibilidadesApi
+                  .criar(ministerio.meuMembroId, data, motivo)
+                  .catch((e) => console.error('Falha ao adicionar indisponibilidade', e));
+              }
+            }}
             souAdmin={ministerio.souAdmin}
             codigoConvite={ministerio.codigoConvite}
             solicitacoes={ministerio.solicitacoes}
@@ -260,19 +261,9 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
 
         {subTela === 'avisos' && (
           <AvisosTela
-            avisos={avisos}
+            avisos={avisosApi.avisos}
             onCriar={(titulo, descricao, emDestaque) =>
-              setAvisos((prev) => [
-                {
-                  id: `a${prev.length + 1}`,
-                  titulo,
-                  descricao,
-                  emDestaque,
-                  arquivado: false,
-                  criadoEm: new Date().toISOString(),
-                },
-                ...prev,
-              ])
+              avisosApi.criar(titulo, descricao, emDestaque).catch((e) => console.error('Falha ao criar aviso', e))
             }
           />
         )}
@@ -281,7 +272,8 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
           <PanoramaTela
             escalas={escalasApi.escalas}
             repertorios={repertoriosApi.repertorios}
-            indisponibilidades={indisponibilidades}
+            indisponibilidades={indisponibilidadesApi.indisponibilidades}
+            totalMembros={ministerio.membros.length}
           />
         )}
       </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, Clock, Info, ListMusic, Lock, Plus, Trash2, Users } from 'lucide-react';
-import { formatarDataLonga, itensRoteiroComMusicas } from '../../lib/mockMinisterio';
+import { formatarDataLonga, itensRoteiroComMusicas } from '../../lib/ministerioUtils';
 import type { RepertoriosApi } from '../../lib/useRepertorios';
 import type { Escala, FuncaoMinisterio, ItemRoteiro, MembroMinisterio, StatusConfirmacao } from '../../types/ministerio';
 import type { Musica } from '../../types/musica';

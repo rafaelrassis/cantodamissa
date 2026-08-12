@@ -1,5 +1,5 @@
 import { Bell, CalendarDays, Cake, Check, ChevronRight, Megaphone, Music2, Users, X } from 'lucide-react';
-import { formatarDataCurta } from '../../lib/mockMinisterio';
+import { formatarDataCurta } from '../../lib/ministerioUtils';
 import type { Repertorio } from '../../lib/repertorios';
 import type { Aviso, Escala, MembroMinisterio, SolicitacaoIngresso } from '../../types/ministerio';
 

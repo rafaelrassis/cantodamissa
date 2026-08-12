@@ -12,7 +12,7 @@ import {
   Send,
   Trash2,
 } from 'lucide-react';
-import { FUNCOES } from '../../lib/mockMinisterio';
+import { FUNCOES_PADRAO } from '../../lib/ministerioApi';
 import type { FuncaoMinisterio } from '../../types/ministerio';
 import { FuncaoEditorTela } from './FuncaoEditorTela';
 
@@ -64,7 +64,7 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo }: P
 
   // ---- Cadastrar ----
   const [nomeMinisterio, setNomeMinisterio] = useState('');
-  const [funcoes, setFuncoes] = useState<FuncaoMinisterio[]>(FUNCOES);
+  const [funcoes, setFuncoes] = useState<FuncaoMinisterio[]>(FUNCOES_PADRAO.map((f, i) => ({ ...f, id: `padrao-${i}` })));
   const [funcaoEditor, setFuncaoEditor] = useState<{ id: string | null; nome: string; icone: string } | null>(
     null
   );

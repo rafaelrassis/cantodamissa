@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Check, Copy, MoreVertical, Plus, Shield, ShieldOff, Trash2, UserMinus, UserPlus, X } from 'lucide-react';
-import { formatarDataLonga } from '../../lib/mockMinisterio';
+import { formatarDataLonga } from '../../lib/ministerioUtils';
 import type { FuncaoMinisterio, Indisponibilidade, MembroMinisterio, SolicitacaoIngresso } from '../../types/ministerio';
 
 interface Props {

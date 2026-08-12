@@ -1,5 +1,4 @@
-// Camada de dados real do Ministério (Supabase) — substitui o estado
-// levantado em memória de mockMinisterio.ts/useMinisterioMock.ts.
+// Camada de dados real do Ministério (Supabase).
 //
 // Sem auth ainda (ver ADR no chat "remover auth"): cada dispositivo tem uma
 // device_key (mesma função getDeviceKey() de repertorios.ts) que funciona
@@ -12,7 +11,7 @@ import { supabase } from './supabase';
 import { getDeviceKey } from './repertorios';
 import type { FuncaoMinisterio, MembroMinisterio, SolicitacaoIngresso } from '../types/ministerio';
 
-const FUNCOES_PADRAO: Omit<FuncaoMinisterio, 'id'>[] = [
+export const FUNCOES_PADRAO: Omit<FuncaoMinisterio, 'id'>[] = [
   { nome: 'Ministro', icone: '🎤' },
   { nome: 'Vocalista', icone: '🎙️' },
   { nome: 'Backing vocal', icone: '🎶' },

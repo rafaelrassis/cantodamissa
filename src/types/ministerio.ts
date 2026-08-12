@@ -1,6 +1,6 @@
-// Tipos usados apenas pelo mock de /ministério (src/lib/mockMinisterio.ts).
-// Não têm relação com o schema do Supabase — servem só pra validar UX antes
-// de desenhar as tabelas reais (ver conversa no chat "refinar repertório").
+// Tipos do módulo /ministério, usados tanto pelas telas quanto pelas
+// camadas de dados reais (ministerioApi.ts, escalasApi.ts, avisosApi.ts,
+// indisponibilidadesApi.ts).
 
 export type FuncaoMinisterio = {
   id: string;

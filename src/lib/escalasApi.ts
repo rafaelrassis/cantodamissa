@@ -6,7 +6,7 @@
 //
 // "roteiro" só grava itens tipo 'evento' — os tipo 'musica' são
 // derivados do Repertorio vinculado à escala na hora de exibir (ver
-// itensRoteiroComMusicas em mockMinisterio.ts), não persistem aqui.
+// itensRoteiroComMusicas em ministerioUtils.ts), não persistem aqui.
 
 import { supabase } from './supabase';
 import type { Escala, ItemRoteiro, ParticipanteEscala } from '../types/ministerio';

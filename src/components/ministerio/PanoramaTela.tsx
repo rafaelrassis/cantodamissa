@@ -1,4 +1,3 @@
-import { MEMBROS } from '../../lib/mockMinisterio';
 import type { Repertorio } from '../../lib/repertorios';
 import type { Escala, Indisponibilidade } from '../../types/ministerio';
 
@@ -6,9 +5,10 @@ interface Props {
   escalas: Escala[];
   repertorios: Repertorio[];
   indisponibilidades: Indisponibilidade[];
+  totalMembros: number;
 }
 
-export function PanoramaTela({ escalas, repertorios, indisponibilidades }: Props) {
+export function PanoramaTela({ escalas, repertorios, indisponibilidades, totalMembros }: Props) {
   const totalEscalacoes = escalas.reduce((acc, e) => acc + e.participantes.length, 0);
   const totalConfirmados = escalas.reduce(
     (acc, e) => acc + e.participantes.filter((p) => p.status === 'confirmado').length,
@@ -19,7 +19,7 @@ export function PanoramaTela({ escalas, repertorios, indisponibilidades }: Props
     0
   );
   const membrosEscalados = new Set(escalas.flatMap((e) => e.participantes.map((p) => p.membroId)));
-  const pctEscalados = Math.round((membrosEscalados.size / MEMBROS.length) * 100);
+  const pctEscalados = totalMembros ? Math.round((membrosEscalados.size / totalMembros) * 100) : 0;
   const pctConfirmacao = totalEscalacoes ? Math.round((totalConfirmados / totalEscalacoes) * 100) : 0;
 
   const musicasCount: Record<string, { title: string; count: number }> = {};
@@ -32,7 +32,7 @@ export function PanoramaTela({ escalas, repertorios, indisponibilidades }: Props
 
   return (
     <div className="grid grid-cols-2 gap-3 px-4 py-4">
-      <Card titulo="Membros escalados" valor={`${membrosEscalados.size}/${MEMBROS.length}`} sub={`${pctEscalados}%`} />
+      <Card titulo="Membros escalados" valor={`${membrosEscalados.size}/${totalMembros}`} sub={`${pctEscalados}%`} />
       <Card titulo="Total de escalações" valor={String(totalEscalacoes)} />
       <Card titulo="Confirmações de presença" valor={`${pctConfirmacao}%`} sub={`${totalConfirmados}/${totalEscalacoes}`} />
       <Card titulo="Faltas" valor={String(totalFaltas)} />

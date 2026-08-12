@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { formatarDataCurta, formatarDataLonga } from '../../lib/mockMinisterio';
+import { formatarDataCurta, formatarDataLonga } from '../../lib/ministerioUtils';
 import type { Escala } from '../../types/ministerio';
 
 interface Props {

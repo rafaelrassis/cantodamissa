@@ -17,7 +17,7 @@ import {
   UsersRound,
   X,
 } from 'lucide-react';
-import { PALETAS_CORES, itensRoteiroComMusicas } from '../../lib/mockMinisterio';
+import { PALETAS_CORES, itensRoteiroComMusicas } from '../../lib/ministerioUtils';
 import type { Escala, FuncaoMinisterio, ItemRoteiro, MembroMinisterio, ParticipanteEscala } from '../../types/ministerio';
 import { MembrosSelecionarTela } from './MembrosSelecionarTela';
 import { EventoRoteiroTela } from './EventoRoteiroTela';
