@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChevronLeft, Clock, Info, ListMusic, Lock, Plus, Shuffle, Trash2, Users, UsersRound } from 'lucide-react';
+import { ChevronLeft, Clock, Info, ListMusic, Lock, Pencil, Plus, Shuffle, Trash2, Users, UsersRound } from 'lucide-react';
 import { formatarDataLonga, itensRoteiroComMusicas } from '../../lib/ministerioUtils';
 import type { RepertoriosApi } from '../../lib/useRepertorios';
 import type {
@@ -29,6 +29,8 @@ interface Props {
   onAbrirMusica: (musica: Musica, repertorioId?: string | null, tom?: string | null) => void;
   onCriarModelo: (nome: string, itens: ItemRoteiro[]) => void;
   onExcluirModelo: (id: string) => void;
+  onEditar: () => void;
+  onExcluir: (escalaId: string) => Promise<void>;
   repertoriosApi: RepertoriosApi;
 }
 
@@ -57,6 +59,8 @@ export function EscalaDetalheTela({
   onAbrirMusica,
   onCriarModelo,
   onExcluirModelo,
+  onEditar,
+  onExcluir,
   repertoriosApi,
 }: Props) {
   const [aba, setAba] = useState<'detalhes' | 'participantes' | 'musicas' | 'roteiro'>('detalhes');
@@ -65,8 +69,24 @@ export function EscalaDetalheTela({
   const [criandoEvento, setCriandoEvento] = useState(false);
   const [verRepertorio, setVerRepertorio] = useState(false);
   const [modelosAbertos, setModelosAbertos] = useState(false);
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
 
   const repertorioDaEscala = repertoriosApi.obterPorEscala(escala.id);
+
+  async function excluir() {
+    if (!confirmandoExclusao) {
+      setConfirmandoExclusao(true);
+      return;
+    }
+    try {
+      await onExcluir(escala.id);
+      onBack();
+    } catch (err) {
+      console.error('excluir escala:', err);
+      alert('Não foi possível excluir a escala. Veja o console.');
+      setConfirmandoExclusao(false);
+    }
+  }
 
   useEffect(() => {
     if (!repertoriosApi.carregando && !repertorioDaEscala) {
@@ -163,13 +183,34 @@ export function EscalaDetalheTela({
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
       <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
-        <button onClick={onBack} className="mb-2 flex items-center gap-1 text-xs opacity-80">
-          <ChevronLeft size={14} /> Voltar
-        </button>
+        <div className="mb-2 flex items-center justify-between">
+          <button onClick={onBack} className="flex items-center gap-1 text-xs opacity-80">
+            <ChevronLeft size={14} /> Voltar
+          </button>
+          <div className="flex items-center gap-4">
+            <button onClick={onEditar} aria-label="Editar escala" className="opacity-80">
+              <Pencil size={16} />
+            </button>
+            <button onClick={excluir} aria-label="Excluir escala" className="opacity-80">
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
         <h1 className="text-xl font-extrabold tracking-tight">{escala.titulo}</h1>
         <p className="mt-0.5 text-sm capitalize opacity-80">
           {formatarDataLonga(escala.data)} · {escala.hora}
         </p>
+        {confirmandoExclusao && (
+          <div className="mt-3 flex items-center gap-2 rounded-lg bg-black/20 px-3 py-2 text-xs">
+            <span className="flex-1">Excluir esta escala e tudo relacionado a ela?</span>
+            <button onClick={excluir} className="font-bold underline">
+              Excluir
+            </button>
+            <button onClick={() => setConfirmandoExclusao(false)} className="opacity-80">
+              Cancelar
+            </button>
+          </div>
+        )}
       </header>
 
       <div className="mx-auto max-w-2xl">
