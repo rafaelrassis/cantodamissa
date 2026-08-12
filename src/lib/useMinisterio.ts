@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as api from './ministerioApi';
-import type { MinisterioIdentidade } from './ministerioApi';
+import type { MinisterioIdentidade, MinisterioResumo } from './ministerioApi';
 import type { SolicitacaoIngresso } from '../types/ministerio';
+
+const CHAVE_MINISTERIO_ATIVO = 'cdm_ministerio_ativo_id';
 
 /**
  * Hook real do módulo Ministério (Supabase) — mesma interface antes usada
@@ -16,10 +18,30 @@ import type { SolicitacaoIngresso } from '../types/ministerio';
  */
 export function useMinisterio(dataNascimentoUsuario?: string | null) {
   const [ministerio, setMinisterio] = useState<MinisterioIdentidade | null>(null);
+  const [meusMinisterios, setMeusMinisterios] = useState<MinisterioResumo[]>([]);
   const [carregando, setCarregando] = useState(true);
 
-  const recarregar = useCallback(async () => {
-    const m = await api.buscarMeuMinisterio();
+  /**
+   * Refaz a lista de ministérios do device e recarrega o ministério ativo
+   * (o salvo em localStorage, se ainda válido; senão o primeiro da lista).
+   * `preferirId` força a troca pra um id específico (usado após
+   * cadastrar/trocar).
+   */
+  const recarregar = useCallback(async (preferirId?: string) => {
+    const lista = await api.listarMeusMinisterios();
+    setMeusMinisterios(lista);
+
+    if (lista.length === 0) {
+      localStorage.removeItem(CHAVE_MINISTERIO_ATIVO);
+      setMinisterio(null);
+      return null;
+    }
+
+    const salvo = preferirId ?? localStorage.getItem(CHAVE_MINISTERIO_ATIVO);
+    const alvoId = lista.find((m) => m.id === salvo)?.id ?? lista[0].id;
+    localStorage.setItem(CHAVE_MINISTERIO_ATIVO, alvoId);
+
+    const m = await api.buscarMinisterioPorId(alvoId);
     setMinisterio(m);
     return m;
   }, []);
@@ -28,6 +50,20 @@ export function useMinisterio(dataNascimentoUsuario?: string | null) {
     setCarregando(true);
     recarregar().finally(() => setCarregando(false));
   }, [recarregar]);
+
+  /** Troca qual ministério (dentre os que o device já integra) está ativo. */
+  const trocarMinisterio = useCallback(async (ministerioId: string) => {
+    setCarregando(true);
+    try {
+      localStorage.setItem(CHAVE_MINISTERIO_ATIVO, ministerioId);
+      const m = await api.buscarMinisterioPorId(ministerioId);
+      setMinisterio(m);
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
+
+  const podeAdicionarMinisterio = meusMinisterios.length < api.LIMITE_MINISTERIOS;
 
   const pertence = ministerio !== null;
   const id = ministerio?.id ?? null;
@@ -44,9 +80,9 @@ export function useMinisterio(dataNascimentoUsuario?: string | null) {
   const cadastrar = useCallback(
     async (nomeNovo: string, funcoesCustom?: { nome: string; icone: string }[]) => {
       const m = await api.criarMinisterio(nomeNovo, dataNascimentoUsuario, funcoesCustom);
-      setMinisterio(m);
+      await recarregar(m.id);
     },
-    [dataNascimentoUsuario]
+    [dataNascimentoUsuario, recarregar]
   );
 
   const ingressarComCodigo = useCallback(async (codigo: string) => {
@@ -57,14 +93,14 @@ export function useMinisterio(dataNascimentoUsuario?: string | null) {
   const sair = useCallback(async () => {
     if (!ministerio) return;
     await api.sairDoMinisterio(ministerio.id);
-    setMinisterio(null);
-  }, [ministerio]);
+    await recarregar();
+  }, [ministerio, recarregar]);
 
   const excluir = useCallback(async () => {
     if (!ministerio) return;
     await api.excluirMinisterio(ministerio.id);
-    setMinisterio(null);
-  }, [ministerio]);
+    await recarregar();
+  }, [ministerio, recarregar]);
 
   const renomear = useCallback(
     async (novoNome: string) => {
@@ -154,6 +190,9 @@ export function useMinisterio(dataNascimentoUsuario?: string | null) {
   return {
     carregando,
     pertence,
+    meusMinisterios,
+    trocarMinisterio,
+    podeAdicionarMinisterio,
     id,
     meuMembroId,
     nome,
