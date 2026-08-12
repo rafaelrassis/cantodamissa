@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarDays, ChevronRight, Home as HomeIcon, ListMusic, Search, Users, X } from 'lucide-react';
+import { ChevronRight, Search, X } from 'lucide-react';
 import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
 import type { Cantor } from '../types/cantor';
 import {
@@ -38,11 +38,9 @@ interface Props {
   onAbrirLoginAdmin?: () => void;
   onAbrirTopMusicas?: () => void;
   onAbrirTopArtistas?: () => void;
-  onAbrirBusca?: () => void;
   onAbrirRepertorio: (id: string) => void;
   onSelectArtista?: (artista: string) => void;
   onSelectCantor?: (slug: string) => void;
-  onAbrirMinisterio?: () => void;
   theme: Theme;
   onToggleTheme: () => void;
   corPersonalizada: string | null;
@@ -80,11 +78,9 @@ export function Home({
   onAbrirLoginAdmin,
   onAbrirTopMusicas,
   onAbrirTopArtistas,
-  onAbrirBusca,
   onSelectArtista,
   onSelectCantor,
   onAbrirRepertorio,
-  onAbrirMinisterio,
   theme,
   onToggleTheme,
   corPersonalizada,
@@ -132,7 +128,11 @@ export function Home({
   }, []);
   const { criar: criarSubmissao } = useSubmissoes();
   const [formularioAberto, setFormularioAberto] = useState(false);
-  const [repertoriosMobileAberto, setRepertoriosMobileAberto] = useState(false);
+  // Só o link "Repertórios" do header desktop usa isso — no mobile a
+  // barra inferior global (App.tsx → BottomNavBar) não tem mais esse
+  // atalho, e no desktop a sidebar "Meus repertórios" já fica visível o
+  // tempo todo; este sheet é só um atalho extra pro link do header.
+  const [repertorioSheetAberto, setRepertorioSheetAberto] = useState(false);
   const [loginAberto, setLoginAberto] = useState(false);
   const [personalizarAberto, setPersonalizarAberto] = useState(false);
   const notificacoes = ministerio.souAdmin ? ministerio.solicitacoes : [];
@@ -198,7 +198,7 @@ export function Home({
               <button onClick={onAbrirCalendario} className="hover:opacity-100">
                 Calendário
               </button>
-              <button onClick={() => setRepertoriosMobileAberto(true)} className="hover:opacity-100">
+              <button onClick={() => setRepertorioSheetAberto(true)} className="hover:opacity-100">
                 Repertórios
               </button>
             </nav>
@@ -478,19 +478,6 @@ export function Home({
         </button>
       )}
 
-      {/* Bottom navigation (mobile) */}
-      <nav className="sticky bottom-0 flex items-center justify-around border-t border-[var(--border)] bg-[var(--surface)] py-2 lg:hidden">
-        <TabItem icon={<HomeIcon size={18} />} label="Início" active />
-        <TabItem icon={<Search size={18} />} label="Buscar" onClick={onAbrirBusca} />
-        <TabItem
-          icon={<ListMusic size={18} />}
-          label="Repertórios"
-          onClick={() => setRepertoriosMobileAberto(true)}
-        />
-        <TabItem icon={<CalendarDays size={18} />} label="Calendário" onClick={onAbrirCalendario} />
-        <TabItem icon={<Users size={18} />} label="Ministério" onClick={onAbrirMinisterio} />
-      </nav>
-
       {formularioAberto && (
         <SubmissaoForm
           modo="nova"
@@ -537,12 +524,12 @@ export function Home({
         />
       )}
 
-      {repertoriosMobileAberto && (
-        <div className="fixed inset-0 z-40 flex flex-col bg-[var(--bg)] lg:hidden">
+      {repertorioSheetAberto && (
+        <div className="fixed inset-0 z-40 flex flex-col bg-[var(--bg)]">
           <header className="flex items-center justify-between bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)]">
             <h2 className="text-lg font-bold">Meus repertórios</h2>
             <button
-              onClick={() => setRepertoriosMobileAberto(false)}
+              onClick={() => setRepertorioSheetAberto(false)}
               aria-label="Fechar"
               className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/16"
             >
@@ -550,7 +537,7 @@ export function Home({
             </button>
           </header>
           <div className="flex-1 overflow-y-auto p-4">
-            <div className="flex flex-col gap-3">
+            <div className="mx-auto flex max-w-md flex-col gap-3">
               <PainelRepertorios
                 repertorios={repertorios}
                 repertorioCompartilhado={repertorioCompartilhado}
@@ -589,30 +576,6 @@ function FiltroChip({
       }`}
     >
       {label}
-    </button>
-  );
-}
-
-function TabItem({
-  icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex min-w-16 flex-col items-center gap-1 py-1.5 ${
-        active ? 'text-[var(--accent)]' : 'text-[var(--muted)]'
-      }`}
-    >
-      {icon}
-      <span className="text-[10px] font-semibold">{label}</span>
     </button>
   );
 }

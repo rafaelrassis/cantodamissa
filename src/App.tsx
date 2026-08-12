@@ -13,6 +13,7 @@ import { BuscaTela } from './components/BuscaTela';
 import { MinisterioTela } from './components/ministerio/MinisterioTela';
 import { UserLoginModal } from './components/UserLoginModal';
 import { AlertaTopo } from './components/AlertaTopo';
+import { BottomNavBar } from './components/BottomNavBar';
 import { useTheme } from './lib/useTheme';
 import { useRepertorios } from './lib/useRepertorios';
 import { useAdminAuth } from './lib/useAdminAuth';
@@ -112,7 +113,19 @@ function App() {
   // ad-slot que também some lá).
   const mostrarAlertaGlobal = !musicaAtual && ministerio.souAdmin && ministerio.solicitacoes.length > 0;
 
-  function comAlerta(conteudo: React.ReactNode) {
+  // BottomNavBar: fixa em todas as telas, exceto no leitor de cifra
+  // (mesma exceção do alerta acima). `comAlerta` decide a tela ativa da
+  // barra a partir de `tela`; a barra é `position: fixed`, então cada
+  // chamada também injeta um spacer no fim do documento pra o
+  // conteúdo da tela não ficar por baixo dela.
+  function telaNavAtiva(): 'home' | 'busca' | 'calendario' | 'ministerio' {
+    if (tela === 'busca') return 'busca';
+    if (tela === 'calendario') return 'calendario';
+    if (tela === 'ministerio') return 'ministerio';
+    return 'home';
+  }
+
+  function comAlerta(conteudo: React.ReactNode, opts?: { semNav?: boolean }) {
     return (
       <>
         {mostrarAlertaGlobal && (
@@ -124,6 +137,18 @@ function App() {
           />
         )}
         {conteudo}
+        {!opts?.semNav && (
+          <>
+            <div className="h-16 lg:hidden" aria-hidden />
+            <BottomNavBar
+              ativa={telaNavAtiva()}
+              onIrHome={() => setTela('home')}
+              onIrBusca={() => setTela('busca')}
+              onIrCalendario={() => setTela('calendario')}
+              onIrMinisterio={abrirMinisterio}
+            />
+          </>
+        )}
       </>
     );
   }
@@ -143,7 +168,8 @@ function App() {
         onSelectMusica={(m) => abrirMusica(m, repertorioId)}
         onAbrirCantor={abrirCantor}
         onAbrirArtista={abrirArtista}
-      />
+      />,
+      { semNav: true }
     );
   }
 
@@ -234,14 +260,12 @@ function App() {
         onAbrirLoginAdmin={() => setTela('admin')}
         onAbrirTopMusicas={() => setTela('top-musicas')}
         onAbrirTopArtistas={() => setTela('top-artistas')}
-        onAbrirBusca={() => setTela('busca')}
         onSelectArtista={abrirArtista}
         onSelectCantor={abrirCantor}
         onAbrirRepertorio={(id) => {
           setRepertorioId(id);
           setTela('repertorio-detalhe');
         }}
-        onAbrirMinisterio={abrirMinisterio}
         theme={theme}
         onToggleTheme={toggleTheme}
         corPersonalizada={corPersonalizada}
