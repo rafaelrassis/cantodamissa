@@ -18,8 +18,8 @@ import { FuncaoEditorTela } from './FuncaoEditorTela';
 
 interface Props {
   onBack: () => void;
-  onConcluir: (nomeMinisterio?: string) => void;
-  validarCodigo: (codigo: string) => boolean;
+  onConcluir: (nomeMinisterio?: string, funcoesCustom?: { nome: string; icone: string }[]) => void;
+  validarCodigo: (codigo: string) => Promise<boolean>;
 }
 
 type Passo = 'opcoes' | 'ingressar' | 'cadastrar';
@@ -43,11 +43,22 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo }: P
   const [solicitacaoEnviada, setSolicitacaoEnviada] = useState(false);
   const [passoAPassoAberto, setPassoAPassoAberto] = useState(true);
 
-  function handleSolicitarEntrada() {
-    if (validarCodigo(codigo)) {
-      setSolicitacaoEnviada(true);
-    } else {
-      setErroCodigo('Código inválido. Confira com o administrador do ministério.');
+  const [enviandoCodigo, setEnviandoCodigo] = useState(false);
+
+  async function handleSolicitarEntrada() {
+    setEnviandoCodigo(true);
+    setErroCodigo('');
+    try {
+      const ok = await validarCodigo(codigo);
+      if (ok) {
+        setSolicitacaoEnviada(true);
+      } else {
+        setErroCodigo('Código inválido. Confira com o administrador do ministério.');
+      }
+    } catch {
+      setErroCodigo('Não foi possível enviar agora. Tente de novo.');
+    } finally {
+      setEnviandoCodigo(false);
     }
   }
 
@@ -81,7 +92,10 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo }: P
 
   function handleSalvarMinisterio() {
     if (nomeMinisterio.trim()) {
-      onConcluir(nomeMinisterio.trim());
+      onConcluir(
+        nomeMinisterio.trim(),
+        funcoes.map((f) => ({ nome: f.nome, icone: f.icone }))
+      );
     }
   }
 
@@ -178,7 +192,7 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo }: P
 
               <button
                 onClick={handleSolicitarEntrada}
-                disabled={!codigo.trim()}
+                disabled={!codigo.trim() || enviandoCodigo}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-50"
               >
                 <Send size={15} /> Solicitar entrada

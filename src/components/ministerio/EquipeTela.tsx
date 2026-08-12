@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Check, Copy, MoreVertical, Plus, Shield, ShieldOff, Trash2, UserMinus, UserPlus, X } from 'lucide-react';
-import { FUNCOES, formatarDataLonga } from '../../lib/mockMinisterio';
-import type { Indisponibilidade, MembroMinisterio, SolicitacaoIngresso } from '../../types/ministerio';
+import { formatarDataLonga } from '../../lib/mockMinisterio';
+import type { FuncaoMinisterio, Indisponibilidade, MembroMinisterio, SolicitacaoIngresso } from '../../types/ministerio';
 
 interface Props {
   membros: MembroMinisterio[];
+  funcoes: FuncaoMinisterio[];
   indisponibilidades: Indisponibilidade[];
   onAdicionarIndisponibilidade: (data: string, motivo: string) => void;
   souAdmin: boolean;
@@ -19,6 +20,7 @@ interface Props {
 
 export function EquipeTela({
   membros,
+  funcoes,
   indisponibilidades,
   onAdicionarIndisponibilidade,
   souAdmin,
@@ -120,7 +122,7 @@ export function EquipeTela({
                     {m.nome} {m.admin && <span className="text-[10px] font-normal text-[var(--accent)]">· admin</span>}
                   </p>
                   <p className="truncate text-xs text-[var(--muted)]">
-                    {m.funcoes.map((f) => FUNCOES.find((x) => x.id === f)?.nome).join(', ') || 'Sem função'}
+                    {m.funcoes.map((f) => funcoes.find((x) => x.id === f)?.nome).join(', ') || 'Sem função'}
                   </p>
                 </div>
 
@@ -180,7 +182,7 @@ export function EquipeTela({
       {aba === 'funcoes' && (
         <div className="mt-4 px-4">
           <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
-            {FUNCOES.map((f) => (
+            {funcoes.map((f) => (
               <li key={f.id} className="flex items-center justify-between px-4 py-3">
                 <span className="flex items-center gap-2 text-sm text-[var(--text)]">
                   <span>{f.icone}</span> {f.nome}

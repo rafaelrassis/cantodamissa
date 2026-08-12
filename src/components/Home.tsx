@@ -20,7 +20,7 @@ import {
 import { useRepertorios } from '../lib/useRepertorios';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import type { Theme } from '../lib/useTheme';
-import type { MinisterioMock } from '../lib/useMinisterioMock';
+import type { Ministerio } from '../lib/useMinisterio';
 import { CantoresPopularesSection } from './CantoresPopularesSection';
 import { HeaderUsuario } from './HeaderUsuario';
 import { MusicaCard } from './MusicaCard';
@@ -47,7 +47,7 @@ interface Props {
   onToggleTheme: () => void;
   corPersonalizada: string | null;
   onDefinirCorPersonalizada: (hex: string | null) => void;
-  ministerio: MinisterioMock;
+  ministerio: Ministerio;
   isLoggedIn: boolean;
   userName: string | null;
   foto: string | null;

@@ -17,7 +17,7 @@ import { useTheme } from './lib/useTheme';
 import { useRepertorios } from './lib/useRepertorios';
 import { useAdminAuth } from './lib/useAdminAuth';
 import { useUserAuth } from './lib/useUserAuth';
-import { useMinisterioMock } from './lib/useMinisterioMock';
+import { useMinisterio } from './lib/useMinisterio';
 import type { Musica, TempoLiturgico } from './types/musica';
 
 const MIN_FONT = 15;
@@ -61,8 +61,8 @@ function App() {
 
   // Levantado até aqui (em vez de ficar dentro de MinisterioTela) pra
   // sobreviver à troca de tela e alimentar o alerta global abaixo.
-  // dataNascimento (da conta) sobrescreve o aniversário mockado de "você".
-  const ministerio = useMinisterioMock(dataNascimento);
+  // dataNascimento (da conta) sobrescreve o aniversário salvo de "você".
+  const ministerio = useMinisterio(dataNascimento);
 
   function abrirMinisterio() {
     if (isLoggedIn) {

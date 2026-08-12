@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { BarChart3, CalendarDays, ChevronLeft, Home, ListMusic, Megaphone, Settings, Users } from 'lucide-react';
 import { AVISOS, ESCALAS, INDISPONIBILIDADES } from '../../lib/mockMinisterio';
 import { useRepertorios } from '../../lib/useRepertorios';
-import type { MinisterioMock } from '../../lib/useMinisterioMock';
+import type { Ministerio } from '../../lib/useMinisterio';
 import type { Aviso, Escala, Indisponibilidade } from '../../types/ministerio';
 import type { Musica } from '../../types/musica';
 import { InicioTela } from './InicioTela';
@@ -20,7 +20,7 @@ import { RepertorioDetalheTela } from '../RepertorioDetalheTela';
 interface Props {
   onBack: () => void;
   onAbrirMusica: (musica: Musica, repertorioId?: string | null, tom?: string | null) => void;
-  ministerio: MinisterioMock;
+  ministerio: Ministerio;
 }
 
 type SubTela = 'inicio' | 'escalas' | 'equipe' | 'avisos' | 'panorama' | 'repertorio';
@@ -38,7 +38,7 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
  * Módulo "Ministério" — mock só de UX/fluxo PARA Início/Escalas/Equipe/
  * Avisos/Panorama. A identidade do ministério (pertence/nome/membros/
  * admins/solicitações) vem de fora via prop `ministerio` (hook levantado
- * até App.tsx — ver useMinisterioMock.ts) pra sobreviver à desmontagem
+ * até App.tsx — ver useMinisterio.ts) pra sobreviver à desmontagem
  * deste componente e alimentar o alerta global de solicitação pendente.
  * A aba Repertório reaproveita a feature real já existente (useRepertorios
  * + PainelRepertorios + RepertorioDetalheTela) — não é ministério-scoped
@@ -66,8 +66,8 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
     return (
       <AdicionarMinisterioTela
         onBack={onBack}
-        onConcluir={(nome) => {
-          if (nome) ministerio.cadastrar(nome);
+        onConcluir={(nome, funcoesCustom) => {
+          if (nome) ministerio.cadastrar(nome, funcoesCustom).catch((e) => console.error('Falha ao criar ministério', e));
         }}
         validarCodigo={ministerio.ingressarComCodigo}
       />
@@ -229,6 +229,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         {subTela === 'equipe' && (
           <EquipeTela
             membros={ministerio.membros}
+            funcoes={ministerio.funcoes}
             indisponibilidades={indisponibilidades}
             onAdicionarIndisponibilidade={(data, motivo) =>
               setIndisponibilidades((prev) => [
