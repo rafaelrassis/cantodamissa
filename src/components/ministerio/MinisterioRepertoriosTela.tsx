@@ -30,13 +30,18 @@ export function MinisterioRepertoriosTela({
 }: Props) {
   const [escolhendoEvento, setEscolhendoEvento] = useState(false);
   const [criandoParaId, setCriandoParaId] = useState<string | null>(null);
+  const [verTudoEventos, setVerTudoEventos] = useState(false);
 
   const comRepertorio = escalas
     .map((escala) => ({ escala, repertorio: repertorios.find((r) => r.escalaId === escala.id) ?? null }))
     .filter((x): x is { escala: Escala; repertorio: Repertorio } => x.repertorio !== null)
     .sort((a, b) => b.escala.data.localeCompare(a.escala.data));
 
-  const semRepertorio = escalas.filter((e) => !repertorios.some((r) => r.escalaId === e.id));
+  const semRepertorioCompleto = escalas
+    .filter((e) => !repertorios.some((r) => r.escalaId === e.id))
+    .sort((a, b) => a.data.localeCompare(b.data));
+  const semRepertorio = verTudoEventos ? semRepertorioCompleto : semRepertorioCompleto.slice(0, 10);
+  const restantesEventos = semRepertorioCompleto.length - semRepertorio.length;
 
   async function criarPara(escala: Escala) {
     setCriandoParaId(escala.id);
@@ -87,7 +92,7 @@ export function MinisterioRepertoriosTela({
         >
           Crie um evento primeiro, na aba Escalas
         </button>
-      ) : semRepertorio.length === 0 ? (
+      ) : semRepertorioCompleto.length === 0 ? (
         <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
           Todos os eventos já têm repertório.
         </div>
@@ -116,9 +121,22 @@ export function MinisterioRepertoriosTela({
                 </button>
               </li>
             ))}
+            {restantesEventos > 0 && (
+              <li>
+                <button
+                  onClick={() => setVerTudoEventos(true)}
+                  className="w-full rounded-lg py-2.5 text-center text-xs font-semibold text-[var(--accent)]"
+                >
+                  Ver mais {restantesEventos}
+                </button>
+              </li>
+            )}
           </ul>
           <button
-            onClick={() => setEscolhendoEvento(false)}
+            onClick={() => {
+              setEscolhendoEvento(false);
+              setVerTudoEventos(false);
+            }}
             className="mt-1 w-full rounded-lg py-2 text-center text-xs text-[var(--muted)]"
           >
             Cancelar
