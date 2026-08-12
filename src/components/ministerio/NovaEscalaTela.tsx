@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Check,
   ChevronLeft,
@@ -13,13 +13,14 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { PALETAS_CORES } from '../../lib/ministerioUtils';
-import type { Equipe, Escala, FuncaoMinisterio, MembroMinisterio, ParticipanteEscala } from '../../types/ministerio';
+import type { Equipe, Escala, FuncaoMinisterio, Indisponibilidade, MembroMinisterio, ParticipanteEscala } from '../../types/ministerio';
 import { MembrosSelecionarTela } from './MembrosSelecionarTela';
 
 interface Props {
   membros: MembroMinisterio[];
   funcoes: FuncaoMinisterio[];
   equipes: Equipe[];
+  indisponibilidades: Indisponibilidade[];
   escalaExistente?: Escala;
   onCancelar: () => void;
   onSalvar: (escala: Escala) => void;
@@ -27,7 +28,7 @@ interface Props {
 
 type Aba = 'detalhes' | 'participantes';
 
-export function NovaEscalaTela({ membros, funcoes, equipes, escalaExistente, onCancelar, onSalvar }: Props) {
+export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, escalaExistente, onCancelar, onSalvar }: Props) {
   const [aba, setAba] = useState<Aba>('detalhes');
   const [abaMembrosSelecionar, setAbaMembrosSelecionar] = useState<'todos' | 'equipes'>('todos');
 
@@ -45,6 +46,11 @@ export function NovaEscalaTela({ membros, funcoes, equipes, escalaExistente, onC
   const [selecionandoMembros, setSelecionandoMembros] = useState(false);
 
   const podeSalvar = titulo.trim() && data;
+
+  const indisponiveisIds = useMemo(
+    () => new Set(indisponibilidades.filter((i) => i.data === data).map((i) => i.membroId)),
+    [indisponibilidades, data]
+  );
 
   function handleSalvar() {
     if (!podeSalvar) return;
@@ -64,7 +70,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, escalaExistente, onC
 
   function sortear() {
     const jaSelecionados = new Set(participantes.map((p) => p.membroId));
-    const disponiveis = membros.filter((m) => !jaSelecionados.has(m.id));
+    const disponiveis = membros.filter((m) => !jaSelecionados.has(m.id) && !indisponiveisIds.has(m.id));
     if (disponiveis.length === 0) return;
     const escolhidos = [...disponiveis].sort(() => Math.random() - 0.5).slice(0, Math.min(4, disponiveis.length));
     setParticipantes((prev) => [
@@ -85,6 +91,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, escalaExistente, onC
         equipes={equipes}
         abaInicial={abaMembrosSelecionar}
         selecionadosIniciais={participantes.map((p) => p.membroId)}
+        indisponiveisIds={indisponiveisIds}
         onCancelar={() => setSelecionandoMembros(false)}
         onConfirmar={(sel) => {
           setParticipantes(sel.map((s) => ({ ...s, status: 'pendente' })));

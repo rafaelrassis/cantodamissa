@@ -91,6 +91,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         funcoes={ministerio.funcoes}
         equipes={equipesApi.equipes}
         escalaExistente={editando}
+        indisponibilidades={indisponibilidadesApi.indisponibilidades}
         onCancelar={() => setFormularioEscala(null)}
         onSalvar={(escala) => {
           if (editando) {
@@ -120,6 +121,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         funcoes={ministerio.funcoes}
         equipes={equipesApi.equipes}
         meuMembroId={ministerio.meuMembroId}
+        indisponibilidades={indisponibilidadesApi.indisponibilidades}
         onBack={() => setEscalaAbertaId(null)}
         onAtualizar={(atualizada) =>
           escalasApi.atualizar(atualizada).catch((e) => console.error('Falha ao atualizar escala', e))
