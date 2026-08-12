@@ -7,12 +7,11 @@ import { RepertorioPickerSheet } from './RepertorioPickerSheet';
 interface Props {
   musica: Musica;
   repertorios: Repertorio[];
-  onCriar: (nome: string) => Promise<Repertorio>;
   onAdd: (repertorioId: string, rito: string) => void;
 }
 
 /** Botão "+" que abre o sheet de "Salvar" no repertório (ver RepertorioPickerSheet). */
-export function AddToRepertorioMenu({ musica, repertorios, onCriar, onAdd }: Props) {
+export function AddToRepertorioMenu({ musica, repertorios, onAdd }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -32,7 +31,6 @@ export function AddToRepertorioMenu({ musica, repertorios, onCriar, onAdd }: Pro
         <RepertorioPickerSheet
           musica={musica}
           repertorios={repertorios}
-          onCriar={onCriar}
           onAdicionar={onAdd}
           onFechar={() => setOpen(false)}
         />

@@ -120,8 +120,7 @@ export function Home({
   const ehHoje = diasParaDomingo === 0;
   const buscando = query.trim().length > 0;
 
-  const { repertorios, criar, adicionarMusica, duplicar } = useRepertorios();
-  const [novoNome, setNovoNome] = useState('');
+  const { repertorios, adicionarMusica, duplicar } = useRepertorios();
   const [repertorioCompartilhado, setRepertorioCompartilhado] = useState<RepertorioTipo | null>(
     null
   );
@@ -380,7 +379,6 @@ export function Home({
                   posicao={undefined}
                   onClick={() => onSelectMusica(musica)}
                   repertorios={repertorios}
-                  onCriarRepertorio={criar}
                   onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
                 />
               ))}
@@ -398,7 +396,6 @@ export function Home({
                       posicao={pageIndex * 5 + i + 1}
                       onClick={() => onSelectMusica(musica)}
                       repertorios={repertorios}
-                      onCriarRepertorio={criar}
                   onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
                     />
                   ))}
@@ -457,9 +454,6 @@ export function Home({
           <PainelRepertorios
             repertorios={repertorios}
             repertorioCompartilhado={repertorioCompartilhado}
-            novoNome={novoNome}
-            setNovoNome={setNovoNome}
-            criar={criar}
             onAbrirRepertorio={onAbrirRepertorio}
             onSelectMusica={onSelectMusica}
             onClonar={duplicar}
@@ -560,9 +554,6 @@ export function Home({
               <PainelRepertorios
                 repertorios={repertorios}
                 repertorioCompartilhado={repertorioCompartilhado}
-                novoNome={novoNome}
-                setNovoNome={setNovoNome}
-                criar={criar}
                 onAbrirRepertorio={onAbrirRepertorio}
                 onSelectMusica={onSelectMusica}
                 onClonar={duplicar}

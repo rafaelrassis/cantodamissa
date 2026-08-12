@@ -6,9 +6,9 @@ import { getMusicaById } from '../lib/musicasApi';
 interface Props {
   repertorios: Repertorio[];
   repertorioCompartilhado: Repertorio | null;
-  novoNome: string;
-  setNovoNome: (nome: string) => void;
-  criar: (nome: string) => void;
+  novoNome?: string;
+  setNovoNome?: (nome: string) => void;
+  criar?: (nome: string) => void;
   onAbrirRepertorio: (id: string) => void;
   onSelectMusica: (musica: Musica, repertorioId?: string) => void;
   onClonar?: (id: string) => void;
@@ -16,9 +16,15 @@ interface Props {
 
 /**
  * Lista de "Meus repertórios" — reutilizada como sidebar fixa no desktop
- * (Home.tsx) e como tela cheia no mobile. Clicar num repertório abre a
- * página dedicada dele (`RepertorioDetalheTela`), onde de fato dá pra
- * gerenciar ritos, reordenar, exportar etc.
+ * (Home.tsx) e como tela cheia no mobile, e também na aba "Repertório" do
+ * Ministério (MinisterioTela). Clicar num repertório abre a página
+ * dedicada dele (`RepertorioDetalheTela`), onde de fato dá pra gerenciar
+ * ritos, reordenar, exportar etc.
+ *
+ * `novoNome`/`setNovoNome`/`criar` só vêm preenchidos a partir do
+ * Ministério — repertório só se cria por lá (1 escala pode ganhar o seu, ou
+ * um avulso nesta aba). Em outros usos (Home.tsx) esses props ficam de
+ * fora e o formulário de criação não aparece.
  */
 export function PainelRepertorios({
   repertorios,
@@ -30,6 +36,7 @@ export function PainelRepertorios({
   onSelectMusica,
   onClonar,
 }: Props) {
+  const podeCriar = criar !== undefined && setNovoNome !== undefined;
   return (
     <>
       {repertorioCompartilhado && (
@@ -62,8 +69,9 @@ export function PainelRepertorios({
 
       {repertorios.length === 0 && (
         <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
-          Você ainda não tem repertórios. Crie um abaixo ou clique no ícone{' '}
-          <span className="font-semibold">+</span> ao lado de uma música.
+          {podeCriar
+            ? 'Você ainda não tem repertórios. Crie um abaixo.'
+            : 'Você ainda não tem repertórios. É necessário criar um repertório no menu Ministério.'}
         </div>
       )}
 
@@ -97,28 +105,30 @@ export function PainelRepertorios({
         </div>
       ))}
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!novoNome.trim()) return;
-          criar(novoNome);
-          setNovoNome('');
-        }}
-        className="flex gap-2"
-      >
-        <input
-          value={novoNome}
-          onChange={(e) => setNovoNome(e.target.value)}
-          placeholder="Nome do novo repertório"
-          className="w-full rounded-xl border border-dashed border-[var(--border)] px-3 py-2 text-sm text-[var(--text)] focus:outline-none"
-        />
-        <button
-          type="submit"
-          className="shrink-0 rounded-xl bg-[var(--accent)] px-3 text-sm font-semibold text-[var(--accent-fg)]"
+      {podeCriar && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!novoNome?.trim()) return;
+            criar?.(novoNome);
+            setNovoNome?.('');
+          }}
+          className="flex gap-2"
         >
-          Criar
-        </button>
-      </form>
+          <input
+            value={novoNome}
+            onChange={(e) => setNovoNome?.(e.target.value)}
+            placeholder="Nome do novo repertório"
+            className="w-full rounded-xl border border-dashed border-[var(--border)] px-3 py-2 text-sm text-[var(--text)] focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="shrink-0 rounded-xl bg-[var(--accent)] px-3 text-sm font-semibold text-[var(--accent-fg)]"
+          >
+            Criar
+          </button>
+        </form>
+      )}
 
       <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
         Monte o repertório da missa por rito e compartilhe com o ministério.

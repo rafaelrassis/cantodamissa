@@ -21,7 +21,7 @@ export function CantorTela({ slug, onBack, onSelectMusica }: Props) {
   const [todas, setTodas] = useState<Musica[]>([]);
   const [aba, setAba] = useState<Aba>('top');
   const [carregando, setCarregando] = useState(true);
-  const { repertorios, criar, adicionarMusica } = useRepertorios();
+  const { repertorios, adicionarMusica } = useRepertorios();
 
   useEffect(() => {
     let ativo = true;
@@ -138,8 +138,7 @@ export function CantorTela({ slug, onBack, onSelectMusica }: Props) {
             posicao={aba === 'top' ? i + 1 : undefined}
             onClick={() => onSelectMusica(musica)}
             repertorios={repertorios}
-            onCriarRepertorio={criar}
-              onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
+            onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
           />
         ))}
         {lista.length === 0 && (

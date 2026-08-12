@@ -8,7 +8,6 @@ import { RepertorioPickerSheet } from './RepertorioPickerSheet';
 interface Props {
   musica: Musica;
   repertorios: Repertorio[];
-  onCriarRepertorio: (nome: string) => Promise<Repertorio>;
   onAdicionarAoRepertorio: (repertorioId: string, rito: string) => void;
   onCompartilhar: () => void;
   buttonClassName?: string;
@@ -30,7 +29,6 @@ const LARGURA_MENU = 240; // w-60
 export function CifraOptionsMenu({
   musica,
   repertorios,
-  onCriarRepertorio,
   onAdicionarAoRepertorio,
   onCompartilhar,
   buttonClassName,
@@ -115,7 +113,6 @@ export function CifraOptionsMenu({
         <RepertorioPickerSheet
           musica={musica}
           repertorios={repertorios}
-          onCriar={onCriarRepertorio}
           onAdicionar={onAdicionarAoRepertorio}
           onFechar={() => setPickerAberto(false)}
         />

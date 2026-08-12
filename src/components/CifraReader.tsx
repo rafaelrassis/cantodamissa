@@ -72,7 +72,7 @@ export function CifraReader({
   const [colaboradoresAbertos, setColaboradoresAbertos] = useState(false);
   const [tomSeletorAberto, setTomSeletorAberto] = useState(false);
   const { submissoes, criar: criarSubmissao } = useSubmissoes();
-  const { repertorios, criar: criarRepertorio, adicionarMusica } = useRepertorios();
+  const { repertorios, adicionarMusica } = useRepertorios();
   const { registrarAbertura } = useHistoricoMusicas();
 
   useEffect(() => {
@@ -322,7 +322,6 @@ export function CifraReader({
             <AddToRepertorioMenu
               musica={musica}
               repertorios={repertorios}
-              onCriar={criarRepertorio}
               onAdd={adicionarAoRepertorio}
             />
             <span className="text-xs font-medium text-[var(--muted)]">
@@ -463,7 +462,6 @@ export function CifraReader({
         onToggleAwake={keepAwake.toggle}
         musica={musica}
         repertorios={repertorios}
-        onCriarRepertorio={criarRepertorio}
         onAddToRepertorio={adicionarAoRepertorio}
         onCompartilhar={compartilhar}
       />

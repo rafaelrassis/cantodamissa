@@ -20,7 +20,6 @@ interface Props {
   onToggleAwake: () => void;
   musica: Musica;
   repertorios: Repertorio[];
-  onCriarRepertorio: (nome: string) => Promise<Repertorio>;
   onAddToRepertorio: (repertorioId: string, rito: string) => void;
   onCompartilhar: () => void;
 }
@@ -89,7 +88,6 @@ export function CifraBottomSheet(props: Props) {
         <AddToRepertorioMenu
           musica={props.musica}
           repertorios={props.repertorios}
-          onCriar={props.onCriarRepertorio}
           onAdd={props.onAddToRepertorio}
         />
       </div>
