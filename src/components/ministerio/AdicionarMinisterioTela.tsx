@@ -20,6 +20,7 @@ interface Props {
   onBack: () => void;
   onConcluir: (nomeMinisterio?: string, funcoesCustom?: { nome: string; icone: string }[]) => void;
   validarCodigo: (codigo: string) => Promise<boolean>;
+  erroCadastro?: string | null;
 }
 
 type Passo = 'opcoes' | 'ingressar' | 'cadastrar';
@@ -35,7 +36,7 @@ type Passo = 'opcoes' | 'ingressar' | 'cadastrar';
  * funções do ministério (ver ministerioApi.ts → criarMinisterio) quando
  * o formulário é salvo.
  */
-export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo }: Props) {
+export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, erroCadastro }: Props) {
   const [passo, setPasso] = useState<Passo>('opcoes');
 
   // ---- Ingressar ----
@@ -263,6 +264,9 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo }: P
 
         {passo === 'cadastrar' && (
           <>
+            {erroCadastro && (
+              <p className="mb-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-500">{erroCadastro}</p>
+            )}
             <input
               value={nomeMinisterio}
               onChange={(e) => setNomeMinisterio(e.target.value)}

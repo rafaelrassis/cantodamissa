@@ -75,9 +75,9 @@ export async function listarMeusMinisterios(): Promise<MinisterioResumo[]> {
   const deviceKey = getDeviceKey();
   const { data, error } = await supabase
     .from('ministerio_membros')
-    .select('ministerio_id, created_at, ministerios(id, nome)')
+    .select('ministerio_id, criado_em, ministerios(id, nome)')
     .eq('device_key', deviceKey)
-    .order('created_at', { ascending: true });
+    .order('criado_em', { ascending: true });
   if (error) throw error;
   const resultado: MinisterioResumo[] = [];
   for (const m of data ?? []) {

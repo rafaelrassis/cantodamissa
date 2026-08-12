@@ -5,6 +5,7 @@ import { useEscalas } from '../../lib/useEscalas';
 import { useAvisos } from '../../lib/useAvisos';
 import { useIndisponibilidades } from '../../lib/useIndisponibilidades';
 import { useEquipes } from '../../lib/useEquipes';
+import { LIMITE_MINISTERIOS } from '../../lib/ministerioApi';
 import type { Ministerio } from '../../lib/useMinisterio';
 import type { Musica } from '../../types/musica';
 import type { Escala } from '../../types/ministerio';
@@ -67,6 +68,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
   const [configuracoesAbertas, setConfiguracoesAbertas] = useState(false);
   const [seletorMinisterioAberto, setSeletorMinisterioAberto] = useState(false);
   const [adicionandoMinisterio, setAdicionandoMinisterio] = useState(false);
+  const [erroCadastroMinisterio, setErroCadastroMinisterio] = useState<string | null>(null);
 
   const repertoriosApi = useRepertorios();
   const [repertorioAbertoId, setRepertorioAbertoId] = useState<string | null>(null);
@@ -76,12 +78,21 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
     return (
       <AdicionarMinisterioTela
         onBack={primeiroMinisterio ? onBack : () => setAdicionandoMinisterio(false)}
+        erroCadastro={erroCadastroMinisterio}
         onConcluir={(nome, funcoesCustom) => {
           if (nome) {
+            setErroCadastroMinisterio(null);
             ministerio
               .cadastrar(nome, funcoesCustom)
               .then(() => setAdicionandoMinisterio(false))
-              .catch((e) => console.error('Falha ao criar ministério', e));
+              .catch((e) => {
+                console.error('Falha ao criar ministério', e);
+                setErroCadastroMinisterio(
+                  e instanceof Error && e.message === 'LIMITE_MINISTERIOS'
+                    ? `Limite de ${LIMITE_MINISTERIOS} ministérios atingido.`
+                    : 'Não foi possível salvar agora. Tente de novo.'
+                );
+              });
           } else {
             setAdicionandoMinisterio(false);
           }
