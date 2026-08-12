@@ -69,6 +69,14 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
   const [repertorioAbertoId, setRepertorioAbertoId] = useState<string | null>(null);
   const [novoNomeRepertorio, setNovoNomeRepertorio] = useState('');
 
+  if (ministerio.carregando) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg)] text-sm text-[var(--muted)]">
+        Carregando ministério…
+      </div>
+    );
+  }
+
   if (!ministerio.pertence) {
     return (
       <AdicionarMinisterioTela
