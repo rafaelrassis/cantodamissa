@@ -44,6 +44,9 @@ export function MinisterioRepertoriosTela({
       const rep = await garantirRepertorioDaEscala(escala.id, escala.titulo);
       setEscolhendoEvento(false);
       onAbrirRepertorio(rep.id);
+    } catch (err) {
+      console.error('criarPara (criar repertório da escala):', err);
+      alert('Não deu pra criar o repertório desse evento. Veja o console.');
     } finally {
       setCriandoParaId(null);
     }
