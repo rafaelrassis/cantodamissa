@@ -52,8 +52,18 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
     [indisponibilidades, data]
   );
 
+  const participantesIndisponiveis = participantes.filter((p) => indisponiveisIds.has(p.membroId));
+
   function handleSalvar() {
     if (!podeSalvar) return;
+    if (participantesIndisponiveis.length > 0) {
+      const nomes = participantesIndisponiveis
+        .map((p) => membros.find((m) => m.id === p.membroId)?.nome ?? '?')
+        .join(', ');
+      alert(`Remova antes de salvar: ${nomes} — indisponíve${participantesIndisponiveis.length > 1 ? 'is' : 'l'} nesta data.`);
+      setAba('participantes');
+      return;
+    }
     onSalvar({
       id: escalaExistente?.id ?? `e${Date.now()}`,
       titulo: titulo.trim(),
@@ -112,7 +122,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
         </h1>
         <button
           onClick={handleSalvar}
-          disabled={!podeSalvar}
+          disabled={!podeSalvar || participantesIndisponiveis.length > 0}
           className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-4 py-1.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-40"
         >
           <Check size={15} /> Salvar
@@ -251,6 +261,13 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
               </button>
             </div>
 
+            {participantesIndisponiveis.length > 0 && (
+              <div className="mt-3 rounded-lg bg-amber-500/15 px-3 py-2 text-xs text-amber-500">
+                {participantesIndisponiveis.length} participante{participantesIndisponiveis.length > 1 ? 's' : ''} indisponíve
+                {participantesIndisponiveis.length > 1 ? 'is' : 'l'} nesta data — remova antes de salvar.
+              </div>
+            )}
+
             {participantes.length === 0 ? (
               <EmptyState
                 icon={<Users size={40} />}
@@ -261,11 +278,14 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
                 {participantes.map((p) => {
                   const membro = membros.find((m) => m.id === p.membroId);
                   const funcao = funcoes.find((f) => f.id === p.funcaoId);
+                  const indisponivel = indisponiveisIds.has(p.membroId);
                   if (!membro) return null;
                   return (
                     <li key={p.membroId} className="flex items-center gap-3 rounded-lg px-2 py-2.5">
                       <span
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${membro.avatarCor}`}
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${membro.avatarCor} ${
+                          indisponivel ? 'opacity-40' : ''
+                        }`}
                       >
                         {membro.nome[0]}
                       </span>
@@ -274,6 +294,9 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
                         <span className="block truncate text-xs text-[var(--muted)]">
                           {funcao?.icone} {funcao?.nome}
                         </span>
+                        {indisponivel && (
+                          <span className="block text-xs font-semibold text-amber-500">Indisponível nesta data</span>
+                        )}
                       </span>
                       <button
                         onClick={() => setParticipantes((prev) => prev.filter((x) => x.membroId !== p.membroId))}
