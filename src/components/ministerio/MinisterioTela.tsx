@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, CalendarDays, ChevronLeft, Home, ListMusic, Megaphone, Settings, Users } from 'lucide-react';
+import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, Home, ListMusic, Megaphone, Settings, Users } from 'lucide-react';
 import { useRepertorios } from '../../lib/useRepertorios';
 import { useEscalas } from '../../lib/useEscalas';
 import { useAvisos } from '../../lib/useAvisos';
@@ -19,6 +19,7 @@ import { AdicionarMinisterioTela } from './AdicionarMinisterioTela';
 import { ConfiguracoesMinisterioTela } from './ConfiguracoesMinisterioTela';
 import { MinisterioRepertoriosTela } from './MinisterioRepertoriosTela';
 import { RepertorioDetalheTela } from '../RepertorioDetalheTela';
+import { SeletorMinisterioSheet } from './SeletorMinisterioSheet';
 
 interface Props {
   onBack: () => void;
@@ -64,16 +65,26 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
   const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(null);
   const [formularioEscala, setFormularioEscala] = useState<'nova' | Escala | null>(null);
   const [configuracoesAbertas, setConfiguracoesAbertas] = useState(false);
+  const [seletorMinisterioAberto, setSeletorMinisterioAberto] = useState(false);
+  const [adicionandoMinisterio, setAdicionandoMinisterio] = useState(false);
 
   const repertoriosApi = useRepertorios();
   const [repertorioAbertoId, setRepertorioAbertoId] = useState<string | null>(null);
 
-  if (!ministerio.pertence) {
+  if (!ministerio.pertence || adicionandoMinisterio) {
+    const primeiroMinisterio = !ministerio.pertence;
     return (
       <AdicionarMinisterioTela
-        onBack={onBack}
+        onBack={primeiroMinisterio ? onBack : () => setAdicionandoMinisterio(false)}
         onConcluir={(nome, funcoesCustom) => {
-          if (nome) ministerio.cadastrar(nome, funcoesCustom).catch((e) => console.error('Falha ao criar ministério', e));
+          if (nome) {
+            ministerio
+              .cadastrar(nome, funcoesCustom)
+              .then(() => setAdicionandoMinisterio(false))
+              .catch((e) => console.error('Falha ao criar ministério', e));
+          } else {
+            setAdicionandoMinisterio(false);
+          }
         }}
         validarCodigo={ministerio.ingressarComCodigo}
       />
@@ -189,14 +200,29 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
             <Settings size={16} />
           </button>
         </div>
-        <div className="flex items-center gap-3">
+        <button
+          onClick={() => setSeletorMinisterioAberto(true)}
+          className="flex w-full items-center gap-3 text-left"
+        >
           {ministerio.foto && <span className="text-2xl">{ministerio.foto}</span>}
-          <div>
-            <h1 className="text-xl font-extrabold tracking-tight">{ministerio.nome}</h1>
+          <div className="min-w-0 flex-1">
+            <span className="flex items-center gap-1">
+              <h1 className="truncate text-xl font-extrabold tracking-tight">{ministerio.nome}</h1>
+              <ChevronDown size={18} className="shrink-0 opacity-80" />
+            </span>
             <p className="mt-0.5 text-sm opacity-80">{ministerio.membros.length} membros · área restrita</p>
           </div>
-        </div>
+        </button>
       </header>
+
+      <SeletorMinisterioSheet
+        open={seletorMinisterioAberto}
+        onClose={() => setSeletorMinisterioAberto(false)}
+        ministerios={ministerio.meusMinisterios}
+        ministerioAtivoId={ministerio.id}
+        onTrocar={(id) => ministerio.trocarMinisterio(id)}
+        onAdicionar={() => setAdicionandoMinisterio(true)}
+      />
 
       <nav className="mx-auto flex max-w-2xl overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)]">
         {ABAS.map((a) => (

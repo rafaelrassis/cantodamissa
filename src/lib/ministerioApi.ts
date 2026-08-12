@@ -38,6 +38,15 @@ export type MinisterioIdentidade = {
   meuMembroId: string | null;
 };
 
+export type MinisterioResumo = {
+  id: string;
+  nome: string;
+  foto: string | null;
+};
+
+/** Limite de ministérios que um mesmo device_key pode integrar. */
+export const LIMITE_MINISTERIOS = 5;
+
 function gerarCodigo(): string {
   const alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let sufixo = '';
@@ -52,26 +61,51 @@ function gerarCodigo(): string {
  * nenhum ministério.
  */
 export async function buscarMeuMinisterio(): Promise<MinisterioIdentidade | null> {
+  const meus = await listarMeusMinisterios();
+  if (meus.length === 0) return null;
+  return buscarMinisterioPorId(meus[0].id);
+}
+
+/**
+ * Lista todos os ministérios (até LIMITE_MINISTERIOS) aos quais este
+ * device_key pertence, em ordem de ingresso. Usado pelo seletor de
+ * ministério (trocar/adicionar) — ver useMinisterio.ts.
+ */
+export async function listarMeusMinisterios(): Promise<MinisterioResumo[]> {
+  const deviceKey = getDeviceKey();
+  const { data, error } = await supabase
+    .from('ministerio_membros')
+    .select('ministerio_id, created_at, ministerios(id, nome)')
+    .eq('device_key', deviceKey)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  const resultado: MinisterioResumo[] = [];
+  for (const m of data ?? []) {
+    const mn = Array.isArray(m.ministerios) ? m.ministerios[0] : m.ministerios;
+    if (mn) resultado.push({ id: mn.id as string, nome: mn.nome as string, foto: null });
+  }
+  return resultado;
+}
+
+/** Carrega um ministério específico (já sabendo que o device pertence a ele). */
+export async function buscarMinisterioPorId(ministerioId: string): Promise<MinisterioIdentidade> {
   const authUid = await garantirSessaoAnonima();
   const deviceKey = getDeviceKey();
 
-  const { data: meuMembro, error: erroMembro } = await supabase
+  // Self-heal: vincula esta sessão anônima ao membro (ver
+  // 0011_ministerio_rls_admin.sql) — sem isso as policies de admin não
+  // reconhecem este device.
+  const { data: meuMembro } = await supabase
     .from('ministerio_membros')
-    .select('id, ministerio_id, auth_uid')
+    .select('id, auth_uid')
+    .eq('ministerio_id', ministerioId)
     .eq('device_key', deviceKey)
-    .limit(1)
     .maybeSingle();
-  if (erroMembro) throw erroMembro;
-  if (!meuMembro) return null;
-
-  // Vincula esta sessão anônima ao membro (self-heal pra linhas criadas
-  // antes da migração de RLS, ver 0011_ministerio_rls_admin.sql) — sem
-  // isso as policies de admin não reconhecem este device.
-  if (authUid && meuMembro.auth_uid !== authUid) {
+  if (meuMembro && authUid && meuMembro.auth_uid !== authUid) {
     await supabase.from('ministerio_membros').update({ auth_uid: authUid }).eq('id', meuMembro.id);
   }
 
-  return carregarMinisterio(meuMembro.ministerio_id);
+  return carregarMinisterio(ministerioId);
 }
 
 async function carregarMinisterio(ministerioId: string): Promise<MinisterioIdentidade> {
@@ -130,6 +164,11 @@ export async function criarMinisterio(
 ): Promise<MinisterioIdentidade> {
   const authUid = await garantirSessaoAnonima();
   const deviceKey = getDeviceKey();
+
+  if ((await listarMeusMinisterios()).length >= LIMITE_MINISTERIOS) {
+    throw new Error(`LIMITE_MINISTERIOS`);
+  }
+
   const codigoConvite = gerarCodigo();
 
   const { data: ministerio, error: erroMinisterio } = await supabase
@@ -162,6 +201,11 @@ export async function criarMinisterio(
 /** Confere se o código existe; se sim, cria a solicitação de ingresso. */
 export async function solicitarIngresso(codigo: string, nomeSolicitante: string): Promise<boolean> {
   const authUid = await garantirSessaoAnonima();
+
+  if ((await listarMeusMinisterios()).length >= LIMITE_MINISTERIOS) {
+    throw new Error(`LIMITE_MINISTERIOS`);
+  }
+
   const codigoNormalizado = codigo.trim().toUpperCase();
   const { data: ministerio, error: erroBusca } = await supabase
     .from('ministerios')
