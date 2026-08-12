@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Check, Copy, MoreVertical, Plus, Shield, ShieldOff, Trash2, UserMinus, UserPlus, X } from 'lucide-react';
 import { formatarDataLonga } from '../../lib/ministerioUtils';
-import type { FuncaoMinisterio, Indisponibilidade, MembroMinisterio, SolicitacaoIngresso } from '../../types/ministerio';
+import type { Equipe, FuncaoMinisterio, Indisponibilidade, MembroMinisterio, SolicitacaoIngresso } from '../../types/ministerio';
 import { FuncaoEditorTela } from './FuncaoEditorTela';
+import { EquipeEditorTela } from './EquipeEditorTela';
 
 interface Props {
   membros: MembroMinisterio[];
   funcoes: FuncaoMinisterio[];
+  equipes: Equipe[];
   indisponibilidades: Indisponibilidade[];
   onAdicionarIndisponibilidade: (data: string, motivo: string) => void;
   souAdmin: boolean;
@@ -20,11 +22,15 @@ interface Props {
   onCriarFuncao: (nome: string, icone: string) => void;
   onEditarFuncao: (funcaoId: string, nome: string, icone: string) => void;
   onRemoverFuncao: (funcaoId: string) => void;
+  onCriarEquipe: (nome: string, membroIds: string[]) => void;
+  onEditarEquipe: (equipeId: string, nome: string, membroIds: string[]) => void;
+  onRemoverEquipe: (equipeId: string) => void;
 }
 
 export function EquipeTela({
   membros,
   funcoes,
+  equipes,
   indisponibilidades,
   onAdicionarIndisponibilidade,
   souAdmin,
@@ -38,14 +44,20 @@ export function EquipeTela({
   onCriarFuncao,
   onEditarFuncao,
   onRemoverFuncao,
+  onCriarEquipe,
+  onEditarEquipe,
+  onRemoverEquipe,
 }: Props) {
-  const [aba, setAba] = useState<'membros' | 'funcoes' | 'indisponibilidades'>('membros');
+  const [aba, setAba] = useState<'membros' | 'funcoes' | 'equipes' | 'indisponibilidades'>('membros');
   const [convidarAberto, setConvidarAberto] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [novaData, setNovaData] = useState('');
   const [novoMotivo, setNovoMotivo] = useState('');
   const [menuMembroId, setMenuMembroId] = useState<string | null>(null);
   const [funcaoEditor, setFuncaoEditor] = useState<{ id: string | null; nome: string; icone: string } | null>(null);
+  const [equipeEditor, setEquipeEditor] = useState<{ id: string | null; nome: string; membroIds: string[] } | null>(
+    null
+  );
 
   const qtdAdmins = membros.filter((m) => m.admin).length;
 
@@ -71,10 +83,27 @@ export function EquipeTela({
     );
   }
 
+  if (equipeEditor) {
+    return (
+      <EquipeEditorTela
+        titulo={equipeEditor.id ? 'Editar equipe' : 'Nova equipe'}
+        nomeInicial={equipeEditor.nome}
+        membroIdsIniciais={equipeEditor.membroIds}
+        membros={membros}
+        onVoltar={() => setEquipeEditor(null)}
+        onSalvar={(nome, membroIds) => {
+          if (equipeEditor.id) onEditarEquipe(equipeEditor.id, nome, membroIds);
+          else onCriarEquipe(nome, membroIds);
+          setEquipeEditor(null);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="pb-6">
       <div className="mx-4 mt-3 flex gap-1 rounded-full bg-[var(--surface)] p-1 text-xs font-semibold">
-        {(['membros', 'funcoes', 'indisponibilidades'] as const).map((k) => (
+        {(['membros', 'funcoes', 'equipes', 'indisponibilidades'] as const).map((k) => (
           <button
             key={k}
             onClick={() => setAba(k)}
@@ -225,6 +254,37 @@ export function EquipeTela({
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
           >
             <Plus size={16} /> Adicionar função
+          </button>
+        </div>
+      )}
+
+      {aba === 'equipes' && (
+        <div className="mt-4 px-4">
+          {equipes.length === 0 ? (
+            <p className="mb-3 text-center text-sm text-[var(--muted)]">Nenhuma equipe criada ainda.</p>
+          ) : (
+            <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
+              {equipes.map((eq) => (
+                <li key={eq.id} className="flex items-center justify-between px-4 py-3">
+                  <button
+                    onClick={() => setEquipeEditor({ id: eq.id, nome: eq.nome, membroIds: eq.membroIds })}
+                    className="flex-1 text-left"
+                  >
+                    <span className="block text-sm font-semibold text-[var(--text)]">{eq.nome}</span>
+                    <span className="block text-xs text-[var(--muted)]">{eq.membroIds.length} membros</span>
+                  </button>
+                  <button onClick={() => onRemoverEquipe(eq.id)} aria-label={`Excluir ${eq.nome}`}>
+                    <Trash2 size={14} className="text-[var(--muted)]" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button
+            onClick={() => setEquipeEditor({ id: null, nome: '', membroIds: [] })}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+          >
+            <Plus size={16} /> Nova equipe
           </button>
         </div>
       )}

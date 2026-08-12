@@ -1,22 +1,32 @@
 import { useMemo, useState } from 'react';
 import { Check, ChevronLeft, Search } from 'lucide-react';
 import { normalizar } from '../../lib/musicasApi';
-import type { FuncaoMinisterio, MembroMinisterio } from '../../types/ministerio';
+import type { Equipe, FuncaoMinisterio, MembroMinisterio } from '../../types/ministerio';
 
 interface Props {
   membros: MembroMinisterio[];
   funcoes: FuncaoMinisterio[];
+  equipes: Equipe[];
   selecionadosIniciais: string[]; // ids de membro já na escala
+  abaInicial?: AbaLista;
   onCancelar: () => void;
   onConfirmar: (selecionados: { membroId: string; funcaoId: string }[]) => void;
 }
 
-type AbaLista = 'todos' | 'selecionados' | 'funcoes';
+type AbaLista = 'todos' | 'selecionados' | 'funcoes' | 'equipes';
 
-export function MembrosSelecionarTela({ membros, funcoes, selecionadosIniciais, onCancelar, onConfirmar }: Props) {
+export function MembrosSelecionarTela({
+  membros,
+  funcoes,
+  equipes,
+  selecionadosIniciais,
+  abaInicial = 'todos',
+  onCancelar,
+  onConfirmar,
+}: Props) {
   const [busca, setBusca] = useState('');
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set(selecionadosIniciais));
-  const [aba, setAba] = useState<AbaLista>('todos');
+  const [aba, setAba] = useState<AbaLista>(abaInicial);
 
   const filtrados = useMemo(() => {
     const termo = normalizar(busca);
@@ -56,6 +66,15 @@ export function MembrosSelecionarTela({ membros, funcoes, selecionadosIniciais, 
     });
   }
 
+  function toggleEquipe(equipe: Equipe) {
+    const todosJaSelecionados = equipe.membroIds.every((id) => selecionados.has(id));
+    setSelecionados((prev) => {
+      const novo = new Set(prev);
+      equipe.membroIds.forEach((id) => (todosJaSelecionados ? novo.delete(id) : novo.add(id)));
+      return novo;
+    });
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[var(--bg)] font-sans text-[var(--text)]">
       <header className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4">
@@ -89,6 +108,7 @@ export function MembrosSelecionarTela({ membros, funcoes, selecionadosIniciais, 
               ['todos', `Todos (${membros.length})`],
               ['selecionados', `Selecionados (${selecionados.size})`],
               ['funcoes', `Funções (${funcoes.length})`],
+              ['equipes', `Equipes (${equipes.length})`],
             ] as [AbaLista, string][]
           ).map(([id, label]) => (
             <button
@@ -103,7 +123,7 @@ export function MembrosSelecionarTela({ membros, funcoes, selecionadosIniciais, 
           ))}
         </div>
 
-        {aba !== 'funcoes' ? (
+        {aba === 'todos' || aba === 'selecionados' ? (
           <ul className="mt-3 flex flex-col gap-1">
             {listaExibida.length === 0 && (
               <li className="py-8 text-center text-sm text-[var(--muted)]">Nenhum membro encontrado.</li>
@@ -132,7 +152,7 @@ export function MembrosSelecionarTela({ membros, funcoes, selecionadosIniciais, 
               </li>
             ))}
           </ul>
-        ) : (
+        ) : aba === 'funcoes' ? (
           <ul className="mt-3 flex flex-col gap-1">
             {funcoes.map((f) => {
               const membrosDaFuncao = membros.filter((m) => m.funcoes.includes(f.id));
@@ -148,6 +168,32 @@ export function MembrosSelecionarTela({ membros, funcoes, selecionadosIniciais, 
                     <span className="text-lg">{f.icone}</span>
                     <span className="flex-1 text-sm font-medium">
                       {f.nome} <span className="text-xs text-[var(--muted)]">({membrosDaFuncao.length})</span>
+                    </span>
+                    {todosSelecionados && <Check size={16} className="text-[var(--accent)]" />}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <ul className="mt-3 flex flex-col gap-1">
+            {equipes.length === 0 && (
+              <li className="py-8 text-center text-sm text-[var(--muted)]">
+                Nenhuma equipe criada ainda (Equipe → aba Equipes).
+              </li>
+            )}
+            {equipes.map((eq) => {
+              const todosSelecionados =
+                eq.membroIds.length > 0 && eq.membroIds.every((id) => selecionados.has(id));
+              return (
+                <li key={eq.id}>
+                  <button
+                    onClick={() => toggleEquipe(eq)}
+                    disabled={eq.membroIds.length === 0}
+                    className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left disabled:opacity-40"
+                  >
+                    <span className="flex-1 text-sm font-medium">
+                      {eq.nome} <span className="text-xs text-[var(--muted)]">({eq.membroIds.length})</span>
                     </span>
                     {todosSelecionados && <Check size={16} className="text-[var(--accent)]" />}
                   </button>

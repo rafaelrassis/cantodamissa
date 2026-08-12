@@ -4,6 +4,8 @@ import { useRepertorios } from '../../lib/useRepertorios';
 import { useEscalas } from '../../lib/useEscalas';
 import { useAvisos } from '../../lib/useAvisos';
 import { useIndisponibilidades } from '../../lib/useIndisponibilidades';
+import { useEquipes } from '../../lib/useEquipes';
+import { useModelosRoteiro } from '../../lib/useModelosRoteiro';
 import type { Ministerio } from '../../lib/useMinisterio';
 import type { Musica } from '../../types/musica';
 import { InicioTela } from './InicioTela';
@@ -55,6 +57,8 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
   const escalasApi = useEscalas(ministerio.id);
   const avisosApi = useAvisos(ministerio.id);
   const indisponibilidadesApi = useIndisponibilidades(ministerio.id);
+  const equipesApi = useEquipes(ministerio.id);
+  const modelosRoteiroApi = useModelosRoteiro(ministerio.id);
   const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(null);
   const [criandoEscala, setCriandoEscala] = useState(false);
   const [configuracoesAbertas, setConfiguracoesAbertas] = useState(false);
@@ -83,6 +87,10 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
       <NovaEscalaTela
         membros={ministerio.membros}
         funcoes={ministerio.funcoes}
+        equipes={equipesApi.equipes}
+        modelos={modelosRoteiroApi.modelos}
+        onCriarModelo={modelosRoteiroApi.criar}
+        onExcluirModelo={modelosRoteiroApi.excluir}
         onCancelar={() => setCriandoEscala(false)}
         onSalvar={(rascunho) => {
           escalasApi
@@ -103,6 +111,10 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         escala={escalaAberta}
         membros={ministerio.membros}
         funcoes={ministerio.funcoes}
+        equipes={equipesApi.equipes}
+        modelos={modelosRoteiroApi.modelos}
+        onCriarModelo={modelosRoteiroApi.criar}
+        onExcluirModelo={modelosRoteiroApi.excluir}
         meuMembroId={ministerio.meuMembroId}
         onBack={() => setEscalaAbertaId(null)}
         onAtualizar={(atualizada) =>
@@ -240,6 +252,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
           <EquipeTela
             membros={ministerio.membros}
             funcoes={ministerio.funcoes}
+            equipes={equipesApi.equipes}
             indisponibilidades={indisponibilidadesApi.indisponibilidades}
             onAdicionarIndisponibilidade={(data, motivo) => {
               if (ministerio.meuMembroId) {
@@ -259,6 +272,9 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
             onCriarFuncao={ministerio.criarFuncao}
             onEditarFuncao={ministerio.editarFuncao}
             onRemoverFuncao={ministerio.removerFuncao}
+            onCriarEquipe={equipesApi.criar}
+            onEditarEquipe={equipesApi.editar}
+            onRemoverEquipe={equipesApi.excluir}
           />
         )}
 

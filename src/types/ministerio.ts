@@ -1,6 +1,6 @@
-// Tipos do módulo /ministério, usados tanto pelas telas quanto pelas
-// camadas de dados reais (ministerioApi.ts, escalasApi.ts, avisosApi.ts,
-// indisponibilidadesApi.ts).
+// Tipos do domínio /ministério — schema real em supabase/migrations/0009_ministerio.sql.
+// Não têm relação com o schema do Supabase — servem só pra validar UX antes
+// de desenhar as tabelas reais (ver conversa no chat "refinar repertório").
 
 export type FuncaoMinisterio = {
   id: string;
@@ -52,7 +52,7 @@ export type Escala = {
   observacoes: string;
   publicada: boolean;
   solicitarConfirmacao: boolean;
-  corPaleta?: string; // id de PALETAS_CORES (mockMinisterio.ts)
+  corPaleta?: string; // id de PALETAS_CORES (ministerioUtils.ts)
   participantes: ParticipanteEscala[];
   // Músicas NÃO ficam mais aqui — a escala pode ter um Repertorio real
   // vinculado por escalaId (ver lib/repertorios.ts,
@@ -82,4 +82,18 @@ export type SolicitacaoIngresso = {
   id: string;
   nome: string;
   codigoUsado: string;
+};
+
+export type Equipe = {
+  id: string;
+  nome: string;
+  membroIds: string[];
+};
+
+// Só itens tipo 'evento' — mesma regra do roteiro da Escala (músicas são
+// derivadas do Repertorio, nunca fazem parte de um modelo salvo).
+export type ModeloRoteiro = {
+  id: string;
+  nome: string;
+  itens: ItemRoteiro[];
 };
