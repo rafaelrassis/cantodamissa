@@ -82,7 +82,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         onConcluir={(nome, funcoesCustom) => {
           if (nome) {
             setErroCadastroMinisterio(null);
-            ministerio
+            return ministerio
               .cadastrar(nome, funcoesCustom)
               .then(() => setAdicionandoMinisterio(false))
               .catch((e) => {
@@ -92,6 +92,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
                     ? `Limite de ${LIMITE_MINISTERIOS} ministérios atingido.`
                     : 'Não foi possível salvar agora. Tente de novo.'
                 );
+                throw e;
               });
           } else {
             setAdicionandoMinisterio(false);
