@@ -117,18 +117,24 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         onCancelar={() => setFormularioEscala(null)}
         onSalvar={(escala) => {
           if (editando) {
-            escalasApi
+            return escalasApi
               .atualizar(escala)
               .then(() => setFormularioEscala(null))
-              .catch((e) => console.error('Falha ao atualizar escala', e));
+              .catch((e) => {
+                console.error('Falha ao atualizar escala', e);
+                throw e;
+              });
           } else {
-            escalasApi
+            return escalasApi
               .criar(escala)
               .then((nova) => {
                 setFormularioEscala(null);
                 setEscalaAbertaId(nova.id);
               })
-              .catch((e) => console.error('Falha ao criar escala', e));
+              .catch((e) => {
+                console.error('Falha ao criar escala', e);
+                throw e;
+              });
           }
         }}
       />
