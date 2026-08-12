@@ -9,19 +9,28 @@ interface Props {
   onCriarEscala: () => void;
 }
 
+const LIMITE_LISTA = 10;
+
 export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala }: Props) {
   const [aba, setAba] = useState<'proximas' | 'anteriores'>('proximas');
+  const [verTudo, setVerTudo] = useState(false);
   const hoje = new Date().toISOString().slice(0, 10);
 
-  const lista = escalas
+  const listaCompleta = escalas
     .filter((e) => (aba === 'proximas' ? e.data >= hoje : e.data < hoje))
     .sort((a, b) => (aba === 'proximas' ? a.data.localeCompare(b.data) : b.data.localeCompare(a.data)));
+
+  const lista = verTudo ? listaCompleta : listaCompleta.slice(0, LIMITE_LISTA);
+  const restantes = listaCompleta.length - lista.length;
 
   return (
     <div className="pb-24">
       <div className="mx-4 mt-3 flex gap-1 rounded-full bg-[var(--surface)] p-1 text-xs font-semibold">
         <button
-          onClick={() => setAba('proximas')}
+          onClick={() => {
+            setAba('proximas');
+            setVerTudo(false);
+          }}
           className={`flex-1 rounded-full py-2 transition ${
             aba === 'proximas' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
           }`}
@@ -29,7 +38,10 @@ export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala }: Props) {
           Próximas
         </button>
         <button
-          onClick={() => setAba('anteriores')}
+          onClick={() => {
+            setAba('anteriores');
+            setVerTudo(false);
+          }}
           className={`flex-1 rounded-full py-2 transition ${
             aba === 'anteriores' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
           }`}
@@ -74,6 +86,16 @@ export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala }: Props) {
               </li>
             );
           })}
+          {restantes > 0 && (
+            <li>
+              <button
+                onClick={() => setVerTudo(true)}
+                className="w-full rounded-xl border border-dashed border-[var(--border)] py-3 text-center text-sm font-semibold text-[var(--accent)]"
+              >
+                Ver mais {restantes}
+              </button>
+            </li>
+          )}
         </ul>
       )}
 
