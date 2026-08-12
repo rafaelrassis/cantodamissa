@@ -183,16 +183,21 @@ export function MembrosSelecionarTela({
               const membrosDaFuncao = membros.filter((m) => m.funcoes.includes(f.id));
               const todosSelecionados =
                 membrosDaFuncao.length > 0 && membrosDaFuncao.every((m) => selecionados.has(m.id));
+              const algumDisponivel = membrosDaFuncao.some((m) => !indisponiveisIds.has(m.id));
+              const bloqueada = membrosDaFuncao.length === 0 || (!todosSelecionados && !algumDisponivel);
               return (
                 <li key={f.id}>
                   <button
                     onClick={() => toggleFuncao(f.id)}
-                    disabled={membrosDaFuncao.length === 0}
+                    disabled={bloqueada}
                     className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left disabled:opacity-40"
                   >
                     <span className="text-lg">{f.icone}</span>
                     <span className="flex-1 text-sm font-medium">
                       {f.nome} <span className="text-xs text-[var(--muted)]">({membrosDaFuncao.length})</span>
+                      {!todosSelecionados && !algumDisponivel && membrosDaFuncao.length > 0 && (
+                        <span className="block text-xs text-amber-500">Todos indisponíveis nesta data</span>
+                      )}
                     </span>
                     {todosSelecionados && <Check size={16} className="text-[var(--accent)]" />}
                   </button>
@@ -210,15 +215,20 @@ export function MembrosSelecionarTela({
             {equipes.map((eq) => {
               const todosSelecionados =
                 eq.membroIds.length > 0 && eq.membroIds.every((id) => selecionados.has(id));
+              const algumDisponivel = eq.membroIds.some((id) => !indisponiveisIds.has(id));
+              const bloqueada = eq.membroIds.length === 0 || (!todosSelecionados && !algumDisponivel);
               return (
                 <li key={eq.id}>
                   <button
                     onClick={() => toggleEquipe(eq)}
-                    disabled={eq.membroIds.length === 0}
+                    disabled={bloqueada}
                     className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left disabled:opacity-40"
                   >
                     <span className="flex-1 text-sm font-medium">
                       {eq.nome} <span className="text-xs text-[var(--muted)]">({eq.membroIds.length})</span>
+                      {!todosSelecionados && !algumDisponivel && eq.membroIds.length > 0 && (
+                        <span className="block text-xs text-amber-500">Todos indisponíveis nesta data</span>
+                      )}
                     </span>
                     {todosSelecionados && <Check size={16} className="text-[var(--accent)]" />}
                   </button>
