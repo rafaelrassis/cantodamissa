@@ -57,8 +57,12 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
       } else {
         setErroCodigo('Código inválido. Confira com o administrador do ministério.');
       }
-    } catch {
-      setErroCodigo('Não foi possível enviar agora. Tente de novo.');
+    } catch (e) {
+      setErroCodigo(
+        e instanceof Error && e.message === 'JA_MEMBRO'
+          ? 'Você já faz parte desse ministério.'
+          : 'Não foi possível enviar agora. Tente de novo.'
+      );
     } finally {
       setEnviandoCodigo(false);
     }

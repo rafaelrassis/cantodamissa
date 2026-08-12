@@ -202,7 +202,8 @@ export async function criarMinisterio(
 export async function solicitarIngresso(codigo: string, nomeSolicitante: string): Promise<boolean> {
   const authUid = await garantirSessaoAnonima();
 
-  if ((await listarMeusMinisterios()).length >= LIMITE_MINISTERIOS) {
+  const meusMinisterios = await listarMeusMinisterios();
+  if (meusMinisterios.length >= LIMITE_MINISTERIOS) {
     throw new Error(`LIMITE_MINISTERIOS`);
   }
 
@@ -214,6 +215,12 @@ export async function solicitarIngresso(codigo: string, nomeSolicitante: string)
     .maybeSingle();
   if (erroBusca) throw erroBusca;
   if (!ministerio) return false;
+
+  // Já é membro (admin ou não) desse ministério — não faz sentido abrir
+  // uma nova solicitação de ingresso pra algo que já pertence.
+  if (meusMinisterios.some((m) => m.id === ministerio.id)) {
+    throw new Error('JA_MEMBRO');
+  }
 
   const { error: erroInsert } = await supabase.from('solicitacoes_ingresso').insert({
     ministerio_id: ministerio.id,
