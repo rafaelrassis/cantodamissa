@@ -1,62 +1,34 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Clock,
   Eye,
   Info,
-  ListMusic,
-  Lock,
-  Music,
   Palette,
   Plus,
   Shuffle,
   Trash2,
   Users,
   UsersRound,
-  X,
 } from 'lucide-react';
-import { PALETAS_CORES, itensRoteiroComMusicas } from '../../lib/ministerioUtils';
-import type {
-  Equipe,
-  Escala,
-  FuncaoMinisterio,
-  ItemRoteiro,
-  MembroMinisterio,
-  ModeloRoteiro,
-  ParticipanteEscala,
-} from '../../types/ministerio';
+import { PALETAS_CORES } from '../../lib/ministerioUtils';
+import type { Equipe, Escala, FuncaoMinisterio, MembroMinisterio, ParticipanteEscala } from '../../types/ministerio';
 import { MembrosSelecionarTela } from './MembrosSelecionarTela';
-import { EventoRoteiroTela } from './EventoRoteiroTela';
-import { ModelosRoteiroSheet } from './ModelosRoteiroSheet';
 
 interface Props {
   membros: MembroMinisterio[];
   funcoes: FuncaoMinisterio[];
   equipes: Equipe[];
-  modelos: ModeloRoteiro[];
-  onCriarModelo: (nome: string, itens: ItemRoteiro[]) => void;
-  onExcluirModelo: (id: string) => void;
   onCancelar: () => void;
   onSalvar: (escala: Escala) => void;
 }
 
-type Aba = 'detalhes' | 'participantes' | 'musicas' | 'roteiro';
+type Aba = 'detalhes' | 'participantes';
 
-export function NovaEscalaTela({
-  membros,
-  funcoes,
-  equipes,
-  modelos,
-  onCriarModelo,
-  onExcluirModelo,
-  onCancelar,
-  onSalvar,
-}: Props) {
+export function NovaEscalaTela({ membros, funcoes, equipes, onCancelar, onSalvar }: Props) {
   const [aba, setAba] = useState<Aba>('detalhes');
   const [abaMembrosSelecionar, setAbaMembrosSelecionar] = useState<'todos' | 'equipes'>('todos');
-  const [modelosAbertos, setModelosAbertos] = useState(false);
 
   const [titulo, setTitulo] = useState('');
   const [data, setData] = useState('');
@@ -68,15 +40,8 @@ export function NovaEscalaTela({
   const [seletorPaletaAberto, setSeletorPaletaAberto] = useState(false);
 
   const [participantes, setParticipantes] = useState<ParticipanteEscala[]>([]);
-  const [roteiroEventos, setRoteiroEventos] = useState<ItemRoteiro[]>([]);
-  const [avisoRoteiroDispensado, setAvisoRoteiroDispensado] = useState(false);
 
   const [selecionandoMembros, setSelecionandoMembros] = useState(false);
-  const [criandoEvento, setCriandoEvento] = useState(false);
-
-  // Sem repertório ainda (só existe depois de salvar — ver aba Músicas),
-  // então o roteiro aqui só tem os eventos manuais.
-  const itensRoteiro = useMemo(() => itensRoteiroComMusicas(roteiroEventos, null), [roteiroEventos]);
 
   const podeSalvar = titulo.trim() && data;
 
@@ -92,12 +57,8 @@ export function NovaEscalaTela({
       solicitarConfirmacao,
       corPaleta,
       participantes,
-      roteiro: roteiroEventos,
+      roteiro: [], // Roteiro (e Músicas, via repertório) fica pra tela da escala já salva.
     });
-  }
-
-  function removerItemRoteiro(item: ItemRoteiro) {
-    setRoteiroEventos((prev) => prev.filter((r) => r.id !== item.id));
   }
 
   function sortear() {
@@ -132,19 +93,6 @@ export function NovaEscalaTela({
     );
   }
 
-  if (criandoEvento) {
-    return (
-      <EventoRoteiroTela
-        nomeEscala={titulo || 'Nova escala'}
-        onCancelar={() => setCriandoEvento(false)}
-        onSalvar={(evento) => {
-          setRoteiroEventos((prev) => [...prev, evento]);
-          setCriandoEvento(false);
-        }}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
       <header className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4 lg:px-10">
@@ -170,19 +118,6 @@ export function NovaEscalaTela({
             label="Participantes"
             active={aba === 'participantes'}
             onClick={() => setAba('participantes')}
-          />
-          <TabBtn
-            icon={<Music size={18} />}
-            label="Músicas"
-            active={aba === 'musicas'}
-            onClick={() => setAba('musicas')}
-          />
-          <TabBtn
-            icon={<Clock size={18} />}
-            count={itensRoteiro.length}
-            label="Roteiro"
-            active={aba === 'roteiro'}
-            onClick={() => setAba('roteiro')}
           />
         </div>
 
@@ -269,15 +204,6 @@ export function NovaEscalaTela({
                   ))}
                 </div>
               )}
-              <button
-                onClick={() => setAba('roteiro')}
-                className="flex w-full items-center gap-3 border-t border-[var(--border)] px-4 py-3.5 text-left"
-              >
-                <Clock size={18} className="shrink-0 text-[var(--muted)]" />
-                <span className="flex-1 text-sm font-semibold">Roteiro</span>
-                <span className="text-xs text-[var(--muted)]">{itensRoteiro.length} itens</span>
-                <ChevronRight size={16} className="shrink-0 text-[var(--muted)]" />
-              </button>
               <div className="flex items-center gap-3 border-t border-[var(--border)] px-4 py-3.5">
                 <span className="flex-1 text-sm font-semibold">Solicitar confirmação dos participantes</span>
                 <ToggleBtn ativo={solicitarConfirmacao} onClick={() => setSolicitarConfirmacao((v) => !v)} />
@@ -353,89 +279,7 @@ export function NovaEscalaTela({
             )}
           </div>
         )}
-
-        {aba === 'musicas' && (
-          <EmptyState
-            icon={<Lock size={36} />}
-            texto="Salve os detalhes da escala primeiro — o repertório (organizado por rito) fica disponível depois, na tela da escala já salva."
-          />
-        )}
-
-        {aba === 'roteiro' && (
-          <div className="mt-4">
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCriandoEvento(true)}
-                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)]"
-              >
-                <Plus size={16} /> Evento
-              </button>
-              <button
-                onClick={() => setModelosAbertos(true)}
-                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
-              >
-                Modelos
-              </button>
-            </div>
-
-            {!avisoRoteiroDispensado && (
-              <div className="mt-3 flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-xs text-[var(--muted)]">
-                <span className="flex-1">
-                  As músicas do roteiro são adicionadas automaticamente com base na seleção feita na aba
-                  &apos;Músicas&apos;.
-                </span>
-                <button onClick={() => setAvisoRoteiroDispensado(true)} aria-label="Dispensar aviso">
-                  <X size={14} />
-                </button>
-              </div>
-            )}
-
-            {itensRoteiro.length === 0 ? (
-              <EmptyState icon={<Clock size={40} />} texto="Nenhum item adicionado ao roteiro." />
-            ) : (
-              <ul className="mt-4 flex flex-col gap-1">
-                {itensRoteiro.map((item) => (
-                  <li key={item.id} className="flex items-center gap-3 rounded-lg px-2 py-2.5">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--surface)] text-lg">
-                      {item.tipo === 'musica' ? <ListMusic size={16} className="text-[var(--accent)]" /> : item.icone}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold">{item.titulo}</span>
-                      <span className="block truncate text-xs text-[var(--muted)]">
-                        {item.tipo === 'musica'
-                          ? `${item.momento} · Tom: ${item.tom}`
-                          : item.duracaoSegundos
-                            ? `${Math.round(item.duracaoSegundos / 60)} min`
-                            : item.descricao}
-                      </span>
-                    </span>
-                    <button onClick={() => removerItemRoteiro(item)} aria-label="Remover item" className="text-[var(--muted)]">
-                      <Trash2 size={15} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
       </div>
-
-      {modelosAbertos && (
-        <ModelosRoteiroSheet
-          modelos={modelos}
-          roteiroAtual={roteiroEventos}
-          onUsar={(modelo) => {
-            setRoteiroEventos((prev) => [
-              ...prev,
-              ...modelo.itens.map((item, i) => ({ ...item, id: `rm-${modelo.id}-${Date.now()}-${i}` })),
-            ]);
-            setModelosAbertos(false);
-          }}
-          onSalvarComoModelo={(nome) => onCriarModelo(nome, roteiroEventos)}
-          onExcluirModelo={onExcluirModelo}
-          onClose={() => setModelosAbertos(false)}
-        />
-      )}
     </div>
   );
 }

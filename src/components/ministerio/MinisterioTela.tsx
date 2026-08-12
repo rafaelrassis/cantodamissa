@@ -90,9 +90,6 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         membros={ministerio.membros}
         funcoes={ministerio.funcoes}
         equipes={equipesApi.equipes}
-        modelos={modelosRoteiroApi.modelos}
-        onCriarModelo={modelosRoteiroApi.criar}
-        onExcluirModelo={modelosRoteiroApi.excluir}
         onCancelar={() => setCriandoEscala(false)}
         onSalvar={(rascunho) => {
           escalasApi
