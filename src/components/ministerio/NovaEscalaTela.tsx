@@ -20,26 +20,27 @@ interface Props {
   membros: MembroMinisterio[];
   funcoes: FuncaoMinisterio[];
   equipes: Equipe[];
+  escalaExistente?: Escala;
   onCancelar: () => void;
   onSalvar: (escala: Escala) => void;
 }
 
 type Aba = 'detalhes' | 'participantes';
 
-export function NovaEscalaTela({ membros, funcoes, equipes, onCancelar, onSalvar }: Props) {
+export function NovaEscalaTela({ membros, funcoes, equipes, escalaExistente, onCancelar, onSalvar }: Props) {
   const [aba, setAba] = useState<Aba>('detalhes');
   const [abaMembrosSelecionar, setAbaMembrosSelecionar] = useState<'todos' | 'equipes'>('todos');
 
-  const [titulo, setTitulo] = useState('');
-  const [data, setData] = useState('');
-  const [hora, setHora] = useState('19:00');
-  const [observacoes, setObservacoes] = useState('');
-  const [publicada, setPublicada] = useState(true);
-  const [solicitarConfirmacao, setSolicitarConfirmacao] = useState(true);
-  const [corPaleta, setCorPaleta] = useState<string | undefined>(undefined);
+  const [titulo, setTitulo] = useState(escalaExistente?.titulo ?? '');
+  const [data, setData] = useState(escalaExistente?.data ?? '');
+  const [hora, setHora] = useState(escalaExistente?.hora ?? '19:00');
+  const [observacoes, setObservacoes] = useState(escalaExistente?.observacoes ?? '');
+  const [publicada, setPublicada] = useState(escalaExistente?.publicada ?? true);
+  const [solicitarConfirmacao, setSolicitarConfirmacao] = useState(escalaExistente?.solicitarConfirmacao ?? true);
+  const [corPaleta, setCorPaleta] = useState<string | undefined>(escalaExistente?.corPaleta);
   const [seletorPaletaAberto, setSeletorPaletaAberto] = useState(false);
 
-  const [participantes, setParticipantes] = useState<ParticipanteEscala[]>([]);
+  const [participantes, setParticipantes] = useState<ParticipanteEscala[]>(escalaExistente?.participantes ?? []);
 
   const [selecionandoMembros, setSelecionandoMembros] = useState(false);
 
@@ -48,7 +49,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, onCancelar, onSalvar
   function handleSalvar() {
     if (!podeSalvar) return;
     onSalvar({
-      id: `e${Date.now()}`,
+      id: escalaExistente?.id ?? `e${Date.now()}`,
       titulo: titulo.trim(),
       data,
       hora,
@@ -57,7 +58,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, onCancelar, onSalvar
       solicitarConfirmacao,
       corPaleta,
       participantes,
-      roteiro: [], // Roteiro (e Músicas, via repertório) fica pra tela da escala já salva.
+      roteiro: escalaExistente?.roteiro ?? [], // Roteiro (e Músicas, via repertório) fica pra tela da escala já salva.
     });
   }
 
@@ -99,7 +100,9 @@ export function NovaEscalaTela({ membros, funcoes, equipes, onCancelar, onSalvar
         <button onClick={onCancelar} aria-label="Voltar">
           <ChevronLeft size={20} />
         </button>
-        <h1 className="flex-1 text-lg font-extrabold tracking-tight">Nova escala</h1>
+        <h1 className="flex-1 text-lg font-extrabold tracking-tight">
+          {escalaExistente ? 'Editar escala' : 'Nova escala'}
+        </h1>
         <button
           onClick={handleSalvar}
           disabled={!podeSalvar}

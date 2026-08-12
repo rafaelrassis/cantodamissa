@@ -8,6 +8,7 @@ import { useEquipes } from '../../lib/useEquipes';
 import { useModelosRoteiro } from '../../lib/useModelosRoteiro';
 import type { Ministerio } from '../../lib/useMinisterio';
 import type { Musica } from '../../types/musica';
+import type { Escala } from '../../types/ministerio';
 import { InicioTela } from './InicioTela';
 import { EscalasTela } from './EscalasTela';
 import { EscalaDetalheTela } from './EscalaDetalheTela';
@@ -63,7 +64,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
   const equipesApi = useEquipes(ministerio.id);
   const modelosRoteiroApi = useModelosRoteiro(ministerio.id);
   const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(null);
-  const [criandoEscala, setCriandoEscala] = useState(false);
+  const [formularioEscala, setFormularioEscala] = useState<'nova' | Escala | null>(null);
   const [configuracoesAbertas, setConfiguracoesAbertas] = useState(false);
 
   const repertoriosApi = useRepertorios();
@@ -84,21 +85,30 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
   const escalaAberta = escalasApi.escalas.find((e) => e.id === escalaAbertaId) ?? null;
   const repertorioAberto = repertoriosApi.repertorios.find((r) => r.id === repertorioAbertoId) ?? null;
 
-  if (criandoEscala) {
+  if (formularioEscala) {
+    const editando = formularioEscala !== 'nova' ? formularioEscala : undefined;
     return (
       <NovaEscalaTela
         membros={ministerio.membros}
         funcoes={ministerio.funcoes}
         equipes={equipesApi.equipes}
-        onCancelar={() => setCriandoEscala(false)}
-        onSalvar={(rascunho) => {
-          escalasApi
-            .criar(rascunho)
-            .then((nova) => {
-              setCriandoEscala(false);
-              setEscalaAbertaId(nova.id);
-            })
-            .catch((e) => console.error('Falha ao criar escala', e));
+        escalaExistente={editando}
+        onCancelar={() => setFormularioEscala(null)}
+        onSalvar={(escala) => {
+          if (editando) {
+            escalasApi
+              .atualizar(escala)
+              .then(() => setFormularioEscala(null))
+              .catch((e) => console.error('Falha ao atualizar escala', e));
+          } else {
+            escalasApi
+              .criar(escala)
+              .then((nova) => {
+                setFormularioEscala(null);
+                setEscalaAbertaId(nova.id);
+              })
+              .catch((e) => console.error('Falha ao criar escala', e));
+          }
         }}
       />
     );
@@ -120,6 +130,8 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
           escalasApi.atualizar(atualizada).catch((e) => console.error('Falha ao atualizar escala', e))
         }
         onAbrirMusica={onAbrirMusica}
+        onEditar={() => setFormularioEscala(escalaAberta)}
+        onExcluir={(id) => escalasApi.excluir(id)}
         repertoriosApi={repertoriosApi}
       />
     );
@@ -228,7 +240,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
           <EscalasTela
             escalas={escalasApi.escalas}
             onAbrirEscala={setEscalaAbertaId}
-            onCriarEscala={() => setCriandoEscala(true)}
+            onCriarEscala={() => setFormularioEscala('nova')}
           />
         )}
 
