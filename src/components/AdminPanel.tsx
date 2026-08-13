@@ -26,33 +26,33 @@ export function AdminPanel({ onBack, onLogout }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
-        <div className="mb-2 flex items-center justify-between">
-          <button onClick={onBack} className="flex items-center gap-1 text-xs opacity-80">
-            <ChevronLeft size={14} /> Voltar
+      <header className="bg-[var(--accent)] px-4 pb-5 pt-4 text-[var(--accent-fg)] lg:px-8">
+        <div className="mb-2 flex items-center justify-between text-xs opacity-85">
+          <button onClick={onBack} className="flex items-center gap-1">
+            <ChevronLeft size={14} strokeWidth={2.75} /> Voltar
           </button>
-          <button onClick={onLogout} className="text-xs opacity-80 hover:underline">
+          <button onClick={onLogout} className="hover:underline">
             Sair
           </button>
         </div>
-        <h1 className="text-xl font-extrabold tracking-tight">Painel administrativo</h1>
+        <h1 className="text-2xl">Painel administrativo</h1>
       </header>
 
-      <nav className="flex gap-1 border-b border-[var(--border)] bg-[var(--surface)] px-4 lg:px-10">
+      <nav className="flex gap-1 border-b border-[var(--border)] bg-[var(--surface)] px-4 lg:px-8">
         {abas.map(({ id, label, icon: Icon, badge }) => (
           <button
             key={id}
             onClick={() => setAba(id)}
-            className={`relative flex items-center gap-1.5 border-b-2 px-3 py-3 text-sm font-medium transition ${
+            className={`relative flex items-center gap-1.5 border-b-2 px-4 py-3.5 text-sm font-semibold transition ${
               aba === id
                 ? 'border-[var(--accent)] text-[var(--text)]'
                 : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
             }`}
           >
-            <Icon size={15} />
+            <Icon size={15} strokeWidth={2.75} />
             {label}
             {badge ? (
-              <span className="ml-1 rounded-full bg-[var(--accent)] px-1.5 text-[10px] font-bold text-[var(--accent-fg)]">
+              <span className="ml-1 rounded-full bg-[var(--accent)] px-2 py-0.5 text-[10.5px] font-extrabold text-[var(--accent-fg)]">
                 {badge}
               </span>
             ) : null}
@@ -69,8 +69,8 @@ export function AdminPanel({ onBack, onLogout }: Props) {
       {aba === 'cantores' && <CantoresAdmin />}
 
       {aba === 'repertorios' && (
-        <div className="mx-auto max-w-2xl px-4 py-10 text-center lg:px-10">
-          <ListMusic size={28} className="mx-auto mb-3 text-[var(--muted)]" />
+        <div className="mx-auto max-w-md px-4 py-16 text-center lg:px-8">
+          <ListMusic size={28} strokeWidth={2.75} className="mx-auto mb-3 text-[var(--muted)]" />
           <p className="text-sm text-[var(--muted)]">
             Montagem de repertório por domingo/ciclo — em breve nesta aba.
           </p>

@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Figtree', system-ui, sans-serif;
+  --font-display: 'Caprasimo', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --color-brand-green: #186420;
-  --color-brand-green-dark: #0f3f14;
-  --color-brand-green-light: #e6f2e7;
+  --color-brand-green: #4f6135;
+  --color-brand-green-dark: #3b4a27;
+  --color-brand-green-light: #e2eecd;
   --color-brand-gold: #c9a227;
 
   --color-liturgico-advento: #5b2d90;
@@ -25,30 +26,30 @@
  */
 :root {
   --bg: #ffffff;
-  --surface: #f5faf5;
-  --surface2: #e9f3ea;
-  --border: #dbe8dc;
-  --text: #0f1c13;
-  --muted: #5d7562;
-  --accent: #186420;
-  --accent-soft: #e6f2e7;
-  --accent-fg: #ffffff;
-  --chord: #157a2a;
-  --shadow: 0 24px 60px rgba(15, 63, 20, 0.14);
+  --surface: #f6faf1;
+  --surface2: #e9f1dd;
+  --border: #d7e2c7;
+  --text: #1b2118;
+  --muted: #6f7a66;
+  --accent: #4f6135;
+  --accent-soft: #e2eecd;
+  --accent-fg: #f4fae9;
+  --chord: #5c7040;
+  --shadow: 0 12px 32px rgba(30, 42, 20, 0.2);
 }
 
 :root[data-theme='dark'] {
-  --bg: #071008;
-  --surface: #0d1e11;
-  --surface2: #16301b;
-  --border: #1f4327;
-  --text: #eaf5eb;
-  --muted: #8fae95;
-  --accent: #25913a;
-  --accent-soft: #16301b;
-  --accent-fg: #f2fff4;
-  --chord: #6ee787;
-  --shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+  --bg: #151a13;
+  --surface: #1f261c;
+  --surface2: #2a3325;
+  --border: #3a4433;
+  --text: #f1f6ea;
+  --muted: #9aa792;
+  --accent: #8fa76a;
+  --accent-soft: #2f3b24;
+  --accent-fg: #151a13;
+  --chord: #a8c37e;
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
 }
 
 html, body, #root {
@@ -60,6 +61,36 @@ html, body, #root {
 body {
   background: var(--bg);
   color: var(--text);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+
+a {
+  color: #3b4a27;
+}
+
+a:hover {
+  color: #5c7040;
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid #4f6135;
+  outline-offset: 2px;
+}
+
+:root[data-theme='dark'] a {
+  color: var(--accent);
+}
+
+:root[data-theme='dark'] a:hover {
+  color: var(--accent);
 }
 
 /* Fonte da cifra: desktop usa --font-cifra, mobile é 3px menor (mín. 15px). */
@@ -78,9 +109,13 @@ body {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
-  border-radius: 10px;
-  padding: 8px 10px;
+  border-radius: 999px;
+  padding: 11px 18px;
   font-size: 14px;
+}
+
+textarea.input-field {
+  border-radius: 24px;
 }
 
 .input-field:focus {

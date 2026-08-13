@@ -25,9 +25,9 @@ export function CifraBottomBar(props: Props) {
       <button
         onClick={props.onTogglePlay}
         aria-label="Pausar rolagem automática"
-        className="fixed bottom-5 left-1/2 z-30 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)] lg:hidden"
+        className="fixed bottom-5 left-1/2 z-30 flex h-[52px] w-[52px] -translate-x-1/2 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[0_8px_20px_rgba(30,42,20,0.24)] lg:hidden"
       >
-        <Pause size={18} />
+        <Pause size={18} strokeWidth={2.75} />
       </button>
     );
   }
@@ -38,47 +38,47 @@ export function CifraBottomBar(props: Props) {
         <button
           onClick={props.onDecTone}
           aria-label="Diminuir tom"
-          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
+          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-[16px] border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
         >
-          <Minus size={16} />
+          <Minus size={16} strokeWidth={2.75} />
         </button>
         <button
           onClick={props.onOpenTomSeletor}
           aria-label="Abrir seletor de tom"
-          className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--accent-soft)]"
+          className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-[16px] bg-[var(--accent-soft)]"
         >
           <span className="font-mono text-sm font-bold leading-none text-[var(--accent)]">
             {props.currentTone}
           </span>
-          <span className="text-[8px] font-semibold uppercase tracking-wide text-[var(--accent)]">
+          <span className="text-[8px] font-bold uppercase tracking-wide text-[var(--accent)]">
             Tom
           </span>
         </button>
         <button
           onClick={props.onIncTone}
           aria-label="Aumentar tom"
-          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
+          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-[16px] border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
         >
-          <Plus size={16} />
+          <Plus size={16} strokeWidth={2.75} />
         </button>
       </div>
 
       <BarraBotao onClick={props.onTogglePlay} label="Rolagem" ariaLabel="Iniciar rolagem automática" destaque>
-        <Play size={17} />
+        <Play size={17} strokeWidth={2.75} />
       </BarraBotao>
 
       <div className="flex items-center gap-1">
         <button
           onClick={props.onDecFont}
           aria-label="Diminuir fonte"
-          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs font-semibold text-[var(--text)]"
+          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-[16px] border border-[var(--border)] bg-[var(--bg)] text-xs font-bold text-[var(--text)]"
         >
           A−
         </button>
         <button
           onClick={props.onIncFont}
           aria-label="Aumentar fonte"
-          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs font-semibold text-[var(--text)]"
+          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-[16px] border border-[var(--border)] bg-[var(--bg)] text-xs font-bold text-[var(--text)]"
         >
           A+
         </button>
@@ -90,7 +90,7 @@ export function CifraBottomBar(props: Props) {
         ariaLabel="Mais opções"
         ativo={props.sheetOpen}
       >
-        <MoreHorizontal size={18} />
+        <MoreHorizontal size={18} strokeWidth={2.75} />
       </BarraBotao>
     </div>
   );
@@ -116,14 +116,14 @@ function BarraBotao({
     <button
       onClick={onClick}
       aria-label={ariaLabel}
-      className={`flex h-11 w-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl ${
+      className={`flex h-11 w-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-[16px] ${
         ativado
           ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
           : 'border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]'
       }`}
     >
       {children}
-      <span className="text-[8px] font-semibold uppercase tracking-wide">{label}</span>
+      <span className="text-[8px] font-bold uppercase tracking-wide">{label}</span>
     </button>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Copy, MoreVertical, Plus, Shield, ShieldOff, Trash2, UserMinus, UserPlus, X } from 'lucide-react';
+import { Copy, MoreVertical, Plus, Shield, ShieldOff, Trash2, UserMinus, UserPlus, X } from 'lucide-react';
 import { formatarDataLonga } from '../../lib/ministerioUtils';
 import type { Equipe, FuncaoMinisterio, Indisponibilidade, MembroMinisterio, SolicitacaoIngresso } from '../../types/ministerio';
 import { FuncaoEditorTela } from './FuncaoEditorTela';
@@ -102,13 +102,13 @@ export function EquipeTela({
 
   return (
     <div className="pb-6">
-      <div className="mx-4 mt-3 flex gap-1 rounded-full bg-[var(--surface)] p-1 text-xs font-semibold">
+      <div className="flex overflow-x-auto border-b border-[var(--border)] px-2 lg:px-6">
         {(['membros', 'funcoes', 'equipes', 'indisponibilidades'] as const).map((k) => (
           <button
             key={k}
             onClick={() => setAba(k)}
-            className={`flex-1 rounded-full py-2 capitalize transition ${
-              aba === k ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
+            className={`flex-1 whitespace-nowrap px-2 py-[13px] text-[11.5px] font-bold capitalize transition ${
+              aba === k ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'text-[var(--muted)]'
             }`}
           >
             {k === 'funcoes' ? 'Funções' : k}
@@ -117,62 +117,65 @@ export function EquipeTela({
       </div>
 
       {aba === 'membros' && (
-        <div className="mt-4 px-4">
+        <div className="mt-4 px-4 lg:px-8">
           {souAdmin && (
             <button
               onClick={() => setConvidarAberto(true)}
-              className="mb-4 flex w-full items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
+              className="mb-3.5 flex w-full items-center justify-between rounded-[20px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
             >
               <span className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
-                <UserPlus size={16} /> Convidar membros
+                <UserPlus size={16} strokeWidth={2.75} /> Convidar membros
               </span>
-              <span className="text-xs text-[var(--muted)]">Ver código</span>
+              <span className="text-xs font-semibold text-[var(--accent)]">Ver código</span>
             </button>
           )}
 
           {souAdmin && solicitacoes.length > 0 && (
-            <div className="mb-4 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent)]/10 p-3">
-              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--accent)]">
-                Solicitações pendentes ({solicitacoes.length})
+            <div className="mb-3.5 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-[14px]">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
+                Solicitações pendentes · {solicitacoes.length}
               </p>
-              {solicitacoes.map((s) => (
-                <div key={s.id} className="flex items-center justify-between py-1.5 text-sm">
-                  <span className="text-[var(--text)]">{s.nome}</span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => onAprovarSolicitacao(s)}
-                      className="rounded-full bg-[var(--accent)] p-1.5 text-[var(--accent-fg)]"
-                      aria-label="Aprovar"
-                    >
-                      <Check size={14} />
-                    </button>
-                    <button
-                      onClick={() => onRecusarSolicitacao(s.id)}
-                      className="rounded-full bg-[var(--border)] p-1.5 text-[var(--muted)]"
-                      aria-label="Recusar"
-                    >
-                      <X size={14} />
-                    </button>
+              <div className="divide-y divide-[var(--border)]">
+                {solicitacoes.map((s) => (
+                  <div key={s.id} className="flex items-center gap-3 py-[9px]">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold text-[var(--accent-fg)]">
+                      {s.nome[0]}
+                    </span>
+                    <span className="flex-1 truncate text-sm font-semibold text-[var(--text)]">{s.nome}</span>
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        onClick={() => onAprovarSolicitacao(s)}
+                        className="rounded-full bg-[var(--accent)] px-4 py-[7px] text-xs font-bold text-[var(--accent-fg)]"
+                      >
+                        Aprovar
+                      </button>
+                      <button
+                        onClick={() => onRecusarSolicitacao(s.id)}
+                        className="rounded-full border border-[var(--border)] bg-[var(--bg)] px-4 py-[7px] text-xs font-bold text-[var(--muted)]"
+                      >
+                        Recusar
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
             Membros ({membros.length})
           </p>
-          <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
+          <ul className="divide-y divide-[var(--border)] rounded-[20px] border border-[var(--border)] bg-[var(--surface)]">
             {membros.map((m) => (
-              <li key={m.id} className="relative flex items-center gap-3 px-4 py-3">
+              <li key={m.id} className="relative flex items-center gap-3 px-4 py-[10px]">
                 <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${m.avatarCor}`}
+                  className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${m.avatarCor}`}
                 >
                   {m.nome[0]}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-[var(--text)]">
-                    {m.nome} {m.admin && <span className="text-[10px] font-normal text-[var(--accent)]">· admin</span>}
+                  <p className="truncate text-[14.5px] font-semibold text-[var(--text)]">
+                    {m.nome} {m.admin && <span className="text-[11px] font-normal text-[var(--accent)]">· admin</span>}
                   </p>
                   <p className="truncate text-xs text-[var(--muted)]">
                     {m.funcoes.map((f) => funcoes.find((x) => x.id === f)?.nome).join(', ') || 'Sem função'}
@@ -185,12 +188,12 @@ export function EquipeTela({
                     aria-label="Mais opções"
                     className="shrink-0 text-[var(--muted)]"
                   >
-                    <MoreVertical size={16} />
+                    <MoreVertical size={16} strokeWidth={2.75} />
                   </button>
                 )}
 
                 {menuMembroId === m.id && (
-                  <div className="absolute right-4 top-12 z-10 w-52 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
+                  <div className="absolute right-4 top-12 z-10 w-52 overflow-hidden rounded-[20px] border border-[var(--border)] bg-[var(--bg)] shadow-[0_12px_30px_rgba(30,42,20,.18)]">
                     {m.admin ? (
                       <button
                         onClick={() => {
@@ -199,9 +202,9 @@ export function EquipeTela({
                           setMenuMembroId(null);
                         }}
                         disabled={qtdAdmins <= 1}
-                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm disabled:opacity-40"
+                        className="flex w-full items-center gap-2 px-4 py-[11px] text-left text-sm text-[var(--text)] disabled:opacity-40"
                       >
-                        <ShieldOff size={14} /> Remover admin
+                        <ShieldOff size={14} strokeWidth={2.75} /> Remover admin
                       </button>
                     ) : (
                       <button
@@ -209,9 +212,9 @@ export function EquipeTela({
                           onTornarAdmin(m.id);
                           setMenuMembroId(null);
                         }}
-                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm"
+                        className="flex w-full items-center gap-2 px-4 py-[11px] text-left text-sm text-[var(--text)]"
                       >
-                        <Shield size={14} /> Tornar admin
+                        <Shield size={14} strokeWidth={2.75} /> Tornar admin
                       </button>
                     )}
                     <button
@@ -220,9 +223,9 @@ export function EquipeTela({
                         setMenuMembroId(null);
                       }}
                       disabled={m.admin && qtdAdmins <= 1}
-                      className="flex w-full items-center gap-2 border-t border-[var(--border)] px-4 py-2.5 text-left text-sm text-red-500 disabled:opacity-40"
+                      className="flex w-full items-center gap-2 border-t border-[var(--border)] px-4 py-[11px] text-left text-sm text-[#a3111d] disabled:opacity-40"
                     >
-                      <UserMinus size={14} /> Remover do ministério
+                      <UserMinus size={14} strokeWidth={2.75} /> Remover do ministério
                     </button>
                   </div>
                 )}
@@ -233,8 +236,8 @@ export function EquipeTela({
       )}
 
       {aba === 'funcoes' && (
-        <div className="mt-4 px-4">
-          <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
+        <div className="mt-4 px-4 lg:px-8">
+          <ul className="divide-y divide-[var(--border)] rounded-[20px] border border-[var(--border)] bg-[var(--surface)]">
             {funcoes.map((f) => (
               <li key={f.id} className="flex items-center justify-between px-4 py-3">
                 {souAdmin ? (
@@ -242,16 +245,16 @@ export function EquipeTela({
                     onClick={() => setFuncaoEditor({ id: f.id, nome: f.nome, icone: f.icone })}
                     className="flex flex-1 items-center gap-2 text-left text-sm text-[var(--text)]"
                   >
-                    <span>{f.icone}</span> {f.nome}
+                    <span className="text-base">{f.icone}</span> {f.nome}
                   </button>
                 ) : (
                   <span className="flex flex-1 items-center gap-2 text-sm text-[var(--text)]">
-                    <span>{f.icone}</span> {f.nome}
+                    <span className="text-base">{f.icone}</span> {f.nome}
                   </span>
                 )}
                 {souAdmin && (
                   <button onClick={() => onRemoverFuncao(f.id)} aria-label={`Remover ${f.nome}`}>
-                    <Trash2 size={14} className="text-[var(--muted)]" />
+                    <Trash2 size={14} strokeWidth={2.75} className="text-[var(--muted)]" />
                   </button>
                 )}
               </li>
@@ -260,20 +263,20 @@ export function EquipeTela({
           {souAdmin && (
             <button
               onClick={() => setFuncaoEditor({ id: null, nome: '', icone: '🎵' })}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+              className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-full border border-dashed border-[var(--border)] py-3 text-sm font-bold text-[var(--accent)]"
             >
-              <Plus size={16} /> Adicionar função
+              <Plus size={16} strokeWidth={2.75} /> Adicionar função
             </button>
           )}
         </div>
       )}
 
       {aba === 'equipes' && (
-        <div className="mt-4 px-4">
+        <div className="mt-4 px-4 lg:px-8">
           {equipes.length === 0 ? (
             <p className="mb-3 text-center text-sm text-[var(--muted)]">Nenhuma equipe criada ainda.</p>
           ) : (
-            <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
+            <ul className="divide-y divide-[var(--border)] rounded-[20px] border border-[var(--border)] bg-[var(--surface)]">
               {equipes.map((eq) => (
                 <li key={eq.id} className="flex items-center justify-between px-4 py-3">
                   {souAdmin ? (
@@ -292,7 +295,7 @@ export function EquipeTela({
                   )}
                   {souAdmin && (
                     <button onClick={() => onRemoverEquipe(eq.id)} aria-label={`Excluir ${eq.nome}`}>
-                      <Trash2 size={14} className="text-[var(--muted)]" />
+                      <Trash2 size={14} strokeWidth={2.75} className="text-[var(--muted)]" />
                     </button>
                   )}
                 </li>
@@ -302,18 +305,18 @@ export function EquipeTela({
           {souAdmin && (
             <button
               onClick={() => setEquipeEditor({ id: null, nome: '', membroIds: [] })}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+              className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-full border border-dashed border-[var(--border)] py-3 text-sm font-bold text-[var(--accent)]"
             >
-              <Plus size={16} /> Nova equipe
+              <Plus size={16} strokeWidth={2.75} /> Nova equipe
             </button>
           )}
         </div>
       )}
 
       {aba === 'indisponibilidades' && (
-        <div className="mt-4 px-4">
-          <div className="mb-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+        <div className="mt-4 px-4 lg:px-8">
+          <div className="mb-3.5 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-[14px]">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
               Marcar indisponibilidade
             </p>
             <div className="flex gap-2">
@@ -321,14 +324,14 @@ export function EquipeTela({
                 type="date"
                 value={novaData}
                 onChange={(e) => setNovaData(e.target.value)}
-                className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2 py-1.5 text-sm text-[var(--text)]"
+                className="flex-1 rounded-full border border-[var(--border)] bg-[var(--bg)] px-3 py-[7px] text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
               />
               <input
                 type="text"
                 placeholder="Motivo"
                 value={novoMotivo}
                 onChange={(e) => setNovoMotivo(e.target.value)}
-                className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2 py-1.5 text-sm text-[var(--text)]"
+                className="flex-1 rounded-full border border-[var(--border)] bg-[var(--bg)] px-3 py-[7px] text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
               />
             </div>
             <button
@@ -338,7 +341,7 @@ export function EquipeTela({
                 setNovaData('');
                 setNovoMotivo('');
               }}
-              className="mt-2 w-full rounded-lg bg-[var(--accent)] py-2 text-sm font-semibold text-[var(--accent-fg)]"
+              className="mt-2 w-full rounded-full bg-[var(--accent)] py-2 text-sm font-bold text-[var(--accent-fg)]"
             >
               Adicionar
             </button>
@@ -347,7 +350,7 @@ export function EquipeTela({
           {indisponibilidades.length === 0 ? (
             <p className="py-8 text-center text-sm text-[var(--muted)]">Lista vazia.</p>
           ) : (
-            <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
+            <ul className="divide-y divide-[var(--border)] rounded-[20px] border border-[var(--border)] bg-[var(--surface)]">
               {indisponibilidades.map((i) => (
                 <li key={i.id} className="px-4 py-3">
                   <p className="text-sm font-semibold capitalize text-[var(--text)]">
@@ -365,25 +368,32 @@ export function EquipeTela({
 
       {convidarAberto && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 lg:items-center">
-          <div className="w-full max-w-sm rounded-t-2xl bg-[var(--bg)] p-6 lg:rounded-2xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[var(--text)]">Convidar membros</h2>
+          <div className="w-full max-w-sm rounded-t-[28px] bg-[var(--bg)] p-[22px] shadow-[0_12px_30px_rgba(30,42,20,.18)] lg:rounded-[28px]">
+            <div className="mb-3.5 flex items-center justify-between">
+              <h2 className="text-[20px] text-[var(--text)]">Convidar membros</h2>
               <button onClick={() => setConvidarAberto(false)} aria-label="Fechar" className="text-[var(--muted)]">
-                <X size={20} />
+                <X size={18} strokeWidth={2.75} />
               </button>
             </div>
             <p className="mb-3 text-sm text-[var(--muted)]">
               Compartilhe este código com quem você quer convidar para o ministério.
             </p>
-            <div className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="font-mono text-lg font-bold tracking-wider text-[var(--text)]">
-                {codigoConvite}
-              </span>
-              <button onClick={copiarCodigo} className="text-[var(--accent)]" aria-label="Copiar código">
-                <Copy size={18} />
+            <div className="flex items-center justify-between rounded-[20px] bg-[var(--accent-soft)] px-4 py-[13px]">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#3b4a27]">Código de convite</p>
+                <p className="mt-0.5 font-mono text-[18px] font-bold tracking-[0.08em] text-[#3b4a27]">
+                  {codigoConvite}
+                </p>
+              </div>
+              <button
+                onClick={copiarCodigo}
+                aria-label="Copiar código"
+                className="flex items-center gap-1.5 rounded-full border border-[var(--accent)] px-4 py-2 text-[12.5px] font-bold text-[#3b4a27]"
+              >
+                <Copy size={14} strokeWidth={2.75} /> Copiar
               </button>
             </div>
-            {copiado && <p className="mt-2 text-center text-xs text-[var(--accent)]">Copiado!</p>}
+            {copiado && <p className="mt-2 text-center text-xs font-semibold text-[var(--accent)]">Copiado!</p>}
           </div>
         </div>
       )}

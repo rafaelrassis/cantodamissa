@@ -161,14 +161,14 @@ export function RepertorioDetalheTela({
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
-        <button onClick={onBack} className="mb-2 flex items-center gap-1 text-xs opacity-80">
-          <ChevronLeft size={14} /> Voltar
+      <header className="bg-[var(--accent)] px-4 py-[18px] pb-5 text-[var(--accent-fg)] lg:px-10">
+        <button onClick={onBack} className="mb-2 flex items-center gap-1 text-xs opacity-[.85]">
+          <ChevronLeft size={14} strokeWidth={2.75} /> Voltar
         </button>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-extrabold tracking-tight">{repertorio.nome}</h1>
-            <p className="mt-0.5 text-sm opacity-80">
+            <h1 className="truncate text-[26px]">{repertorio.nome}</h1>
+            <p className="mt-0.5 text-sm opacity-[.85]">
               {repertorio.itens.length} música{repertorio.itens.length === 1 ? '' : 's'} ·{' '}
               {ordem.length} rito{ordem.length === 1 ? '' : 's'}
             </p>
@@ -178,28 +178,28 @@ export function RepertorioDetalheTela({
               <button
                 onClick={copiarLink}
                 aria-label="Compartilhar"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/16"
+                className="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-[var(--accent-fg)]/18"
               >
-                <Share2 size={16} />
+                <Share2 size={16} strokeWidth={2.75} />
               </button>
             )}
             <button
               onClick={baixarRepertorio}
               aria-label="Baixar repertório"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/16"
+              className="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-[var(--accent-fg)]/18"
             >
-              <Download size={16} />
+              <Download size={16} strokeWidth={2.75} />
             </button>
             {podeEditar && !ocultarExcluir && (
               <button
                 onClick={excluir}
                 onBlur={() => setConfirmandoExclusao(false)}
                 aria-label="Excluir repertório"
-                className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                  confirmandoExclusao ? 'bg-red-500' : 'bg-white/16'
+                className={`flex h-[38px] w-[38px] items-center justify-center rounded-full ${
+                  confirmandoExclusao ? 'bg-red-500' : 'bg-[var(--accent-fg)]/18'
                 }`}
               >
-                <Trash2 size={16} />
+                <Trash2 size={16} strokeWidth={2.75} />
               </button>
             )}
           </div>
@@ -212,7 +212,7 @@ export function RepertorioDetalheTela({
         )}
       </header>
 
-      <div className="mx-auto max-w-2xl px-4 py-4 lg:px-10">
+      <div className="mx-auto max-w-2xl px-4 pt-5 pb-10 lg:px-10">
         {gruposParaExibir.map((nomeRito) => {
           const itens = itensPorRito.get(nomeRito) ?? [];
           const removivel = podeEditar && nomeRito !== RITO_SEM_SECAO;
@@ -227,23 +227,23 @@ export function RepertorioDetalheTela({
               }}
               onPointerMove={onPointerMoveRito}
               onPointerUp={onPointerUpRito}
-              className={`mb-3 rounded-2xl border transition-shadow ${
+              className={`mb-3 rounded-[24px] border transition-shadow ${
                 arrastando === nomeRito
                   ? 'border-[var(--accent)] shadow-[var(--shadow)]'
                   : 'border-[var(--border)]'
               }`}
             >
-              <div className="flex items-center gap-2 px-3 py-2.5">
+              <div className="flex items-center gap-2 px-[14px] py-2.5">
                 {reordenavel && (
                   <button
                     onPointerDown={(e) => onPointerDownRito(e, nomeRito)}
                     aria-label={`Arrastar pra reordenar ${nomeRito}`}
                     className="shrink-0 cursor-grab touch-none text-[var(--muted)] active:cursor-grabbing"
                   >
-                    <GripVertical size={16} />
+                    <GripVertical size={16} strokeWidth={2.75} />
                   </button>
                 )}
-                <span className="flex-1 text-sm font-bold uppercase tracking-wide text-[var(--muted)]">
+                <span className="flex-1 text-sm font-bold uppercase tracking-[0.06em] text-[var(--muted)]">
                   {nomeRito}
                 </span>
                 <span className="text-xs text-[var(--muted)]">{itens.length}</span>
@@ -253,7 +253,7 @@ export function RepertorioDetalheTela({
                     aria-label={`Excluir rito ${nomeRito}`}
                     className="shrink-0 text-[var(--muted)] hover:text-red-500"
                   >
-                    <X size={14} />
+                    <X size={14} strokeWidth={2.75} />
                   </button>
                 )}
               </div>
@@ -265,7 +265,7 @@ export function RepertorioDetalheTela({
                   {itens.map((item) => (
                     <div
                       key={item.musicaId}
-                      className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2.5 last:border-b-0"
+                      className="flex items-center gap-2 border-b border-[var(--border)] px-[14px] py-2.5 last:border-b-0"
                     >
                       <button
                         onClick={() => abrirMusica(item)}
@@ -278,7 +278,7 @@ export function RepertorioDetalheTela({
                           {item.artist ?? 'Artista desconhecido'}
                         </p>
                       </button>
-                      <span className="shrink-0 rounded-md bg-[var(--accent-soft)] px-2 py-1 font-mono text-xs font-bold text-[var(--accent)]">
+                      <span className="shrink-0 rounded-full bg-[var(--accent-soft)] px-[11px] py-1 font-mono text-xs font-bold text-[#3b4a27]">
                         {item.tone}
                       </span>
                       {podeEditar && (
@@ -289,7 +289,7 @@ export function RepertorioDetalheTela({
                               moverMusicaParaRito(repertorio.id, item.musicaId, e.target.value)
                             }
                             aria-label="Mover pra outro rito"
-                            className="shrink-0 rounded-md border border-[var(--border)] bg-[var(--bg)] px-1 py-1 text-[10px] text-[var(--text)]"
+                            className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--bg)] px-[10px] py-[5px] text-[10px] text-[var(--text)]"
                           >
                             {opcoesDeRito.map((r) => (
                               <option key={r} value={r}>
@@ -302,7 +302,7 @@ export function RepertorioDetalheTela({
                             aria-label="Remover música"
                             className="shrink-0 text-[var(--muted)] hover:text-[var(--text)]"
                           >
-                            <X size={14} />
+                            <X size={14} strokeWidth={2.75} />
                           </button>
                         </>
                       )}
@@ -328,14 +328,14 @@ export function RepertorioDetalheTela({
               value={novoRito}
               onChange={(e) => setNovoRito(e.target.value)}
               placeholder="Novo rito (ex: Bênção Final)"
-              className="w-full rounded-xl border border-dashed border-[var(--border)] px-3 py-2 text-sm text-[var(--text)] focus:outline-none"
+              className="w-full rounded-full border border-dashed border-[var(--border)] px-[18px] py-[11px] text-sm text-[var(--text)] placeholder:text-[#99a390] focus:outline-none"
             />
             <button
               type="submit"
               aria-label="Adicionar rito"
-              className="flex shrink-0 items-center justify-center rounded-xl bg-[var(--accent)] px-3 text-[var(--accent-fg)]"
+              className="flex shrink-0 items-center justify-center rounded-full bg-[var(--accent)] px-5 text-[var(--accent-fg)]"
             >
-              <Plus size={16} />
+              <Plus size={16} strokeWidth={2.75} />
             </button>
           </form>
         )}

@@ -223,14 +223,14 @@ export function CifraReader({
         <div className="flex min-w-0 items-center gap-3">
           <button
             onClick={onClose}
-            className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[9px] bg-white/16"
+            className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-[var(--accent-fg)]/18"
             aria-label="Voltar"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={18} strokeWidth={2.75} />
           </button>
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-extrabold tracking-tight">{musica.title}</h1>
-            <p className="truncate text-[13px] opacity-80">
+            <h1 className="truncate text-[23px] leading-[1.15]">{musica.title}</h1>
+            <p className="truncate text-[13px] opacity-[.85]">
               {artistaClicavel ? (
                 <button
                   onClick={abrirPaginaDoArtista}
@@ -248,7 +248,7 @@ export function CifraReader({
             {musica.momento.slice(0, 2).map((m) => (
               <span
                 key={m}
-                className="whitespace-nowrap rounded-full bg-white/16 px-3 py-1 text-xs font-semibold"
+                className="whitespace-nowrap rounded-full bg-[var(--accent-fg)]/18 px-[13px] py-[5px] text-xs font-bold"
               >
                 {LABEL_MOMENTO[m]}
               </span>
@@ -260,7 +260,13 @@ export function CifraReader({
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
+      <div
+        className={`grid min-h-0 flex-1 ${
+          showDiagrams
+            ? 'lg:grid-cols-[272px_minmax(0,1fr)_250px]'
+            : 'lg:grid-cols-[272px_minmax(0,1fr)]'
+        }`}
+      >
         <CifraToolsSidebar
           currentTone={currentTone}
           semitonesLabel={semitonesLabel}
@@ -290,7 +296,7 @@ export function CifraReader({
             <button
               onClick={autoScroll.toggle}
               aria-label="Alternar rolagem automática"
-              className={`flex h-[34px] items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold ${
+              className={`flex h-[34px] items-center justify-center gap-1.5 rounded-full px-3.5 text-xs font-bold ${
                 autoScroll.playing
                   ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
                   : 'border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]'
@@ -358,21 +364,21 @@ export function CifraReader({
               {/* Header mobile — vive dentro da área rolável de propósito, então
                   some conforme o usuário rola pra baixo (não fica fixo/preso). */}
               <header className="-mx-5 -mt-8 mb-6 bg-[var(--accent)] px-4 pb-3 pt-4 font-sans text-[var(--accent-fg)] lg:hidden">
-                <button onClick={onClose} className="mb-1 text-xs opacity-80">
+                <button onClick={onClose} className="mb-1 text-xs opacity-[.85]">
                   {repertorio ? `← Repertório · ${repertorio.nome}` : '← Voltar'}
                 </button>
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <h1 className="truncate text-lg font-extrabold">{musica.title}</h1>
+                    <h1 className="truncate text-[21px] leading-[1.2]">{musica.title}</h1>
                     {artistaClicavel ? (
                       <button
                         onClick={abrirPaginaDoArtista}
-                        className="truncate text-sm underline underline-offset-2 opacity-80 hover:opacity-100"
+                        className="truncate text-[13.5px] underline underline-offset-2 opacity-[.85] hover:opacity-100"
                       >
                         {musica.artist}
                       </button>
                     ) : (
-                      <p className="truncate text-sm opacity-80">{musica.artist}</p>
+                      <p className="truncate text-[13.5px] opacity-[.85]">{musica.artist}</p>
                     )}
                   </div>
                 </div>
@@ -382,18 +388,18 @@ export function CifraReader({
                 <ChordLine key={i} line={line} />
               ))}
 
-              <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-[var(--border)] pb-4 pt-6 font-sans">
+              <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-[var(--border)] pb-4 pt-5 font-sans">
                 <button
                   onClick={() => setFormularioCorrecaoAberto(true)}
-                  className="flex h-[34px] items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--surface2)]"
+                  className="flex h-[34px] items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-3.5 text-xs font-bold text-[var(--muted)] hover:bg-[var(--surface2)]"
                 >
-                  <Flag size={13} /> sugerir correção
+                  <Flag size={13} strokeWidth={2.75} /> sugerir correção
                 </button>
 
                 {colaboradores.length > 0 && (
                   <button
                     onClick={() => setColaboradoresAbertos(true)}
-                    className="flex items-center gap-1 text-xs font-semibold text-[var(--accent)] underline-offset-2 hover:underline"
+                    className="flex items-center gap-1 text-xs font-bold text-[var(--accent)] underline-offset-2 hover:underline"
                   >
                     <Users size={13} />
                     Editado por {colaboradores[0]}
@@ -415,12 +421,12 @@ export function CifraReader({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-t-2xl bg-[var(--bg)] p-6 lg:rounded-2xl"
+            className="w-full max-w-sm rounded-t-[28px] bg-[var(--bg)] p-6 shadow-[0_12px_30px_rgba(30,42,20,0.18)] lg:rounded-[28px]"
           >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-bold text-[var(--text)]">Colaboradores desta cifra</h2>
+              <h2 className="text-xl text-[var(--text)]">Colaboradores desta cifra</h2>
               <button onClick={() => setColaboradoresAbertos(false)} aria-label="Fechar" className="text-[var(--muted)]">
-                <X size={18} />
+                <X size={18} strokeWidth={2.75} />
               </button>
             </div>
             <ul className="divide-y divide-[var(--border)]">
@@ -510,12 +516,12 @@ function HeaderCard({
   return (
     <Tag
       onClick={onClick}
-      className="rounded-[10px] bg-white/16 px-3 py-1.5 text-center"
+      className="rounded-[20px] bg-[var(--accent-fg)]/18 px-4 py-[7px] text-center"
     >
-      <div className="text-[9px] font-semibold uppercase tracking-[0.16em] opacity-75">
+      <div className="text-[9px] font-bold uppercase tracking-[0.16em] opacity-80">
         {label}
       </div>
-      <div className="font-mono text-[22px] font-bold leading-none">{value}</div>
+      <div className="font-mono text-[21px] font-bold leading-[1.1]">{value}</div>
     </Tag>
   );
 }
@@ -535,7 +541,7 @@ function ToolbarToggle({
     <button
       onClick={onClick}
       aria-label={ariaLabel}
-      className={`flex h-[34px] items-center gap-1.5 rounded-lg px-3.5 text-xs font-semibold ${
+      className={`flex h-[34px] items-center gap-1.5 rounded-full px-3.5 text-xs font-bold ${
         active
           ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
           : 'border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]'

@@ -43,7 +43,7 @@ export function MusicaCard({
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
-      className="flex w-full items-center gap-3 border-b border-[var(--border)] px-4 py-3 text-left transition-colors hover:bg-[var(--surface)]"
+      className="flex w-full items-center gap-3.5 border-b border-[var(--border)] px-5 py-3.5 text-left transition-colors last:border-b-0 hover:bg-[var(--surface)]"
     >
       {posicao !== undefined && (
         <span className="w-6 shrink-0 text-right font-mono text-sm text-[var(--muted)]">
@@ -52,14 +52,14 @@ export function MusicaCard({
       )}
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[15px] font-semibold text-[var(--text)]">{musica.title}</p>
-        <p className="truncate text-xs text-[var(--muted)]">
+        <p className="truncate text-[15.5px] font-semibold text-[var(--text)]">{musica.title}</p>
+        <p className="truncate text-[13px] text-[var(--muted)]">
           {musica.artist}
           {musica.momento[0] && <> · {LABEL_MOMENTO[musica.momento[0]]}</>}
         </p>
       </div>
 
-      <span className="hidden w-14 shrink-0 text-right font-mono text-xs text-[var(--muted)] sm:block">
+      <span className="hidden w-16 shrink-0 text-right font-mono text-[12.5px] text-[#99a390] sm:block">
         {musica.viewsCount.toLocaleString('pt-BR')}
       </span>
 

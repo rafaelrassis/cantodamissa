@@ -60,9 +60,9 @@ export function MinisterioRepertoriosTela({
   }
 
   return (
-    <div className="flex flex-col gap-3 p-4">
+    <div className="flex flex-col gap-3 p-5">
       {comRepertorio.length === 0 && (
-        <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
+        <div className="rounded-[20px] bg-[var(--accent-soft)] px-4 py-[13px] text-[12.5px] leading-[1.45] text-[#4d5648]">
           Nenhum repertório ainda. Todo repertório aqui é vinculado a um evento — crie um abaixo.
         </div>
       )}
@@ -71,9 +71,9 @@ export function MinisterioRepertoriosTela({
         <button
           key={repertorio.id}
           onClick={() => onAbrirRepertorio(repertorio.id)}
-          className="flex w-full items-center gap-3 rounded-xl border border-[var(--border)] p-3 text-left hover:bg-[var(--surface)]"
+          className="flex w-full items-center gap-3 rounded-[20px] border border-[var(--border)] px-4 py-3 text-left transition hover:bg-[var(--surface)]"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-soft)] font-mono text-sm font-bold text-[var(--accent)]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[var(--accent-soft)] font-mono text-sm font-bold text-brand-green-dark">
             {repertorio.itens.length}
           </span>
           <div className="min-w-0 flex-1">
@@ -90,24 +90,24 @@ export function MinisterioRepertoriosTela({
       {!souAdmin ? null : escalas.length === 0 ? (
         <button
           onClick={onIrParaEscalas}
-          className="rounded-xl border border-dashed border-[var(--border)] p-3 text-center text-sm font-semibold text-[var(--accent)]"
+          className="rounded-full border border-dashed border-[var(--border)] px-4 py-3 text-center text-sm font-bold text-[var(--accent)]"
         >
           Crie um evento primeiro, na aba Escalas
         </button>
       ) : semRepertorioCompleto.length === 0 ? (
-        <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
+        <div className="rounded-[20px] bg-[var(--accent-soft)] px-4 py-[13px] text-[12.5px] leading-[1.45] text-[#4d5648]">
           Todos os eventos já têm repertório.
         </div>
       ) : !escolhendoEvento ? (
         <button
           onClick={() => setEscolhendoEvento(true)}
-          className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] py-3 text-sm font-semibold text-[var(--accent)]"
+          className="flex items-center justify-center gap-2 rounded-full border border-dashed border-[var(--border)] py-3 text-sm font-bold text-[var(--accent)]"
         >
-          <Plus size={16} /> Criar repertório de um evento
+          <Plus size={16} strokeWidth={2.75} /> Criar repertório de um evento
         </button>
       ) : (
-        <div className="rounded-xl border border-[var(--border)] p-2">
-          <p className="mb-1 px-2 pt-1 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+        <div className="rounded-[20px] border border-[var(--border)] p-[10px]">
+          <p className="mb-1.5 px-2 pt-1 text-[10.5px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
             Escolha o evento
           </p>
           <ul className="flex flex-col gap-1">
@@ -116,7 +116,7 @@ export function MinisterioRepertoriosTela({
                 <button
                   onClick={() => criarPara(e)}
                   disabled={criandoParaId === e.id}
-                  className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left hover:bg-[var(--surface)] disabled:opacity-50"
+                  className="flex w-full items-center gap-3 rounded-[16px] px-2 py-[9px] text-left hover:bg-[var(--surface)] disabled:opacity-50"
                 >
                   <span className="flex-1 truncate text-sm font-medium text-[var(--text)]">{e.titulo}</span>
                   <span className="shrink-0 text-xs text-[var(--muted)]">{formatarDataCurta(e.data)}</span>
@@ -127,7 +127,7 @@ export function MinisterioRepertoriosTela({
               <li>
                 <button
                   onClick={() => setVerTudoEventos(true)}
-                  className="w-full rounded-lg py-2.5 text-center text-xs font-semibold text-[var(--accent)]"
+                  className="w-full rounded-[16px] py-[9px] text-center text-xs font-bold text-[var(--accent)]"
                 >
                   Ver mais {restantesEventos}
                 </button>
@@ -139,14 +139,14 @@ export function MinisterioRepertoriosTela({
               setEscolhendoEvento(false);
               setVerTudoEventos(false);
             }}
-            className="mt-1 w-full rounded-lg py-2 text-center text-xs text-[var(--muted)]"
+            className="mt-1 w-full rounded-[16px] py-2 text-center text-xs text-[var(--muted)]"
           >
             Cancelar
           </button>
         </div>
       )}
 
-      <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
+      <div className="rounded-[20px] bg-[var(--accent-soft)] px-4 py-[13px] text-[12.5px] leading-[1.45] text-[#4d5648]">
         Monte o repertório da missa por rito e compartilhe com o ministério.
       </div>
     </div>
