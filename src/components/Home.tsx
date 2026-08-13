@@ -310,7 +310,7 @@ export function Home({
       {/* Corpo */}
       <div className="flex flex-1 flex-col lg:flex-row lg:gap-6 lg:px-10 lg:py-6">
         <div className="flex-1">
-          {!buscando && proximosRepertorios.length > 0 && (
+          {isLoggedIn && !buscando && proximosRepertorios.length > 0 && (
             <div className="px-4 py-3 lg:px-0">
               <h2 className="mb-2 text-sm font-semibold text-[var(--muted)]">
                 Meus próximos repertórios

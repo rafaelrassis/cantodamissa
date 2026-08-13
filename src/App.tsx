@@ -63,17 +63,22 @@ function App() {
   } = useUserAuth();
   const { isAdmin } = useAdminAuth(userEmail);
   const [loginParaMinisterioAberto, setLoginParaMinisterioAberto] = useState(false);
+  const [escalaAlvoPosLogin, setEscalaAlvoPosLogin] = useState<string | null>(null);
   const [perfilPulado, setPerfilPulado] = useState(false);
 
   // Login Google é redirect (a página sai e volta) — a intenção "ir pro
-  // Ministério depois de logar" não sobrevive ao remount sozinha, então
-  // fica guardada aqui e é consumida assim que a sessão aparecer.
+  // Ministério depois de logar" (com ou sem uma escala específica em
+  // mente, ver abrirEscala) não sobrevive ao remount sozinha, então fica
+  // guardada aqui e é consumida assim que a sessão aparecer. Valor '1' =
+  // só ir pro Ministério; qualquer outro valor = id da escala alvo.
   const CHAVE_POS_LOGIN = 'cdm_pos_login_ir_ministerio';
   useEffect(() => {
-    if (isLoggedIn && sessionStorage.getItem(CHAVE_POS_LOGIN)) {
-      sessionStorage.removeItem(CHAVE_POS_LOGIN);
-      setTela('ministerio');
-    }
+    if (!isLoggedIn) return;
+    const valor = sessionStorage.getItem(CHAVE_POS_LOGIN);
+    if (!valor) return;
+    sessionStorage.removeItem(CHAVE_POS_LOGIN);
+    if (valor !== '1') setEscalaAlvoId(valor);
+    setTela('ministerio');
   }, [isLoggedIn]);
 
   // Levantado até aqui (em vez de ficar dentro de MinisterioTela) pra
@@ -85,13 +90,19 @@ function App() {
     if (isLoggedIn) {
       setTela('ministerio');
     } else {
+      setEscalaAlvoPosLogin(null);
       setLoginParaMinisterioAberto(true);
     }
   }
 
   function abrirEscala(escalaId: string) {
-    setEscalaAlvoId(escalaId);
-    setTela('ministerio');
+    if (isLoggedIn) {
+      setEscalaAlvoId(escalaId);
+      setTela('ministerio');
+    } else {
+      setEscalaAlvoPosLogin(escalaId);
+      setLoginParaMinisterioAberto(true);
+    }
   }
 
   const repertoriosApi = useRepertorios();
@@ -132,7 +143,8 @@ function App() {
   // pendente, visível em qualquer tela — exceto dentro do leitor de
   // cifra (modo missa ao vivo não deve ter distração, mesma lógica do
   // ad-slot que também some lá).
-  const mostrarAlertaGlobal = !musicaAtual && ministerio.souAdmin && ministerio.solicitacoes.length > 0;
+  const mostrarAlertaGlobal =
+    isLoggedIn && !musicaAtual && ministerio.souAdmin && ministerio.solicitacoes.length > 0;
 
   // BottomNavBar: fixa em todas as telas, exceto no leitor de cifra
   // (mesma exceção do alerta acima). `comAlerta` decide a tela ativa da
@@ -319,7 +331,7 @@ function App() {
       {loginParaMinisterioAberto && (
         <UserLoginModal
           onLogin={() => {
-            sessionStorage.setItem(CHAVE_POS_LOGIN, '1');
+            sessionStorage.setItem(CHAVE_POS_LOGIN, escalaAlvoPosLogin ?? '1');
             loginUsuario();
             setLoginParaMinisterioAberto(false);
           }}
