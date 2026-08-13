@@ -48,12 +48,12 @@ export function PaginatedCarousel<T>({
       </div>
 
       {paginas.length > 1 && (
-        <div className="mt-3 flex justify-center gap-1.5">
+        <div className="mt-2 flex justify-center gap-1.5">
           {paginas.map((_, i) => (
             <span
               key={i}
               className={`h-1.5 rounded-full transition-all ${
-                i === pagina ? 'w-[22px] bg-[var(--accent)]' : 'w-1.5 bg-[var(--border)]'
+                i === pagina ? 'w-4 bg-[var(--accent)]' : 'w-1.5 bg-[var(--border)]'
               }`}
             />
           ))}

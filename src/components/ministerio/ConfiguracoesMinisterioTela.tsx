@@ -52,20 +52,20 @@ export function ConfiguracoesMinisterioTela({
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="flex items-center gap-2.5 border-b border-[var(--border)] px-5 py-4 lg:px-8">
+      <header className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4 lg:px-10">
         <button onClick={onBack} aria-label="Voltar">
-          <ChevronLeft size={20} strokeWidth={2.75} />
+          <ChevronLeft size={20} />
         </button>
-        <h1 className="text-[20px] leading-none">Configurações do ministério</h1>
+        <h1 className="text-lg font-extrabold tracking-tight">Configurações do ministério</h1>
       </header>
 
-      <div className="mx-auto max-w-2xl px-5 py-6 lg:px-8">
+      <div className="mx-auto max-w-2xl px-4 py-5 lg:px-10">
         <div className="flex items-center gap-4">
           <button
             onClick={() => souAdmin && setEditandoFoto((v) => !v)}
             disabled={!souAdmin}
             aria-label="Alterar foto"
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[24px] bg-[var(--accent)] text-[28px] text-[var(--accent-fg)] disabled:opacity-80"
+            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent)] text-3xl text-[var(--accent-fg)] disabled:opacity-80"
           >
             {foto ?? nome[0]?.toUpperCase()}
           </button>
@@ -76,21 +76,21 @@ export function ConfiguracoesMinisterioTela({
                   autoFocus
                   value={nomeRascunho}
                   onChange={(e) => setNomeRascunho(e.target.value)}
-                  className="w-full rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm outline-none focus:border-[var(--accent)]"
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
                 />
                 <button
                   onClick={() => {
                     if (nomeRascunho.trim()) onRenomear(nomeRascunho.trim());
                     setEditandoNome(false);
                   }}
-                  className="shrink-0 rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-bold text-[var(--accent-fg)]"
+                  className="shrink-0 rounded-lg bg-[var(--accent)] px-3 py-2 text-xs font-semibold text-[var(--accent-fg)]"
                 >
                   Ok
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <p className="truncate text-[19px] font-bold">{nome}</p>
+                <p className="truncate text-lg font-bold">{nome}</p>
                 {souAdmin && (
                   <button
                     onClick={() => {
@@ -99,27 +99,25 @@ export function ConfiguracoesMinisterioTela({
                     }}
                     aria-label="Renomear ministério"
                   >
-                    <Pencil size={14} strokeWidth={2.75} className="text-[var(--muted)]" />
+                    <Pencil size={14} className="text-[var(--muted)]" />
                   </button>
                 )}
               </div>
             )}
-            {!souAdmin && (
-              <p className="mt-0.5 text-xs text-[var(--muted)]">Só admins podem alterar foto e nome.</p>
-            )}
+            {!souAdmin && <p className="mt-0.5 text-xs text-[var(--muted)]">Só admins podem alterar foto e nome.</p>}
           </div>
         </div>
 
         {editandoFoto && souAdmin && (
-          <div className="mt-3.5 flex items-center gap-3 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-[14px]">
+          <div className="mt-3 flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
             <input
               autoFocus
               value={fotoRascunho}
               onChange={(e) => setFotoRascunho(e.target.value)}
               maxLength={2}
-              className="w-14 rounded-[14px] border border-[var(--border)] bg-[var(--bg)] px-2 py-[9px] text-center text-[20px]"
+              className="w-14 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 py-2 text-center text-xl"
             />
-            <p className="flex-1 text-[12.5px] leading-[1.45] text-[var(--muted)]">
+            <p className="flex-1 text-xs text-[var(--muted)]">
               Foto como emoji por ora — upload de imagem de verdade fica pra quando tiver Storage ligado ao
               Ministério.
             </p>
@@ -128,7 +126,7 @@ export function ConfiguracoesMinisterioTela({
                 onAtualizarFoto(fotoRascunho.trim() || null);
                 setEditandoFoto(false);
               }}
-              className="shrink-0 rounded-full bg-[var(--accent)] px-[18px] py-[9px] text-[12.5px] font-bold text-[var(--accent-fg)]"
+              className="shrink-0 rounded-lg bg-[var(--accent)] px-3 py-2 text-xs font-semibold text-[var(--accent-fg)]"
             >
               Ok
             </button>
@@ -136,51 +134,47 @@ export function ConfiguracoesMinisterioTela({
         )}
 
         {souAdmin && (
-          <div className="mt-6 rounded-[24px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">Código de convite</p>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="font-mono text-[17px] font-bold tracking-[0.08em]">{codigoConvite}</span>
-              <div className="flex items-center gap-[14px]">
+          <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5">
+            <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Código de convite</p>
+            <div className="mt-1.5 flex items-center justify-between">
+              <span className="font-mono text-base font-bold tracking-wider">{codigoConvite}</span>
+              <div className="flex items-center gap-3">
                 <button onClick={copiarCodigo} aria-label="Copiar código" className="text-[var(--accent)]">
-                  <Copy size={16} strokeWidth={2.75} />
+                  <Copy size={16} />
                 </button>
                 <button onClick={onRegenerarCodigo} aria-label="Gerar novo código" className="text-[var(--accent)]">
-                  <RefreshCw size={16} strokeWidth={2.75} />
+                  <RefreshCw size={16} />
                 </button>
               </div>
             </div>
             {copiado && <p className="mt-1 text-xs text-[var(--accent)]">Copiado!</p>}
-            <p className="mt-2 text-[12.5px] text-[var(--muted)]">Gerar novo código invalida o anterior.</p>
+            <p className="mt-1 text-xs text-[var(--muted)]">Gerar novo código invalida o anterior.</p>
           </div>
         )}
 
         <div className="mt-6 flex flex-col gap-3">
           {souAdmin && !podeSair && (
-            <p className="flex items-start gap-2.5 rounded-[20px] border border-[rgba(166,122,31,0.35)] bg-[rgba(166,122,31,0.10)] px-4 py-[13px] text-[12.5px] leading-[1.45] text-[#8a651a]">
-              <AlertTriangle size={14} strokeWidth={2.75} className="mt-0.5 shrink-0" />
+            <p className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-600">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               Você é o único admin. Torne outro membro admin (na aba Equipe) antes de sair.
             </p>
           )}
           <button
             onClick={() => (confirmandoSaida ? onSair() : setConfirmandoSaida(true))}
             disabled={!podeSair}
-            className={`flex items-center justify-center gap-2 rounded-full border py-[14px] text-sm font-bold disabled:opacity-40 ${
-              confirmandoSaida
-                ? 'border-transparent bg-[#a3111d] text-white'
-                : 'border-[var(--border)] bg-[var(--bg)] text-[var(--text)]'
-            }`}
+            className="flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] py-3 text-sm font-semibold disabled:opacity-40"
           >
-            <LogOut size={16} strokeWidth={2.75} /> {confirmandoSaida ? 'Confirmar saída' : 'Sair do ministério'}
+            <LogOut size={16} /> {confirmandoSaida ? 'Confirmar saída' : 'Sair do ministério'}
           </button>
 
           {souAdmin && (
             <button
               onClick={() => (confirmandoExclusao ? onExcluir() : setConfirmandoExclusao(true))}
-              className={`flex items-center justify-center gap-2 rounded-full py-[14px] text-sm font-bold ${
-                confirmandoExclusao ? 'bg-[#a3111d] text-white' : 'border border-[rgba(163,17,29,0.4)] text-[#a3111d]'
+              className={`flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold ${
+                confirmandoExclusao ? 'bg-red-600 text-white' : 'border border-red-500/40 text-red-500'
               }`}
             >
-              <Trash2 size={16} strokeWidth={2.75} /> {confirmandoExclusao ? 'Confirmar exclusão (irreversível)' : 'Excluir ministério'}
+              <Trash2 size={16} /> {confirmandoExclusao ? 'Confirmar exclusão (irreversível)' : 'Excluir ministério'}
             </button>
           )}
         </div>

@@ -11,11 +11,9 @@ export function ChordDiagramCard({ diagram, compact }: Props) {
   const dotSize = compact ? 10 : 15;
 
   return (
-    <div
-      className={`rounded-[16px] border border-[var(--border)] ${compact ? 'px-[10px] py-2' : 'p-[10px]'}`}
-    >
+    <div className={`rounded-xl border border-[var(--border)] ${compact ? 'p-2' : 'p-3'}`}>
       <p
-        className={`font-mono font-bold text-[var(--chord)] ${compact ? 'text-xs' : 'text-[13px]'}`}
+        className={`font-mono font-bold text-[var(--chord)] ${compact ? 'text-xs' : 'text-sm'}`}
       >
         {diagram.name}
       </p>

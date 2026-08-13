@@ -10,34 +10,34 @@ export function CantoresPopularesSection({ cantores, onSelectCantor }: Props) {
   if (cantores.length === 0) return null;
 
   return (
-    <section className="mx-4 my-3 rounded-[24px] border border-[var(--border)] bg-[var(--surface)] px-[22px] py-[22px] lg:mx-0 lg:px-[26px]">
-      <p className="mb-4 text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">
-        Cantores populares
-      </p>
+    <section className="py-3">
+      <div className="mb-2 flex items-center justify-between px-4 lg:px-0">
+        <h2 className="text-sm font-semibold text-[var(--muted)]">Cantores populares</h2>
+      </div>
 
       <PaginatedCarousel
         items={cantores}
         pageSize={5}
         renderPage={(pageItems) => (
-          <div className="flex justify-between gap-3">
+          <div className="flex justify-between gap-2 px-4 lg:px-0">
             {pageItems.map((c) => (
               <button
                 key={c.id}
                 onClick={() => onSelectCantor(c.slug)}
-                className="flex w-[88px] flex-col items-center gap-2.5"
+                className="flex flex-col items-center gap-1.5"
               >
                 {c.fotoUrl ? (
                   <img
                     src={c.fotoUrl}
                     alt={c.nome}
-                    className="h-[88px] w-[88px] rounded-full object-cover"
+                    className="h-16 w-16 rounded-full border border-[var(--border)] object-cover"
                   />
                 ) : (
-                  <span className="flex h-[88px] w-[88px] items-center justify-center rounded-full bg-[var(--accent-soft)] font-display text-[30px] text-[var(--accent)]">
+                  <span className="flex h-16 w-16 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--accent-soft)] font-mono text-lg font-bold text-[var(--accent)]">
                     {c.nome.charAt(0).toUpperCase()}
                   </span>
                 )}
-                <span className="max-w-full truncate text-center text-[13px] font-semibold text-[var(--text)]">
+                <span className="max-w-[4.5rem] truncate text-center text-xs text-[var(--text)]">
                   {c.nome}
                 </span>
               </button>

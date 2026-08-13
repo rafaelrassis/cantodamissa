@@ -23,25 +23,25 @@ export function UserLoginModal({ precisaDataNascimento, onLogin, onClose, onAdmi
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 lg:items-center">
-      <div className="w-full max-w-sm rounded-t-[28px] bg-[var(--bg)] p-6 shadow-[0_12px_30px_rgba(30,42,20,0.18)] lg:rounded-[28px]">
+      <div className="w-full max-w-sm rounded-t-2xl bg-[var(--bg)] p-6 lg:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl text-[var(--text)]">
+          <h2 className="text-lg font-bold text-[var(--text)]">
             {etapa === 'inicial' ? 'Entrar' : 'Finalizar cadastro'}
           </h2>
           <button onClick={onClose} aria-label="Fechar" className="text-[var(--muted)]">
-            <X size={20} strokeWidth={2.75} />
+            <X size={20} />
           </button>
         </div>
 
         {etapa === 'inicial' ? (
           <>
-            <p className="mb-4 text-[13.5px] leading-[1.5] text-[var(--muted)]">
+            <p className="mb-4 text-sm text-[var(--muted)]">
               Entre para salvar músicas offline e participar de repertórios compartilhados.
             </p>
 
             <button
               onClick={handleEntrarComGoogle}
-              className="flex w-full items-center justify-center gap-3 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-[11px] text-sm font-semibold text-[var(--text)] hover:bg-[var(--surface2)]"
+              className="flex w-full items-center justify-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-medium text-[var(--text)] shadow-[var(--shadow)] transition hover:shadow-md"
             >
               <GoogleIcon />
               Entrar com Google
@@ -61,7 +61,7 @@ export function UserLoginModal({ precisaDataNascimento, onLogin, onClose, onAdmi
         ) : (
           <>
             <p className="mb-4 flex items-start gap-2 text-sm text-[var(--muted)]">
-              <Cake size={16} strokeWidth={2.75} className="mt-0.5 shrink-0 text-[var(--accent)]" />
+              <Cake size={16} className="mt-0.5 shrink-0 text-[var(--accent)]" />
               Sua data de nascimento é usada pra mostrar seu aniversário para o seu ministério, se você
               participar de um.
             </p>
@@ -73,13 +73,13 @@ export function UserLoginModal({ precisaDataNascimento, onLogin, onClose, onAdmi
               value={dataNascimento}
               onChange={(e) => setDataNascimento(e.target.value)}
               max={new Date().toISOString().slice(0, 10)}
-              className="w-full rounded-full border border-[var(--border)] bg-[var(--surface)] px-[18px] py-[11px] text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
             />
 
             <button
               onClick={() => onLogin(dataNascimento)}
               disabled={!dataNascimento}
-              className="mt-4 w-full rounded-full bg-[var(--accent)] py-3 text-sm font-bold text-[var(--accent-fg)] disabled:opacity-40"
+              className="mt-4 w-full rounded-lg bg-[var(--accent)] py-2.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-40"
             >
               Concluir cadastro
             </button>

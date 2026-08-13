@@ -25,14 +25,14 @@ export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala, souAdmin }:
   const restantes = listaCompleta.length - lista.length;
 
   return (
-    <div className="pb-24 lg:px-4">
-      <div className="mx-4 mt-3 flex gap-1 rounded-full bg-[var(--surface)] p-1 text-[12.5px] font-bold lg:mx-0">
+    <div className="pb-24">
+      <div className="mx-4 mt-3 flex gap-1 rounded-full bg-[var(--surface)] p-1 text-xs font-semibold">
         <button
           onClick={() => {
             setAba('proximas');
             setVerTudo(false);
           }}
-          className={`flex-1 rounded-full py-[9px] transition ${
+          className={`flex-1 rounded-full py-2 transition ${
             aba === 'proximas' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
           }`}
         >
@@ -43,7 +43,7 @@ export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala, souAdmin }:
             setAba('anteriores');
             setVerTudo(false);
           }}
-          className={`flex-1 rounded-full py-[9px] transition ${
+          className={`flex-1 rounded-full py-2 transition ${
             aba === 'anteriores' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
           }`}
         >
@@ -52,21 +52,21 @@ export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala, souAdmin }:
       </div>
 
       {lista.length === 0 ? (
-        <p className="mt-10 px-4 text-center text-sm text-[var(--muted)] lg:px-0">
+        <p className="mt-10 px-4 text-center text-sm text-[var(--muted)]">
           Lista vazia. Toque em ( + ) para cadastrar uma escala.
         </p>
       ) : (
-        <ul className="mt-4 space-y-2 px-4 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 lg:px-0 xl:grid-cols-3">
+        <ul className="mt-4 space-y-2 px-4">
           {lista.map((e) => {
             const confirmados = e.participantes.filter((p) => p.status === 'confirmado').length;
             return (
               <li key={e.id}>
                 <button
                   onClick={() => onAbrirEscala(e.id)}
-                  className="flex w-full items-center gap-3 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] px-4 py-[11px] text-left"
+                  className="flex w-full items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-left"
                 >
-                  <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-2xl bg-[var(--accent)] text-[var(--accent-fg)]">
-                    <span className="text-[10px] font-bold uppercase leading-none">
+                  <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-[var(--accent)] text-[var(--accent-fg)]">
+                    <span className="text-[10px] font-semibold uppercase leading-none">
                       {formatarDataCurta(e.data).split(' ')[1]}
                     </span>
                     <span className="text-base font-extrabold leading-none">
@@ -91,7 +91,7 @@ export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala, souAdmin }:
             <li>
               <button
                 onClick={() => setVerTudo(true)}
-                className="w-full rounded-[20px] border border-dashed border-[var(--border)] py-3 text-center text-sm font-bold text-[var(--accent)]"
+                className="w-full rounded-xl border border-dashed border-[var(--border)] py-3 text-center text-sm font-semibold text-[var(--accent)]"
               >
                 Ver mais {restantes}
               </button>
@@ -104,9 +104,9 @@ export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala, souAdmin }:
         <button
           onClick={onCriarEscala}
           aria-label="Nova escala"
-          className="fixed bottom-24 right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[0_8px_20px_rgba(30,42,20,.24)] lg:bottom-8 lg:right-8"
+          className="fixed bottom-24 right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)]"
         >
-          <Plus size={22} strokeWidth={2.75} />
+          <Plus size={22} />
         </button>
       )}
     </div>

@@ -27,7 +27,7 @@ interface Props {
 export function CifraBottomSheet(props: Props) {
   return (
     <div
-      className={`fixed inset-x-0 z-20 rounded-t-[28px] rounded-b-[36px] border border-[var(--border)] bg-[var(--surface)] p-5 pb-7 shadow-[0_-18px_40px_rgba(30,42,20,0.14)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] lg:hidden ${
+      className={`fixed inset-x-0 z-20 rounded-t-[22px] border-t border-[var(--border)] bg-[var(--surface)] p-5 pb-7 shadow-[0_-18px_40px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] lg:hidden ${
         props.open ? 'translate-y-0' : 'translate-y-[130%]'
       }`}
       style={{ bottom: 86 }}
@@ -57,19 +57,19 @@ export function CifraBottomSheet(props: Props) {
         <button
           onClick={props.onDecCapo}
           aria-label="Diminuir capo"
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
         >
-          <Minus size={18} strokeWidth={2.75} />
+          <Minus size={18} />
         </button>
-        <div className="flex h-12 flex-1 items-center justify-center rounded-[18px] border border-[var(--border)] bg-[var(--bg)] font-mono text-sm text-[var(--text)]">
+        <div className="flex h-12 flex-1 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] font-mono text-sm text-[var(--text)]">
           {props.capoLabel}
         </div>
         <button
           onClick={props.onIncCapo}
           aria-label="Aumentar capo"
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
         >
-          <Plus size={18} strokeWidth={2.75} />
+          <Plus size={18} />
         </button>
       </div>
 
@@ -78,12 +78,12 @@ export function CifraBottomSheet(props: Props) {
           {props.diagrams ? 'acordes visíveis' : 'acordes ocultos'}
         </SheetToggle>
         <SheetToggle active={props.theme === 'dark'} onClick={props.onToggleTheme}>
-          {props.theme === 'dark' ? <Moon size={16} strokeWidth={2.75} /> : <Sun size={16} strokeWidth={2.75} />}
+          {props.theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
           {props.theme === 'dark' ? 'modo escuro' : 'modo claro'}
         </SheetToggle>
       </div>
 
-      <div className="mb-4 flex items-center justify-between rounded-[18px] border border-[var(--border)] px-[14px] py-[9px]">
+      <div className="mb-4 flex items-center justify-between rounded-xl border border-[var(--border)] px-3 py-2">
         <span className="text-sm font-medium text-[var(--text)]">Adicionar ao repertório</span>
         <AddToRepertorioMenu
           musica={props.musica}
@@ -94,21 +94,21 @@ export function CifraBottomSheet(props: Props) {
 
       <button
         onClick={props.onCompartilhar}
-        className="mb-4 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] text-sm font-bold text-[var(--text)]"
+        className="mb-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm font-semibold text-[var(--text)]"
       >
-        <Share2 size={16} strokeWidth={2.75} /> Compartilhar
+        <Share2 size={16} /> Compartilhar
       </button>
 
       {props.awakeSupported && (
         <button
           onClick={props.onToggleAwake}
-          className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold ${
+          className={`flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold ${
             props.awakeActive
               ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
               : 'border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]'
           }`}
         >
-          <Sunrise size={16} strokeWidth={2.75} />
+          <Sunrise size={16} />
           {props.awakeActive ? 'tela sempre acesa · ativo' : 'manter tela acesa'}
         </button>
       )}
@@ -128,7 +128,7 @@ function SheetToggle({
   return (
     <button
       onClick={onClick}
-      className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-[18px] text-xs font-bold ${
+      className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-xl text-xs font-semibold ${
         active
           ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
           : 'border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]'

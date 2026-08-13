@@ -31,28 +31,24 @@ export function PanoramaTela({ escalas, repertorios, indisponibilidades, totalMe
   );
 
   return (
-    <div className="px-4 py-4 lg:px-8 lg:py-6">
-      <div className="grid grid-cols-3 gap-[10px]">
-        <Card titulo="Membros escalados" valor={`${membrosEscalados.size}/${totalMembros}`} sub={`${pctEscalados}%`} />
-        <Card titulo="Total de escalações" valor={String(totalEscalacoes)} />
-        <Card titulo="Confirmações" valor={`${pctConfirmacao}%`} sub={`${totalConfirmados}/${totalEscalacoes}`} />
-        <Card titulo="Faltas" valor={String(totalFaltas)} />
-        <Card titulo="Indisponibilidades" valor={String(indisponibilidades.length)} />
-        <Card titulo="Escalas cadastradas" valor={String(escalas.length)} />
-      </div>
+    <div className="grid grid-cols-2 gap-3 px-4 py-4">
+      <Card titulo="Membros escalados" valor={`${membrosEscalados.size}/${totalMembros}`} sub={`${pctEscalados}%`} />
+      <Card titulo="Total de escalações" valor={String(totalEscalacoes)} />
+      <Card titulo="Confirmações de presença" valor={`${pctConfirmacao}%`} sub={`${totalConfirmados}/${totalEscalacoes}`} />
+      <Card titulo="Faltas" valor={String(totalFaltas)} />
+      <Card titulo="Indisponibilidades" valor={String(indisponibilidades.length)} />
+      <Card titulo="Escalas cadastradas" valor={String(escalas.length)} />
 
-      <div className="mt-3 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-4">
-        <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
-          Relatório de músicas
-        </p>
+      <div className="col-span-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Relatório de músicas</p>
         {Object.keys(musicasCount).length === 0 ? (
           <p className="text-sm text-[var(--muted)]">Nenhuma música escalada ainda.</p>
         ) : (
-          <ul className="flex flex-col">
+          <ul className="space-y-1.5">
             {Object.entries(musicasCount).map(([id, info]) => (
-              <li key={id} className="flex items-center justify-between py-[5px] text-sm">
+              <li key={id} className="flex items-center justify-between text-sm">
                 <span className="text-[var(--text)]">{info.title}</span>
-                <span className="font-bold text-[var(--accent)]">{info.count}x</span>
+                <span className="font-semibold text-[var(--accent)]">{info.count}x</span>
               </li>
             ))}
           </ul>
@@ -64,10 +60,10 @@ export function PanoramaTela({ escalas, repertorios, indisponibilidades, totalMe
 
 function Card({ titulo, valor, sub }: { titulo: string; valor: string; sub?: string }) {
   return (
-    <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-4">
-      <p className="font-display text-[26px] leading-[1.1] text-[var(--text)]">{valor}</p>
-      <p className="mt-1.5 text-xs font-semibold leading-[1.3] text-[var(--text)]">{titulo}</p>
-      {sub && <p className="mt-px text-[10.5px] text-[var(--muted)]">{sub}</p>}
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+      <p className="text-2xl font-extrabold text-[var(--text)]">{valor}</p>
+      <p className="mt-1 text-xs font-semibold text-[var(--text)]">{titulo}</p>
+      {sub && <p className="text-[10px] text-[var(--muted)]">{sub}</p>}
     </div>
   );
 }

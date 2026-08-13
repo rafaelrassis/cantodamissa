@@ -35,15 +35,15 @@ export function TopMusicasTela({ onBack, onSelectMusica }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="bg-[var(--accent)] px-4 py-5 text-[var(--accent-fg)] lg:px-10 lg:pb-6">
+      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
         <button onClick={onBack} className="mb-2 flex items-center gap-1 text-xs opacity-80">
-          <ChevronLeft size={14} strokeWidth={2.75} /> Voltar
+          <ChevronLeft size={14} /> Voltar
         </button>
-        <h1 className="text-[30px]">Músicas em alta</h1>
-        <p className="mt-1 text-[14.5px] opacity-85">Top 50 mais tocadas</p>
+        <h1 className="text-xl font-extrabold tracking-tight">Músicas em alta</h1>
+        <p className="mt-0.5 text-sm opacity-80">Top 50 mais tocadas</p>
       </header>
 
-      <div className="mx-auto max-w-3xl lg:my-[26px] lg:rounded-[24px] lg:border lg:border-[var(--border)]">
+      <div className="mx-auto max-w-3xl lg:my-6 lg:rounded-2xl lg:border lg:border-[var(--border)]">
         {carregando && (
           <p className="px-4 py-6 text-center text-sm text-[var(--muted)]">carregando…</p>
         )}
