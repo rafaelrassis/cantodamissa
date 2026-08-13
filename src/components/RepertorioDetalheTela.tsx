@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, Download, GripVertical, Plus, Share2, Trash2, X } from 'lucide-react';
+import { CloudDownload, ChevronLeft, Download, GripVertical, Plus, Share2, Trash2, X } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import type { Repertorio } from '../lib/repertorios';
 import { RITO_SEM_SECAO } from '../lib/repertorios';
@@ -48,6 +48,7 @@ export function RepertorioDetalheTela({
   const [ordem, setOrdem] = useState<string[]>(repertorio.ritos);
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const [statusOffline, setStatusOffline] = useState<'ocioso' | 'baixando' | 'pronto' | 'erro'>('ocioso');
 
   async function excluir() {
     if (!confirmandoExclusao) {
@@ -124,6 +125,28 @@ export function RepertorioDetalheTela({
     URL.revokeObjectURL(url);
   }
 
+  /**
+   * "Baixar pra usar offline" de verdade: força buscar (e cachear via
+   * service worker — ver runtimeCaching em vite.config.ts) a cifra
+   * completa de cada música do repertório. Sem isso, só a lista (nome,
+   * cantor, tom) fica salva — a letra/cifra em si só é buscada quando o
+   * ministro abre a música pra tocar, o que falha sem sinal se nunca foi
+   * aberta antes. Pensado pro caso de uso real: abrir essa tela em casa
+   * (com wifi) antes de ir pra missa.
+   */
+  async function disponibilizarOffline() {
+    setStatusOffline('baixando');
+    try {
+      await Promise.all(repertorio.itens.map((item) => getMusicaById(item.musicaId)));
+      setStatusOffline('pronto');
+      setTimeout(() => setStatusOffline('ocioso'), 3000);
+    } catch (err) {
+      console.error('disponibilizar offline:', err);
+      setStatusOffline('erro');
+      setTimeout(() => setStatusOffline('ocioso'), 3000);
+    }
+  }
+
   // ---------- arrastar pra reordenar ritos ----------
   const linhaRefs = useRef(new Map<string, HTMLDivElement>());
   const [arrastando, setArrastando] = useState<string | null>(null);
@@ -189,6 +212,23 @@ export function RepertorioDetalheTela({
               className="flex h-9 w-9 items-center justify-center rounded-full bg-white/16"
             >
               <Download size={16} />
+            </button>
+            <button
+              onClick={disponibilizarOffline}
+              disabled={statusOffline === 'baixando'}
+              aria-label="Disponibilizar offline"
+              title={
+                statusOffline === 'pronto'
+                  ? 'Disponível offline'
+                  : statusOffline === 'erro'
+                    ? 'Falha ao baixar — tente com sinal'
+                    : 'Baixar pra usar sem internet'
+              }
+              className={`flex h-9 w-9 items-center justify-center rounded-full ${
+                statusOffline === 'pronto' ? 'bg-emerald-500' : statusOffline === 'erro' ? 'bg-red-500' : 'bg-white/16'
+              }`}
+            >
+              <CloudDownload size={16} className={statusOffline === 'baixando' ? 'animate-pulse' : ''} />
             </button>
             {podeEditar && !ocultarExcluir && (
               <button
