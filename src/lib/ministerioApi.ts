@@ -10,7 +10,7 @@
 
 import { supabase } from './supabase';
 import { getDeviceKey } from './repertorios';
-import { garantirSessaoAnonima } from './supabaseAuth';
+import { garantirSessaoAnonima, obterAuthUidReal } from './supabaseAuth';
 import type { FuncaoMinisterio, MembroMinisterio, SolicitacaoIngresso } from '../types/ministerio';
 
 export const FUNCOES_PADRAO: Omit<FuncaoMinisterio, 'id'>[] = [
@@ -70,19 +70,31 @@ export async function buscarMeuMinisterio(): Promise<MinisterioIdentidade | null
  * Lista todos os ministérios (até LIMITE_MINISTERIOS) aos quais este
  * device_key pertence, em ordem de ingresso. Usado pelo seletor de
  * ministério (trocar/adicionar) — ver useMinisterio.ts.
+ *
+ * Se a sessão for uma conta Google de verdade (não anônima), também
+ * busca por auth_uid — é o que faz "logar num aparelho novo" reconhecer
+ * o ministério sem depender do device_key local daquele aparelho (ver
+ * obterAuthUidReal em supabaseAuth.ts).
  */
 export async function listarMeusMinisterios(): Promise<MinisterioResumo[]> {
   const deviceKey = getDeviceKey();
-  const { data, error } = await supabase
-    .from('ministerio_membros')
-    .select('ministerio_id, criado_em, ministerios(id, nome)')
-    .eq('device_key', deviceKey)
-    .order('criado_em', { ascending: true });
+  const authUid = await obterAuthUidReal();
+  let query = supabase.from('ministerio_membros').select('ministerio_id, criado_em, ministerios(id, nome)');
+  query = authUid ? query.or(`device_key.eq.${deviceKey},auth_uid.eq.${authUid}`) : query.eq('device_key', deviceKey);
+  const { data, error } = await query.order('criado_em', { ascending: true });
   if (error) throw error;
   const resultado: MinisterioResumo[] = [];
+  const idsVistos = new Set<string>();
   for (const m of data ?? []) {
     const mn = Array.isArray(m.ministerios) ? m.ministerios[0] : m.ministerios;
-    if (mn) resultado.push({ id: mn.id as string, nome: mn.nome as string, foto: null });
+    // dedupe: se a pessoa tem uma linha "órfã" por device_key e outra já
+    // vinculada por auth_uid no mesmo ministério, a busca .or() traria as
+    // duas — só a primeira ocorrência importa aqui (é só o resumo p/ o
+    // seletor, não o membro em si).
+    if (mn && !idsVistos.has(mn.id as string)) {
+      idsVistos.add(mn.id as string);
+      resultado.push({ id: mn.id as string, nome: mn.nome as string, foto: null });
+    }
   }
   return resultado;
 }
@@ -92,15 +104,16 @@ export async function buscarMinisterioPorId(ministerioId: string): Promise<Minis
   const authUid = await garantirSessaoAnonima();
   const deviceKey = getDeviceKey();
 
-  // Self-heal: vincula esta sessão anônima ao membro (ver
-  // 0011_ministerio_rls_admin.sql) — sem isso as policies de admin não
-  // reconhecem este device.
-  const { data: meuMembro } = await supabase
-    .from('ministerio_membros')
-    .select('id, auth_uid')
-    .eq('ministerio_id', ministerioId)
-    .eq('device_key', deviceKey)
-    .maybeSingle();
+  // Self-heal: vincula esta sessão ao membro (ver 0011_ministerio_rls_admin.sql)
+  // — sem isso as policies de admin não reconhecem este device/conta.
+  // Busca por device_key (aparelho já conhecido) OU por auth_uid (conta
+  // Google já linkada em outro aparelho, ainda não neste device_key) —
+  // o que encontrar primeiro é "eu".
+  let query = supabase.from('ministerio_membros').select('id, auth_uid').eq('ministerio_id', ministerioId);
+  query = authUid ? query.or(`device_key.eq.${deviceKey},auth_uid.eq.${authUid}`) : query.eq('device_key', deviceKey);
+  const { data: meusMembros } = await query;
+  const meuMembro =
+    (meusMembros ?? []).find((m) => m.auth_uid === authUid) ?? (meusMembros ?? [])[0] ?? null;
   if (meuMembro && authUid && meuMembro.auth_uid !== authUid) {
     await supabase.from('ministerio_membros').update({ auth_uid: authUid }).eq('id', meuMembro.id);
   }
@@ -109,12 +122,13 @@ export async function buscarMinisterioPorId(ministerioId: string): Promise<Minis
 }
 
 async function carregarMinisterio(ministerioId: string): Promise<MinisterioIdentidade> {
+  const authUid = await obterAuthUidReal();
   const [{ data: ministerio, error: e1 }, { data: membrosRaw, error: e2 }, { data: funcoesRaw, error: e3 }, { data: solicitacoesRaw, error: e4 }] =
     await Promise.all([
       supabase.from('ministerios').select('*').eq('id', ministerioId).single(),
       supabase
         .from('ministerio_membros')
-        .select('id, nome, avatar_cor, admin, aniversario, device_key, membro_funcoes(funcao_id)')
+        .select('id, nome, avatar_cor, admin, aniversario, device_key, auth_uid, membro_funcoes(funcao_id)')
         .eq('ministerio_id', ministerioId),
       supabase.from('funcoes').select('*').eq('ministerio_id', ministerioId),
       supabase
@@ -137,7 +151,14 @@ async function carregarMinisterio(ministerioId: string): Promise<MinisterioIdent
     aniversario: m.aniversario ?? undefined,
     funcoes: (m.membro_funcoes ?? []).map((mf: { funcao_id: string }) => mf.funcao_id),
   }));
-  const meuMembroId = (membrosRaw ?? []).find((m) => m.device_key === deviceKey)?.id ?? null;
+  // Prioriza o match por auth_uid (conta Google, vale em qualquer
+  // aparelho) — só cai pro device_key se não houver sessão real ou não
+  // houver match por auth_uid ainda (ex: acabou de logar, self-heal de
+  // buscarMinisterioPorId roda antes disso, mas por garantia).
+  const meuMembroId: string | null =
+    (authUid ? (membrosRaw ?? []).find((m) => m.auth_uid === authUid)?.id : undefined) ??
+    (membrosRaw ?? []).find((m) => m.device_key === deviceKey)?.id ??
+    null;
 
   return {
     id: ministerio!.id,
