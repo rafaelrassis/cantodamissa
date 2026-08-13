@@ -12,6 +12,7 @@ import { BuscaTela } from './components/BuscaTela';
 import { MinisterioTela } from './components/ministerio/MinisterioTela';
 import { UserLoginModal } from './components/UserLoginModal';
 import { CompletarPerfilModal } from './components/CompletarPerfilModal';
+import { AtualizacaoDisponivelBanner } from './components/AtualizacaoDisponivelBanner';
 import { AlertaTopo } from './components/AlertaTopo';
 import { BottomNavBar } from './components/BottomNavBar';
 import { useTheme } from './lib/useTheme';
@@ -19,6 +20,7 @@ import { useRepertorios } from './lib/useRepertorios';
 import { useAdminAuth } from './lib/useAdminAuth';
 import { useUserAuth } from './lib/useUserAuth';
 import { useMinisterio } from './lib/useMinisterio';
+import { useServiceWorkerAtualizacao } from './lib/useServiceWorkerAtualizacao';
 import type { Musica, TempoLiturgico } from './types/musica';
 
 const MIN_FONT = 15;
@@ -62,6 +64,7 @@ function App() {
     definirDataNascimento,
   } = useUserAuth();
   const { isAdmin } = useAdminAuth(userEmail);
+  const { precisaAtualizar, atualizarAgora } = useServiceWorkerAtualizacao();
   const [loginParaMinisterioAberto, setLoginParaMinisterioAberto] = useState(false);
   const [perfilPulado, setPerfilPulado] = useState(false);
 
@@ -158,6 +161,7 @@ function App() {
           />
         )}
         {conteudo}
+        {precisaAtualizar && <AtualizacaoDisponivelBanner onAtualizar={atualizarAgora} />}
         {!opts?.semNav && (
           <>
             <div className="h-16 lg:hidden" aria-hidden />
