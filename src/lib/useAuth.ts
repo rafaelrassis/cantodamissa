@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { supabase, isSupabaseConfigured } from './supabase';
+
+// Precisa bater com o esquema/host registrado no AndroidManifest.xml
+// (intent-filter, ver android/app/src/main/AndroidManifest.xml) e
+// cadastrado como Redirect URL no Supabase Dashboard. appId vem de
+// capacitor.config.ts.
+const REDIRECT_NATIVO = 'app.cantodamissa.mobile://login-callback';
 
 /**
  * Sessão real de usuário via Supabase Auth (Google OAuth) — login único do
@@ -8,12 +17,21 @@ import { supabase, isSupabaseConfigured } from './supabase';
  * (Authentication > Providers > Google, com Client ID/Secret do Google
  * Cloud Console) e a URL do app cadastrada em "Redirect URLs".
  *
- * Login é via redirect (não popup): `signInWithOAuth` navega pra fora do
- * app e volta com a sessão na URL, que o supabase-js já detecta sozinho
- * (detectSessionInUrl, ligado por padrão no createClient). Por isso não
- * dá pra encadear passos síncronos depois de chamar `signInWithGoogle` —
- * qualquer coisa que precise acontecer "depois do login" tem que reagir
- * à sessão aparecendo (ver App.tsx, prompt de data de nascimento).
+ * Dois fluxos diferentes conforme a plataforma:
+ *
+ * - Web: `signInWithOAuth` navega a própria aba pra fora do app e volta
+ *   com a sessão na URL, que o supabase-js já detecta sozinho
+ *   (detectSessionInUrl). Por isso não dá pra encadear passos síncronos
+ *   depois de chamar `signInWithGoogle` — qualquer coisa que precise
+ *   acontecer "depois do login" tem que reagir à sessão aparecendo (ver
+ *   App.tsx, prompt de data de nascimento).
+ *
+ * - Nativo (Android via Capacitor): não existe "voltar pra mesma aba" —
+ *   abre o navegador do sistema (Browser.open, mais seguro que WebView
+ *   pra login) com `skipBrowserRedirect` pra pegar só a URL do provider
+ *   sem navegar embutido, e escuta o deep link de volta
+ *   (REDIRECT_NATIVO) via `appUrlOpen` pra extrair os tokens da URL e
+ *   abrir a sessão manualmente com `setSession`.
  */
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
@@ -31,10 +49,45 @@ export function useAuth() {
     const { data: assinatura } = supabase.auth.onAuthStateChange((_evento, novaSessao) => {
       setSession(novaSessao);
     });
-    return () => assinatura.subscription.unsubscribe();
+
+    let removerListenerDeepLink: (() => void) | undefined;
+    if (Capacitor.isNativePlatform()) {
+      const promessaListener = CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+        if (!url.startsWith(REDIRECT_NATIVO)) return;
+        await Browser.close().catch(() => {});
+        const hash = url.split('#')[1] ?? '';
+        const params = new URLSearchParams(hash);
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        if (access_token && refresh_token) {
+          await supabase.auth.setSession({ access_token, refresh_token });
+        }
+      });
+      removerListenerDeepLink = () => {
+        promessaListener.then((h) => h.remove());
+      };
+    }
+
+    return () => {
+      assinatura.subscription.unsubscribe();
+      removerListenerDeepLink?.();
+    };
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
+    if (Capacitor.isNativePlatform()) {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: REDIRECT_NATIVO, skipBrowserRedirect: true },
+      });
+      if (error) {
+        // eslint-disable-next-line no-console
+        console.error('Falha ao iniciar login Google (nativo):', error);
+        return;
+      }
+      if (data.url) await Browser.open({ url: data.url });
+      return;
+    }
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin },
