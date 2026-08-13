@@ -254,25 +254,25 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-[var(--surface)] p-5 text-[var(--text)]">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[28px] bg-[var(--surface)] p-6 text-[var(--text)] shadow-[var(--shadow)]">
+        <div className="mb-5 flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold">Upload em massa de cifras</h2>
-            <p className="text-xs text-[var(--muted)]">
-              Sobe os arquivos pra pasta <code>{PASTA_BASE}/</code> no Blob, organizados por cantor.
-              PDFs com texto real têm a cifra extraída automaticamente (revise antes de enviar) e a
+            <h2 className="text-xl">Upload em massa de cifras</h2>
+            <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
+              Sobe os arquivos pra pasta <code className="font-mono">{PASTA_BASE}/</code> no Blob, organizados por
+              cantor. PDFs com texto real têm a cifra extraída automaticamente (revise antes de enviar) e a
               música já é criada no banco; imagens e PDFs sem texto extraível só ficam guardados como
               referência. Nome da música e do cantor são obrigatórios pra cada arquivo.
             </p>
           </div>
           <button onClick={onFechar} className="shrink-0 text-[var(--muted)] hover:text-[var(--text)]">
-            <X size={20} />
+            <X size={18} strokeWidth={2.75} />
           </button>
         </div>
 
-        <div className="mb-4 flex gap-2">
-          <label className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-[var(--border)] px-3 py-3 text-sm">
-            <Files size={16} /> Selecionar arquivos
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row">
+          <label className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[20px] border border-dashed border-[var(--border)] bg-[var(--bg)] px-3 py-3.5 text-[13.5px] font-semibold">
+            <Files size={16} strokeWidth={2.75} /> Selecionar arquivos
             <input
               type="file"
               multiple
@@ -281,8 +281,8 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
               onChange={(e) => adicionarArquivos(e.target.files)}
             />
           </label>
-          <label className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-[var(--border)] px-3 py-3 text-sm">
-            <FolderUp size={16} /> Selecionar pasta (com subpastas)
+          <label className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[20px] border border-dashed border-[var(--border)] bg-[var(--bg)] px-3 py-3.5 text-[13.5px] font-semibold">
+            <FolderUp size={16} strokeWidth={2.75} /> Selecionar pasta (com subpastas)
             <input
               type="file"
               multiple
@@ -292,8 +292,8 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
               onChange={(e) => adicionarArquivos(e.target.files)}
             />
           </label>
-          <label className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-[var(--border)] px-3 py-3 text-sm">
-            <FileArchive size={16} /> Selecionar .zip
+          <label className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[20px] border border-dashed border-[var(--border)] bg-[var(--bg)] px-3 py-3.5 text-[13.5px] font-semibold">
+            <FileArchive size={16} strokeWidth={2.75} /> Selecionar .zip
             <input
               type="file"
               multiple
@@ -306,7 +306,7 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
 
         {processandoZip && (
           <p className="mb-3 flex items-center gap-1.5 text-xs text-[var(--muted)]">
-            <Loader2 size={12} className="animate-spin" /> Descompactando zip...
+            <Loader2 size={12} strokeWidth={2.75} className="animate-spin" /> Descompactando zip...
           </p>
         )}
 
@@ -319,15 +319,15 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
         {itens.length > 0 && (
           <div className="space-y-2">
             {itens.map((item) => (
-              <div key={item.id} className="rounded-lg border border-[var(--border)] p-2">
+              <div key={item.id} className="rounded-[20px] border border-[var(--border)] bg-[var(--bg)] p-3">
                 <div className="flex items-center gap-2">
                   <div className="w-6 shrink-0 text-center">
-                    {item.status === 'ok' && <CheckCircle2 size={16} className="text-green-600" />}
+                    {item.status === 'ok' && <CheckCircle2 size={16} strokeWidth={2.75} className="text-green-600" />}
                     {(item.status === 'enviando' || item.status === 'extraindo') && (
-                      <Loader2 size={16} className="animate-spin" />
+                      <Loader2 size={16} strokeWidth={2.75} className="animate-spin" />
                     )}
-                    {item.status === 'erro' && <XCircle size={16} className="text-red-600" />}
-                    {item.status === 'duplicada' && <Copy size={16} className="text-amber-600" />}
+                    {item.status === 'erro' && <XCircle size={16} strokeWidth={2.75} className="text-[#a3111d]" />}
+                    {item.status === 'duplicada' && <Copy size={16} strokeWidth={2.75} className="text-[#8a651a]" />}
                   </div>
                   <p className="w-32 shrink-0 truncate text-xs text-[var(--muted)]" title={item.file.name}>
                     {item.file.name}
@@ -337,8 +337,8 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
                     value={item.musica}
                     disabled={enviando}
                     onChange={(e) => atualizarCampo(item.id, 'musica', e.target.value)}
-                    className={`min-w-0 flex-1 rounded-md border bg-transparent px-2 py-1.5 text-sm ${
-                      !item.musica.trim() ? 'border-red-500/50' : 'border-[var(--border)]'
+                    className={`min-w-0 flex-1 rounded-full border bg-transparent px-3.5 py-2 text-sm outline-none focus:border-[var(--accent)] ${
+                      !item.musica.trim() ? 'border-[#a3111d]/50' : 'border-[var(--border)]'
                     }`}
                   />
                   <input
@@ -346,33 +346,33 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
                     value={item.cantor}
                     disabled={enviando}
                     onChange={(e) => atualizarCampo(item.id, 'cantor', e.target.value)}
-                    className={`min-w-0 flex-1 rounded-md border bg-transparent px-2 py-1.5 text-sm ${
-                      !item.cantor.trim() ? 'border-red-500/50' : 'border-[var(--border)]'
+                    className={`min-w-0 flex-1 rounded-full border bg-transparent px-3.5 py-2 text-sm outline-none focus:border-[var(--accent)] ${
+                      !item.cantor.trim() ? 'border-[#a3111d]/50' : 'border-[var(--border)]'
                     }`}
                   />
                   <button
                     onClick={() => removerItem(item.id)}
                     disabled={enviando}
-                    className="shrink-0 rounded-md p-1.5 text-red-600 hover:bg-red-500/10 disabled:opacity-30"
+                    className="shrink-0 rounded-full p-1.5 text-[#a3111d] hover:bg-[#a3111d]/10 disabled:opacity-30"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={14} strokeWidth={2.75} />
                   </button>
                 </div>
 
                 {item.file.type === 'application/pdf' && item.status !== 'extraindo' && (
-                  <div className="mt-1.5 pl-8">
+                  <div className="mt-2 pl-8">
                     {item.chordsContent.trim() ? (
                       <button
                         type="button"
                         onClick={() => atualizarItem(item.id, { mostrarCifra: !item.mostrarCifra })}
-                        className="flex items-center gap-1 text-xs text-[var(--accent)] hover:underline"
+                        className="flex items-center gap-1 text-xs font-semibold text-[var(--accent)] hover:underline"
                       >
-                        {item.mostrarCifra ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                        {item.mostrarCifra ? <ChevronDown size={12} strokeWidth={2.75} /> : <ChevronRight size={12} strokeWidth={2.75} />}
                         Cifra extraída — revisar antes de enviar
                       </button>
                     ) : (
-                      <p className="flex items-center gap-1 text-xs text-amber-600">
-                        <AlertTriangle size={12} /> Sem texto extraído — só o arquivo será guardado
+                      <p className="flex items-center gap-1 text-xs text-[#8a651a]">
+                        <AlertTriangle size={12} strokeWidth={2.75} /> Sem texto extraído — só o arquivo será guardado
                         (edite manualmente depois)
                       </p>
                     )}
@@ -382,7 +382,7 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
                         disabled={enviando}
                         onChange={(e) => atualizarCampo(item.id, 'chordsContent', e.target.value)}
                         rows={8}
-                        className="mt-1.5 w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 font-mono text-xs"
+                        className="mt-2 w-full rounded-[18px] border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 font-mono text-xs outline-none focus:border-[var(--accent)]"
                       />
                     )}
                   </div>
@@ -390,8 +390,8 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
 
                 {item.erro && (
                   <p
-                    className={`mt-1.5 pl-8 text-xs ${
-                      item.status === 'duplicada' ? 'text-amber-600' : 'text-red-600'
+                    className={`mt-2 pl-8 text-xs ${
+                      item.status === 'duplicada' ? 'text-[#8a651a]' : 'text-[#a3111d]'
                     }`}
                   >
                     {item.erro}
@@ -402,22 +402,25 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
           </div>
         )}
 
-        <div className="mt-5 flex items-center justify-between gap-2">
+        <div className="mt-6 flex items-center justify-between gap-2">
           <p className="text-xs text-[var(--muted)]">
             {itens.length > 0 &&
               `${enviadosOk}/${itens.length} enviado(s) · ${comCifraCount} com cifra extraída` +
                 (duplicadasCount > 0 ? ` · ${duplicadasCount} duplicada(s)` : '')}
           </p>
           <div className="flex gap-2">
-            <button onClick={onFechar} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm">
+            <button
+              onClick={onFechar}
+              className="rounded-full border border-[var(--border)] bg-[var(--bg)] px-[22px] py-[11px] text-sm font-bold"
+            >
               Fechar
             </button>
             <button
               onClick={enviarTodos}
               disabled={!todosPreenchidos || enviando || algumExtraindo}
-              className="flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-6 py-[11px] text-sm font-bold text-[var(--accent-fg)] disabled:opacity-50"
             >
-              {enviando && <Loader2 size={14} className="animate-spin" />}
+              {enviando && <Loader2 size={14} strokeWidth={2.75} className="animate-spin" />}
               Enviar todos
             </button>
           </div>

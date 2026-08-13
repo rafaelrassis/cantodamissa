@@ -3,6 +3,7 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   ChevronUp,
   Info,
@@ -138,11 +139,11 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-[var(--border)] bg-[var(--bg)] px-4 py-4 lg:px-10">
+      <header className="sticky top-0 z-10 flex items-center gap-2.5 border-b border-[var(--border)] bg-[var(--bg)] px-5 py-4 lg:px-8">
         <button onClick={voltar} aria-label="Voltar" className="text-[var(--text)]">
-          <ChevronRight size={20} className="rotate-180" />
+          <ChevronLeft size={20} strokeWidth={2.75} />
         </button>
-        <h1 className="text-lg font-extrabold tracking-tight">
+        <h1 className="text-[19px] leading-none">
           {passo === 'opcoes' && 'Ministério'}
           {passo === 'ingressar' && 'Ingressar'}
           {passo === 'cadastrar' && 'Novo ministério'}
@@ -151,32 +152,32 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
           <button
             onClick={handleSalvarMinisterio}
             disabled={!nomeMinisterio.trim() || salvandoMinisterio}
-            className="ml-auto flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-4 py-1.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-40"
+            className="ml-auto flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-[18px] py-2 text-[13.5px] font-bold text-[var(--accent-fg)] disabled:opacity-40"
           >
-            <Check size={15} /> {salvandoMinisterio ? 'Salvando...' : 'Salvar'}
+            <Check size={15} strokeWidth={2.75} /> {salvandoMinisterio ? 'Salvando...' : 'Salvar'}
           </button>
         )}
       </header>
 
-      <div className="mx-auto max-w-2xl px-4 py-6 lg:px-10">
+      <div className="mx-auto max-w-2xl px-5 py-6 lg:px-8">
         {passo === 'opcoes' && (
           <>
-            <h2 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+            <h2 className="font-sans text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
               Adicionar ministério
             </h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">
+            <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted)]">
               Você ainda não participa de nenhum ministério. Selecione uma opção para continuar:
             </p>
 
-            <div className="mt-6 flex flex-col gap-3">
+            <div className="mt-[22px] flex flex-col gap-3">
               <OpcaoCard
-                icon={<LogIn size={20} />}
+                icon={<LogIn size={20} strokeWidth={2.75} />}
                 titulo="Ingressar em um ministério"
                 descricao="Entre com o código de convite de um ministério."
                 onClick={() => setPasso('ingressar')}
               />
               <OpcaoCard
-                icon={<Plus size={20} />}
+                icon={<Plus size={20} strokeWidth={2.75} />}
                 titulo="Cadastrar novo ministério"
                 descricao="Crie um novo ministério para começar a organizar sua equipe."
                 onClick={() => setPasso('cadastrar')}
@@ -187,9 +188,9 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
 
         {passo === 'ingressar' && !solicitacaoEnviada && (
           <>
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
-              <h2 className="text-base font-bold">Informe o código do convite</h2>
-              <p className="mt-1 text-sm text-[var(--muted)]">
+            <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_4px_14px_rgba(30,42,20,0.08)]">
+              <h2 className="text-[19px]">Informe o código do convite</h2>
+              <p className="mt-1.5 text-[13.5px] leading-[1.45] text-[var(--muted)]">
                 Digite o código compartilhado pelo administrador do ministério.
               </p>
 
@@ -200,29 +201,37 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
                   setErroCodigo('');
                 }}
                 placeholder="Código do convite"
-                className="mt-4 w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2.5 text-sm tracking-wide text-[var(--text)] outline-none focus:border-[var(--accent)]"
+                className="mt-4 w-full rounded-full border border-[var(--border)] bg-[var(--bg)] px-[18px] py-3 font-mono text-sm tracking-[0.06em] text-[var(--text)] outline-none placeholder:text-[#99a390] focus:border-[var(--accent)]"
               />
-              {erroCodigo && <p className="mt-1.5 text-xs text-red-500">{erroCodigo}</p>}
+              {erroCodigo && (
+                <p className="mt-3 rounded-[16px] bg-[#fbe9e9] px-4 py-2.5 text-[13px] leading-[1.4] text-[#a3111d]">
+                  {erroCodigo}
+                </p>
+              )}
 
               <button
                 onClick={handleSolicitarEntrada}
                 disabled={!codigo.trim() || enviandoCodigo}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-50"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-3 text-sm font-bold text-[var(--accent-fg)] disabled:opacity-50"
               >
-                <Send size={15} /> Solicitar entrada
+                <Send size={15} strokeWidth={2.75} /> Solicitar entrada
               </button>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
+            <div className="mt-3.5 rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-5">
               <button
                 onClick={() => setPassoAPassoAberto((v) => !v)}
-                className="flex w-full items-center gap-2 text-left"
+                className="flex w-full items-center gap-2.5 text-left"
               >
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)]">
-                  <Info size={14} />
+                  <Info size={14} strokeWidth={2.75} />
                 </span>
                 <span className="flex-1 text-sm font-bold">Passo a passo</span>
-                {passoAPassoAberto ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                {passoAPassoAberto ? (
+                  <ChevronUp size={16} strokeWidth={2.75} className="text-[var(--muted)]" />
+                ) : (
+                  <ChevronDown size={16} strokeWidth={2.75} className="text-[var(--muted)]" />
+                )}
               </button>
 
               {passoAPassoAberto && (
@@ -247,7 +256,7 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
                       </span>
                       <span>
                         <span className="block text-sm font-semibold">{p.titulo}</span>
-                        <span className="mt-0.5 block text-sm text-[var(--muted)]">{p.texto}</span>
+                        <span className="mt-0.5 block text-[13.5px] leading-[1.45] text-[var(--muted)]">{p.texto}</span>
                       </span>
                     </li>
                   ))}
@@ -258,16 +267,16 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
         )}
 
         {passo === 'ingressar' && solicitacaoEnviada && (
-          <div className="flex flex-col items-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center shadow-[var(--shadow)]">
-            <CheckCircle2 size={40} className="text-[var(--accent)]" />
-            <h2 className="mt-3 text-base font-bold">Solicitação enviada</h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">
+          <div className="flex flex-col items-center rounded-[28px] border border-[var(--border)] bg-[var(--surface)] px-[26px] py-[34px] text-center">
+            <CheckCircle2 size={52} strokeWidth={2} className="text-[var(--accent)]" />
+            <h2 className="mt-3.5 text-[20px]">Solicitação enviada</h2>
+            <p className="mt-1.5 text-[13.5px] leading-[1.5] text-[var(--muted)]">
               Aguarde um administrador do ministério aprovar sua entrada. Você poderá tentar novamente
               a qualquer momento com um novo código.
             </p>
             <button
               onClick={onBack}
-              className="mt-5 rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold"
+              className="mt-5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-[22px] py-[11px] text-sm font-bold text-[var(--text)]"
             >
               Voltar ao início
             </button>
@@ -277,21 +286,26 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
         {passo === 'cadastrar' && (
           <>
             {erroCadastro && (
-              <p className="mb-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-500">{erroCadastro}</p>
+              <p className="mb-4 rounded-[16px] bg-[#fbe9e9] px-4 py-2.5 text-[13.5px] leading-[1.4] text-[#a3111d]">
+                {erroCadastro}
+              </p>
             )}
             <input
               value={nomeMinisterio}
               onChange={(e) => setNomeMinisterio(e.target.value)}
               placeholder="Nome do ministério *"
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
+              className="input-field w-full text-[var(--text)] placeholder:text-[#99a390] focus:outline-none"
             />
 
-            <div className="mt-6 flex items-center justify-between">
+            <div className="mt-[22px] flex items-center justify-between">
               <span>
-                <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                  Funções <span className="ml-1 rounded-full bg-[var(--surface)] px-1.5 py-0.5 text-[10px]">{funcoes.length}</span>
+                <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
+                  Funções{' '}
+                  <span className="ml-1 rounded-full bg-[var(--surface)] px-2 py-0.5 text-[10.5px] normal-case tracking-normal">
+                    {funcoes.length}
+                  </span>
                 </h3>
-                <p className="mt-0.5 text-sm text-[var(--muted)]">
+                <p className="mt-1 text-[13.5px] leading-[1.45] text-[var(--muted)]">
                   Defina os papéis que os membros poderão assumir neste ministério
                 </p>
               </span>
@@ -299,16 +313,16 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
 
             <button
               onClick={abrirNovaFuncao}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--accent)]"
+              className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-full border border-dashed border-[var(--border)] px-4 py-3 text-sm font-bold text-[var(--accent)]"
             >
-              <Plus size={15} /> Adicionar função
+              <Plus size={15} strokeWidth={2.75} /> Adicionar função
             </button>
 
-            <ul className="mt-3 flex flex-col gap-2">
+            <ul className="mt-3.5 flex flex-col gap-2">
               {funcoes.map((f) => (
                 <li
                   key={f.id}
-                  className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5"
+                  className="flex items-center gap-3 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] px-4 py-[11px]"
                 >
                   <span className="text-lg">{f.icone}</span>
                   <span className="flex-1 text-sm font-medium">{f.nome}</span>
@@ -317,14 +331,14 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
                     aria-label="Editar função"
                     className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--bg)]"
                   >
-                    <Pencil size={14} />
+                    <Pencil size={14} strokeWidth={2.75} />
                   </button>
                   <button
                     onClick={() => removerFuncao(f.id)}
                     aria-label="Remover função"
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-red-500 hover:bg-[var(--bg)]"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-[#a3111d] hover:bg-[var(--bg)]"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={14} strokeWidth={2.75} />
                   </button>
                 </li>
               ))}
@@ -350,16 +364,16 @@ function OpcaoCard({
   return (
     <button
       onClick={onClick}
-      className="flex items-start gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left shadow-[var(--shadow)] transition hover:shadow-md"
+      className="flex items-start gap-3.5 rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-4 text-left transition hover:bg-[var(--surface2)]"
     >
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)]">
         {icon}
       </span>
       <span className="flex-1">
-        <span className="block text-base font-semibold text-[var(--text)]">{titulo}</span>
-        <span className="mt-0.5 block text-sm text-[var(--muted)]">{descricao}</span>
+        <span className="block text-[15.5px] font-semibold text-[var(--text)]">{titulo}</span>
+        <span className="mt-[3px] block text-[13.5px] leading-[1.45] text-[var(--muted)]">{descricao}</span>
       </span>
-      <ChevronRight size={18} className="mt-3 shrink-0 text-[var(--muted)]" />
+      <ChevronRight size={18} strokeWidth={2.75} className="mt-2.5 shrink-0 text-[var(--muted)]" />
     </button>
   );
 }

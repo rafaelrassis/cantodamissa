@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronRight, Search, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { CalendarDays, ChevronRight, Home as HomeIcon, ListMusic, Search, X } from 'lucide-react';
 import type { Musica, MomentoMissa, TempoLiturgico } from '../types/musica';
 import type { Cantor } from '../types/cantor';
 import {
@@ -128,10 +128,10 @@ export function Home({
   }, []);
   const { criar: criarSubmissao } = useSubmissoes();
   const [formularioAberto, setFormularioAberto] = useState(false);
-  // Só o link "Repertórios" do header desktop usa isso — no mobile a
+  // Só o link "Repertórios" da nav lateral desktop usa isso — no mobile a
   // barra inferior global (App.tsx → BottomNavBar) não tem mais esse
   // atalho, e no desktop a sidebar "Meus repertórios" já fica visível o
-  // tempo todo; este sheet é só um atalho extra pro link do header.
+  // tempo todo; este sheet é só um atalho extra pro link da nav.
   const [repertorioSheetAberto, setRepertorioSheetAberto] = useState(false);
   const [loginAberto, setLoginAberto] = useState(false);
   const [personalizarAberto, setPersonalizarAberto] = useState(false);
@@ -188,20 +188,9 @@ export function Home({
       <header className="bg-[var(--accent)] text-[var(--accent-fg)]">
         {/* Nav desktop */}
         <div className="hidden items-center justify-between px-10 py-4 lg:flex">
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
-              <img src="/logo-header.png" alt="" className="h-8 w-8" />
-              Canto da Missa
-            </div>
-            <nav className="flex items-center gap-6 text-sm font-medium opacity-90">
-              <span>Músicas</span>
-              <button onClick={onAbrirCalendario} className="hover:opacity-100">
-                Calendário
-              </button>
-              <button onClick={() => setRepertorioSheetAberto(true)} className="hover:opacity-100">
-                Repertórios
-              </button>
-            </nav>
+          <div className="flex items-center gap-2 font-display text-lg">
+            <img src="/logo-header.png" alt="" className="h-8 w-8" />
+            Canto da Missa
           </div>
           <div className="flex shrink-0 items-center gap-3">
             <HeaderUsuario
@@ -219,7 +208,7 @@ export function Home({
 
         {/* Nav mobile */}
         <div className="flex items-center justify-between px-4 pt-4 lg:hidden">
-          <div className="flex items-center gap-2 text-base font-extrabold tracking-tight">
+          <div className="flex items-center gap-2 font-display text-base">
             <img src="/logo-header.png" alt="" className="h-8 w-8" />
             Canto da Missa
           </div>
@@ -237,12 +226,12 @@ export function Home({
 
         <div className="px-4 pb-5 pt-4 lg:px-10 lg:pb-6">
           {ehHoje ? (
-            <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-[var(--accent)]">
+            <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-[var(--accent-fg)] px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-[#3b4a27]">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
               Hoje é domingo
             </div>
           ) : (
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide opacity-70">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide opacity-80">
               Próximo domingo · {domingoAtual.data.toLocaleDateString('pt-BR', {
                 day: '2-digit',
                 month: 'long',
@@ -251,23 +240,21 @@ export function Home({
               {diasParaDomingo === 1 ? 'amanhã' : `daqui a ${diasParaDomingo} dias`}
             </p>
           )}
-          <h1 className="text-xl font-extrabold tracking-tight lg:text-[34px] lg:tracking-[-0.02em]">
-            {domingoAtual.nome}
-          </h1>
-          <p className="mt-0.5 text-sm opacity-80">
+          <h1 className="text-2xl lg:text-[34px]">{domingoAtual.nome}</h1>
+          <p className="mt-1 text-[14.5px] opacity-85">
             Ciclo {domingoAtual.ciclo} · {LABEL_TEMPO[domingoAtual.tempo]}
           </p>
 
-          <div className="mt-4 flex items-center gap-2 rounded-xl bg-white/15 px-4 lg:h-14 lg:rounded-2xl">
-            <Search size={18} className="shrink-0 opacity-70" />
+          <div className="mt-[18px] flex h-14 items-center gap-3 rounded-full bg-[var(--accent-fg)]/20 px-[22px]">
+            <Search size={19} strokeWidth={2.75} className="shrink-0 opacity-75" />
             <input
               ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar por título, letra ou artista..."
-              className="w-full bg-transparent py-2.5 text-sm placeholder:text-white/60 focus:outline-none lg:py-0"
+              className="w-full bg-transparent text-[15px] placeholder:text-[var(--accent-fg)]/65 focus:outline-none"
             />
-            <span className="hidden shrink-0 rounded-md bg-white/15 px-1.5 py-0.5 font-mono text-[11px] opacity-80 lg:inline">
+            <span className="hidden shrink-0 rounded-full bg-[var(--accent-fg)]/15 px-2 py-1 font-mono text-[11px] opacity-80 lg:inline">
               ⌘K
             </span>
           </div>
@@ -292,15 +279,32 @@ export function Home({
       </div>
 
       {/* Corpo */}
-      <div className="flex flex-1 flex-col lg:flex-row lg:gap-6 lg:px-10 lg:py-6">
-        <div className="flex-1">
+      <div className="flex flex-1 flex-col lg:grid lg:grid-cols-[216px_minmax(0,1fr)_344px] lg:items-start lg:gap-6 lg:px-10 lg:py-6">
+        {/* Nav lateral (desktop) */}
+        <nav className="hidden flex-col gap-1 lg:flex">
+          <SideNavItem icon={<HomeIcon size={18} strokeWidth={2.75} />} label="Músicas" active />
+          <SideNavItem
+            icon={<CalendarDays size={18} strokeWidth={2.75} />}
+            label="Calendário"
+            onClick={onAbrirCalendario}
+          />
+          <SideNavItem
+            icon={<ListMusic size={18} strokeWidth={2.75} />}
+            label="Repertórios"
+            onClick={() => setRepertorioSheetAberto(true)}
+          />
+        </nav>
+
+        <div className="min-w-0 flex-1">
           {!buscando && historico.length > 0 && (
             <div className="px-4 py-3 lg:px-0">
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[var(--muted)]">Visto recentemente</h2>
+              <div className="mb-2.5 flex items-center justify-between">
+                <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">
+                  Visto recentemente
+                </p>
                 <button
                   onClick={limparHistorico}
-                  className="text-xs text-[var(--muted)] hover:text-[var(--text)]"
+                  className="text-[13px] text-[var(--muted)] hover:text-[var(--text)]"
                 >
                   limpar
                 </button>
@@ -309,11 +313,11 @@ export function Home({
                 items={historico.slice(0, 9)}
                 pageSize={3}
                 renderPage={(pageItems) => (
-                  <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+                  <div className="lg:rounded-[24px] lg:border lg:border-[var(--border)]">
                     {pageItems.map((h) => (
                       <div
                         key={h.id}
-                        className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3 last:border-b-0"
+                        className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3.5 last:border-b-0"
                       >
                         <button
                           onClick={() => abrirDoHistorico(h.id)}
@@ -323,7 +327,7 @@ export function Home({
                             {h.title}
                           </p>
                           {h.artist && (
-                            <p className="truncate text-xs text-[var(--muted)]">{h.artist}</p>
+                            <p className="truncate text-[12.5px] text-[var(--muted)]">{h.artist}</p>
                           )}
                         </button>
                         <button
@@ -331,7 +335,7 @@ export function Home({
                           aria-label={`remover ${h.title} do histórico`}
                           className="ml-2 shrink-0 text-[var(--muted)] hover:text-[var(--text)]"
                         >
-                          <X size={14} />
+                          <X size={15} strokeWidth={2.75} />
                         </button>
                       </div>
                     ))}
@@ -346,19 +350,19 @@ export function Home({
           )}
 
           <div className="flex items-center justify-between px-4 py-3 lg:px-0">
-            <h2 className="text-sm font-semibold text-[var(--muted)]">
+            <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">
               {buscando ? `Resultados para "${query}"` : listTitle}
-            </h2>
+            </p>
             {!buscando && onAbrirTopMusicas ? (
               <button
                 onClick={onAbrirTopMusicas}
                 aria-label="Ver top 50 completo"
                 className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface)]"
               >
-                <ChevronRight size={16} />
+                <ChevronRight size={16} strokeWidth={2.75} />
               </button>
             ) : (
-              <span className="text-xs text-[var(--muted)]">
+              <span className="text-[12.5px] text-[var(--muted)]">
                 {carregando ? 'carregando…' : `${resultados.length} músicas`}
               </span>
             )}
@@ -371,7 +375,7 @@ export function Home({
           )}
 
           {buscando ? (
-            <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+            <div className="lg:rounded-[24px] lg:border lg:border-[var(--border)]">
               {resultados.map((musica) => (
                 <MusicaCard
                   key={musica.id}
@@ -388,7 +392,7 @@ export function Home({
               items={resultados}
               pageSize={5}
               renderPage={(pageItems, pageIndex) => (
-                <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+                <div className="lg:rounded-[24px] lg:border lg:border-[var(--border)]">
                   {pageItems.map((musica, i) => (
                     <MusicaCard
                       key={musica.id}
@@ -407,25 +411,25 @@ export function Home({
           {!buscando && (
             <div className="mt-6">
               <div className="flex items-center justify-between px-4 py-3 lg:px-0">
-                <h2 className="text-sm font-semibold text-[var(--muted)]">
+                <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">
                   Artistas mais ouvidos
-                </h2>
+                </p>
                 {onAbrirTopArtistas && (
                   <button
                     onClick={onAbrirTopArtistas}
                     aria-label="Ver top 20 artistas"
                     className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface)]"
                   >
-                    <ChevronRight size={16} />
+                    <ChevronRight size={16} strokeWidth={2.75} />
                   </button>
                 )}
               </div>
-              <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+              <div className="lg:rounded-[24px] lg:border lg:border-[var(--border)]">
                 {artistas.map((a, i) => (
                   <button
                     key={a.artist}
                     onClick={() => onSelectArtista?.(a.artist)}
-                    className="flex w-full items-center gap-3 border-b border-[var(--border)] px-4 py-3 text-left last:border-b-0 hover:bg-[var(--surface)]"
+                    className="flex w-full items-center gap-3.5 border-b border-[var(--border)] px-5 py-3.5 text-left last:border-b-0 hover:bg-[var(--surface)]"
                   >
                     <span className="w-6 shrink-0 text-right font-mono text-sm text-[var(--muted)]">
                       {i + 1}
@@ -434,10 +438,10 @@ export function Home({
                       {a.artist.charAt(0).toUpperCase()}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[var(--text)]">
+                      <p className="truncate text-[15px] font-semibold text-[var(--text)]">
                         {a.artist}
                       </p>
-                      <p className="truncate text-xs text-[var(--muted)]">
+                      <p className="truncate text-[12.5px] text-[var(--muted)]">
                         {a.songCount} música{a.songCount === 1 ? '' : 's'}
                       </p>
                     </div>
@@ -449,8 +453,10 @@ export function Home({
         </div>
 
         {/* Meus repertórios (desktop) */}
-        <aside className="hidden w-[340px] shrink-0 flex-col gap-3 lg:flex">
-          <h2 className="text-sm font-semibold text-[var(--muted)]">Meus repertórios</h2>
+        <aside className="hidden flex-col gap-3 lg:flex">
+          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted)]">
+            Meus repertórios
+          </p>
           <PainelRepertorios
             repertorios={repertorios}
             repertorioCompartilhado={repertorioCompartilhado}
@@ -527,13 +533,13 @@ export function Home({
       {repertorioSheetAberto && (
         <div className="fixed inset-0 z-40 flex flex-col bg-[var(--bg)]">
           <header className="flex items-center justify-between bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)]">
-            <h2 className="text-lg font-bold">Meus repertórios</h2>
+            <h2 className="text-xl">Meus repertórios</h2>
             <button
               onClick={() => setRepertorioSheetAberto(false)}
               aria-label="Fechar"
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/16"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent-fg)]/20"
             >
-              <X size={18} />
+              <X size={18} strokeWidth={2.75} />
             </button>
           </header>
           <div className="flex-1 overflow-y-auto p-4">
@@ -550,6 +556,33 @@ export function Home({
         </div>
       )}
     </div>
+  );
+}
+
+function SideNavItem({
+  icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  const Tag = onClick ? 'button' : 'div';
+  return (
+    <Tag
+      onClick={onClick}
+      className={`flex items-center gap-3 rounded-full px-3.5 py-2.5 text-left text-[14.5px] font-semibold transition-colors ${
+        active
+          ? 'bg-[var(--accent-soft)] text-[#3b4a27]'
+          : 'text-[var(--muted)] hover:bg-[var(--surface)]'
+      }`}
+    >
+      {icon}
+      {label}
+    </Tag>
   );
 }
 

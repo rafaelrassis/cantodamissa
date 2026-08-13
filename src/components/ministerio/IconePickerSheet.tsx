@@ -30,13 +30,13 @@ export function IconePickerSheet({ open, onClose, onSelecionar }: Props) {
         }`}
       />
       <div
-        className={`fixed inset-x-0 bottom-0 z-40 max-h-[75vh] rounded-t-[22px] border-t border-[var(--border)] bg-[var(--surface)] pb-6 shadow-[0_-18px_40px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        className={`fixed inset-x-0 bottom-0 z-40 max-h-[75vh] rounded-t-[28px] rounded-b-[36px] border-t border-[var(--border)] bg-[var(--surface)] pb-6 pt-3.5 shadow-[0_-18px_40px_rgba(30,42,20,.14)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           open ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
-        <div className="mx-auto mb-4 mt-3 h-1 w-11 rounded-full bg-[var(--border)]" />
+        <div className="mx-auto mb-4 h-1 w-11 rounded-full bg-[var(--border)]" />
 
-        <div className="mx-4 flex gap-1 overflow-x-auto rounded-full bg-[var(--bg)] p-1">
+        <div className="mx-[18px] flex gap-1 overflow-x-auto rounded-full bg-[var(--bg)] p-1">
           {CATEGORIAS_ICONE.map((c) => {
             const Icone = ICONE_CATEGORIA[c.id];
             return (
@@ -45,19 +45,19 @@ export function IconePickerSheet({ open, onClose, onSelecionar }: Props) {
                 onClick={() => setCategoriaAtiva(c.id)}
                 aria-label={c.label}
                 title={c.label}
-                className={`flex h-9 shrink-0 items-center justify-center rounded-full px-4 text-xs font-semibold transition ${
+                className={`flex h-9 flex-1 shrink-0 items-center justify-center rounded-full px-4 text-xs font-semibold transition ${
                   categoriaAtiva === c.id
                     ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
                     : 'text-[var(--muted)]'
                 }`}
               >
-                <Icone size={15} />
+                <Icone size={15} strokeWidth={2.75} />
               </button>
             );
           })}
         </div>
 
-        <div className="mt-4 grid max-h-[45vh] grid-cols-6 gap-1 overflow-y-auto px-4">
+        <div className="mt-4 grid max-h-[45vh] grid-cols-6 gap-1 overflow-y-auto px-[18px]">
           {categoria.emojis.map((emoji, i) => (
             <button
               key={`${categoria.id}-${i}`}
@@ -65,7 +65,7 @@ export function IconePickerSheet({ open, onClose, onSelecionar }: Props) {
                 onSelecionar(emoji);
                 onClose();
               }}
-              className="flex aspect-square items-center justify-center rounded-xl text-2xl hover:bg-[var(--bg)]"
+              className="flex aspect-square items-center justify-center rounded-2xl text-2xl hover:bg-[var(--bg)]"
             >
               {emoji}
             </button>

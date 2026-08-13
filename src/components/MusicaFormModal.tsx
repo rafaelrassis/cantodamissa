@@ -174,18 +174,21 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
     }
   }
 
+  const campoPill =
+    'w-full rounded-full border border-[var(--border)] bg-[var(--bg)] px-4 py-[11px] text-sm outline-none focus:border-[var(--accent)]';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-[var(--surface)] p-5 text-[var(--text)]">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">{musicaExistente ? 'Editar música' : 'Nova música'}</h2>
+      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[28px] bg-[var(--surface)] p-6 text-[var(--text)] shadow-[var(--shadow)]">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-xl">{musicaExistente ? 'Editar música' : 'Nova música'}</h2>
           <button onClick={onFechar} className="text-[var(--muted)] hover:text-[var(--text)]">
-            <X size={20} />
+            <X size={18} strokeWidth={2.75} />
           </button>
         </div>
 
         {!musicaExistente && (
-          <div className="mb-4 flex gap-1 rounded-lg border border-[var(--border)] p-1">
+          <div className="mb-5 flex max-w-xl gap-1 rounded-full border border-[var(--border)] bg-[var(--bg)] p-1">
             <AbaModo icon={PenLine} label="Manual" ativo={modo === 'manual'} onClick={() => setModo('manual')} />
             <AbaModo icon={Upload} label="Upload de arquivo" ativo={modo === 'upload'} onClick={() => setModo('upload')} />
             <AbaModo icon={Link2} label="Link Cifra Club" ativo={modo === 'link'} onClick={() => setModo('link')} />
@@ -193,25 +196,32 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
         )}
 
         {erro && (
-          <p className="mb-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">{erro}</p>
+          <p className="mb-4 rounded-[20px] bg-red-500/10 px-4 py-2.5 text-sm text-red-600">{erro}</p>
         )}
 
         {modo === 'upload' && (
-          <div className="mb-4 rounded-lg border border-dashed border-[var(--border)] p-4 text-center">
-            <p className="mb-2 text-sm text-[var(--muted)]">
+          <div className="mb-5 rounded-[28px] border border-dashed border-[var(--border)] bg-[var(--bg)] p-6 text-center">
+            <p className="mb-3.5 text-sm text-[var(--muted)]">
               Sobe o PDF/imagem da cifra pro Vercel Blob — vira um link de referência anexado à
               música. Não faz OCR: o texto da cifra ainda precisa ser colado no campo abaixo.
             </p>
-            <input
-              type="file"
-              accept="application/pdf,image/png,image/jpeg,image/webp"
-              disabled={enviandoArquivo}
-              onChange={(e) => e.target.files?.[0] && enviarArquivo(e.target.files[0])}
-              className="mx-auto text-sm"
-            />
+            <label
+              className={`mx-auto flex w-fit items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-[22px] py-[11px] text-[13.5px] font-bold ${
+                enviandoArquivo ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+              }`}
+            >
+              <Upload size={15} strokeWidth={2.75} /> Escolher arquivo
+              <input
+                type="file"
+                accept="application/pdf,image/png,image/jpeg,image/webp"
+                disabled={enviandoArquivo}
+                onChange={(e) => e.target.files?.[0] && enviarArquivo(e.target.files[0])}
+                className="hidden"
+              />
+            </label>
             {enviandoArquivo && (
-              <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-[var(--muted)]">
-                <Loader2 size={12} className="animate-spin" /> Enviando...
+              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-[var(--muted)]">
+                <Loader2 size={12} strokeWidth={2.75} className="animate-spin" /> Enviando...
               </p>
             )}
             {form.sourceFileUrl && (
@@ -219,24 +229,24 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
                 href={form.sourceFileUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 block truncate text-xs text-[var(--accent)] underline"
+                className="mt-2.5 block truncate text-xs text-[var(--accent)] underline"
               >
                 {form.sourceFileUrl}
               </a>
             )}
 
-            <div className="mt-4 border-t border-[var(--border)] pt-3 text-left">
+            <div className="mt-4 border-t border-[var(--border)] pt-4 text-left">
               {arquivosExistentes === null ? (
                 <button
                   type="button"
                   onClick={carregarArquivosExistentes}
                   disabled={carregandoArquivos}
-                  className="mx-auto flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline disabled:opacity-50"
+                  className="mx-auto flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] hover:underline disabled:opacity-50"
                 >
                   {carregandoArquivos ? (
-                    <Loader2 size={12} className="animate-spin" />
+                    <Loader2 size={12} strokeWidth={2.75} className="animate-spin" />
                   ) : (
-                    <FolderSearch size={12} />
+                    <FolderSearch size={12} strokeWidth={2.75} />
                   )}
                   Ver arquivos já enviados
                 </button>
@@ -246,7 +256,7 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
                     value={filtroArquivos}
                     onChange={(e) => setFiltroArquivos(e.target.value)}
                     placeholder="Filtrar por nome ou cantor..."
-                    className="mb-2 w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-1.5 text-xs"
+                    className="mb-2.5 w-full rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-[9px] text-[12.5px] outline-none focus:border-[var(--accent)]"
                   />
                   <div className="max-h-48 space-y-1 overflow-y-auto">
                     {arquivosExistentes
@@ -256,12 +266,12 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
                           type="button"
                           key={a.url}
                           onClick={() => escolherArquivoExistente(a.url)}
-                          className={`flex w-full items-center gap-1.5 truncate rounded-md px-2 py-1.5 text-left text-xs hover:bg-[var(--bg)] ${
-                            form.sourceFileUrl === a.url ? 'bg-[var(--bg)] font-semibold' : ''
+                          className={`flex w-full items-center gap-1.5 truncate rounded-[14px] px-2.5 py-2 text-left text-xs hover:bg-[var(--surface)] ${
+                            form.sourceFileUrl === a.url ? 'bg-[var(--surface)] font-semibold' : ''
                           }`}
                           title={a.pathname}
                         >
-                          <FileText size={12} className="shrink-0 text-[var(--muted)]" />
+                          <FileText size={12} strokeWidth={2.75} className="shrink-0 text-[var(--muted)]" />
                           <span className="truncate">{a.pathname.replace(/^cifra\//, '')}</span>
                         </button>
                       ))}
@@ -278,8 +288,8 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
         )}
 
         {modo === 'link' && (
-          <div className="mb-4 rounded-lg border border-[var(--border)] p-4">
-            <p className="mb-2 text-sm text-[var(--muted)]">
+          <div className="mb-5 rounded-[28px] border border-[var(--border)] bg-[var(--bg)] p-5">
+            <p className="mb-3.5 text-sm text-[var(--muted)]">
               Cola o link de uma música no cifraclub.com.br — título, artista, tom e cifra vêm
               preenchidos automaticamente pra revisão.
             </p>
@@ -289,14 +299,14 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
                 placeholder="https://www.cifraclub.com.br/artista/musica/"
                 value={linkCifraClub}
                 onChange={(e) => setLinkCifraClub(e.target.value)}
-                className="flex-1 rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+                className="flex-1 rounded-full border border-[var(--border)] bg-[var(--surface)] px-[18px] py-[11px] text-[13.5px] outline-none focus:border-[var(--accent)]"
               />
               <button
                 onClick={importarDoCifraClub}
                 disabled={importando || !linkCifraClub.trim()}
-                className="flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-5 py-[11px] text-[13.5px] font-bold text-[var(--accent-fg)] disabled:opacity-50"
               >
-                {importando ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
+                {importando ? <Loader2 size={14} strokeWidth={2.75} className="animate-spin" /> : <Link2 size={14} strokeWidth={2.75} />}
                 Importar
               </button>
             </div>
@@ -304,45 +314,42 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
         )}
 
         {/* Form manual — sempre visível, é onde tudo (manual, upload, link) converge pra revisão final */}
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
             <Campo label="Título *">
               <input
                 value={form.title}
                 onChange={(e) => atualizar('title', e.target.value)}
-                className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+                className={campoPill}
               />
             </Campo>
             <Campo label="Artista/comunidade">
               <input
                 value={form.artist ?? ''}
                 onChange={(e) => atualizar('artist', e.target.value)}
-                className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+                className={campoPill}
               />
             </Campo>
-          </div>
+            <Campo label="Cantor (página do cantor — opcional, cadastrado na aba Cantores)">
+              <select
+                value={form.cantorId ?? ''}
+                onChange={(e) => atualizar('cantorId', e.target.value || null)}
+                className={campoPill}
+              >
+                <option value="">Nenhum</option>
+                {cantores.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
+              </select>
+            </Campo>
 
-          <Campo label="Cantor (página do cantor — opcional, cadastrado na aba Cantores)">
-            <select
-              value={form.cantorId ?? ''}
-              onChange={(e) => atualizar('cantorId', e.target.value || null)}
-              className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
-            >
-              <option value="">Nenhum</option>
-              {cantores.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome}
-                </option>
-              ))}
-            </select>
-          </Campo>
-
-          <div className="grid grid-cols-3 gap-3">
             <Campo label="Tom original">
               <input
                 value={form.originalTone}
                 onChange={(e) => atualizar('originalTone', e.target.value)}
-                className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+                className={`${campoPill} font-mono`}
               />
             </Campo>
             <Campo label="Capotraste">
@@ -350,7 +357,7 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
                 type="number"
                 value={form.capo}
                 onChange={(e) => atualizar('capo', Number(e.target.value))}
-                className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+                className={`${campoPill} font-mono`}
               />
             </Campo>
             <Campo label="Dificuldade (1-5)">
@@ -360,78 +367,80 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
                 max={5}
                 value={form.difficulty ?? ''}
                 onChange={(e) => atualizar('difficulty', e.target.value ? Number(e.target.value) : null)}
-                className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+                className={`${campoPill} font-mono`}
+              />
+            </Campo>
+
+            <Campo label="Link do YouTube" className="lg:col-span-3">
+              <input
+                value={form.youtubeUrl ?? ''}
+                onChange={(e) => atualizar('youtubeUrl', e.target.value)}
+                className={campoPill}
+              />
+            </Campo>
+
+            <Campo label="Cifra (formato ChordPro: [G]texto [Em]mais texto) *" className="lg:col-span-3">
+              <textarea
+                value={form.chordsContent}
+                onChange={(e) => atualizar('chordsContent', e.target.value)}
+                rows={10}
+                className="w-full rounded-[24px] border border-[var(--border)] bg-[var(--bg)] px-[18px] py-3.5 font-mono text-[12.5px] leading-[1.9] outline-none focus:border-[var(--accent)]"
               />
             </Campo>
           </div>
 
-          <Campo label="Link do YouTube">
-            <input
-              value={form.youtubeUrl ?? ''}
-              onChange={(e) => atualizar('youtubeUrl', e.target.value)}
-              className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
-            />
-          </Campo>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-[18px]">
+            <Campo label="Tempo litúrgico">
+              <div className="flex flex-wrap gap-1.5">
+                {TODOS_TEMPOS.map((t) => (
+                  <Chip
+                    key={t}
+                    label={LABEL_TEMPO[t]}
+                    ativo={form.tempoLiturgico.includes(t)}
+                    onClick={() => atualizar('tempoLiturgico', alternarNaLista(form.tempoLiturgico, t))}
+                  />
+                ))}
+              </div>
+            </Campo>
 
-          <Campo label="Cifra (formato ChordPro: [G]texto [Em]mais texto) *">
-            <textarea
-              value={form.chordsContent}
-              onChange={(e) => atualizar('chordsContent', e.target.value)}
-              rows={10}
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 font-mono text-xs"
-            />
-          </Campo>
+            <Campo label="Ciclo dominical">
+              <div className="flex flex-wrap gap-1.5">
+                {TODOS_CICLOS.map((c) => (
+                  <Chip
+                    key={c}
+                    label={c}
+                    ativo={form.ciclo.includes(c)}
+                    onClick={() => atualizar('ciclo', alternarNaLista(form.ciclo, c))}
+                  />
+                ))}
+              </div>
+            </Campo>
 
-          <Campo label="Tempo litúrgico">
-            <div className="flex flex-wrap gap-1.5">
-              {TODOS_TEMPOS.map((t) => (
-                <Chip
-                  key={t}
-                  label={LABEL_TEMPO[t]}
-                  ativo={form.tempoLiturgico.includes(t)}
-                  onClick={() => atualizar('tempoLiturgico', alternarNaLista(form.tempoLiturgico, t))}
-                />
-              ))}
-            </div>
-          </Campo>
-
-          <Campo label="Ciclo dominical">
-            <div className="flex flex-wrap gap-1.5">
-              {TODOS_CICLOS.map((c) => (
-                <Chip
-                  key={c}
-                  label={c}
-                  ativo={form.ciclo.includes(c)}
-                  onClick={() => atualizar('ciclo', alternarNaLista(form.ciclo, c))}
-                />
-              ))}
-            </div>
-          </Campo>
-
-          <Campo label="Momento da missa">
-            <div className="flex flex-wrap gap-1.5">
-              {TODOS_MOMENTOS.map((m) => (
-                <Chip
-                  key={m}
-                  label={LABEL_MOMENTO[m]}
-                  ativo={form.momento.includes(m)}
-                  onClick={() => atualizar('momento', alternarNaLista(form.momento, m))}
-                />
-              ))}
-            </div>
-          </Campo>
+            <Campo label="Momento da missa">
+              <div className="flex flex-wrap gap-1.5">
+                {TODOS_MOMENTOS.map((m) => (
+                  <Chip
+                    key={m}
+                    label={LABEL_MOMENTO[m]}
+                    ativo={form.momento.includes(m)}
+                    onClick={() => atualizar('momento', alternarNaLista(form.momento, m))}
+                  />
+                ))}
+              </div>
+            </Campo>
+          </div>
         </div>
 
-        <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onFechar} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm">
+        <div className="mt-6 flex justify-end gap-2">
+          <button onClick={onFechar} className="rounded-full border border-[var(--border)] bg-[var(--bg)] px-[22px] py-[11px] text-sm font-bold">
             Cancelar
           </button>
           <button
             onClick={handleSalvar}
             disabled={salvando}
-            className="flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-6 py-[11px] text-sm font-bold text-[var(--accent-fg)] disabled:opacity-50"
           >
-            {salvando && <Loader2 size={14} className="animate-spin" />}
+            {salvando && <Loader2 size={14} strokeWidth={2.75} className="animate-spin" />}
             Salvar
           </button>
         </div>
@@ -454,19 +463,19 @@ function AbaModo({
   return (
     <button
       onClick={onClick}
-      className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-2 text-xs font-medium ${
+      className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-[12.5px] font-semibold ${
         ativo ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
       }`}
     >
-      <Icon size={13} /> {label}
+      <Icon size={13} strokeWidth={2.75} /> {label}
     </button>
   );
 }
 
-function Campo({ label, children }: { label: string; children: React.ReactNode }) {
+function Campo({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-medium text-[var(--muted)]">{label}</span>
+    <label className={`block ${className ?? ''}`}>
+      <span className="mb-1.5 block text-xs font-semibold text-[var(--muted)]">{label}</span>
       {children}
     </label>
   );
@@ -477,7 +486,7 @@ function Chip({ label, ativo, onClick }: { label: string; ativo: boolean; onClic
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-2.5 py-1 text-xs ${
+      className={`rounded-full border px-[13px] py-1.5 text-xs font-semibold ${
         ativo
           ? 'border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]'
           : 'border-[var(--border)] text-[var(--muted)]'

@@ -41,17 +41,17 @@ export function SubmissaoForm({ modo, musicaBase, onSubmit, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 lg:items-center">
-      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-[var(--bg)] p-5 lg:max-w-lg lg:rounded-2xl">
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-[28px] bg-[var(--bg)] p-[22px] shadow-[0_12px_30px_rgba(30,42,20,0.18)] lg:max-w-lg lg:rounded-[28px]">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[var(--text)]">
+          <h2 className="text-xl text-[var(--text)]">
             {modo === 'nova' ? 'Sugerir nova música' : 'Sugerir correção'}
           </h2>
           <button
             onClick={onClose}
             aria-label="Fechar"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface)]"
+            className="text-[var(--muted)] hover:text-[var(--text)]"
           >
-            <X size={18} />
+            <X size={18} strokeWidth={2.75} />
           </button>
         </div>
 
@@ -66,7 +66,7 @@ export function SubmissaoForm({ modo, musicaBase, onSubmit, onClose }: Props) {
             </p>
             <button
               onClick={onClose}
-              className="rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-fg)]"
+              className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent-fg)]"
             >
               Fechar
             </button>
@@ -124,7 +124,7 @@ export function SubmissaoForm({ modo, musicaBase, onSubmit, onClose }: Props) {
 
             <button
               type="submit"
-              className="mt-2 rounded-xl bg-[var(--accent)] py-3 text-sm font-semibold text-[var(--accent-fg)]"
+              className="mt-2 rounded-full bg-[var(--accent)] py-[14px] text-sm font-bold text-[var(--accent-fg)]"
             >
               Enviar sugestão
             </button>
@@ -146,7 +146,7 @@ function Campo({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-xs font-semibold text-[var(--muted)]">
+      <span className="text-xs font-bold text-[var(--muted)]">
         {label}
         {required && <span className="text-[var(--accent)]"> *</span>}
       </span>

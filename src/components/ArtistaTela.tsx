@@ -56,40 +56,40 @@ export function ArtistaTela({ artista, onBack, onSelectMusica }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="flex flex-col items-center gap-3 bg-[var(--accent)] px-4 py-6 text-[var(--accent-fg)] lg:px-10">
+      <header className="flex flex-col items-center gap-3.5 bg-[var(--accent)] px-4 pb-[30px] pt-5 text-[var(--accent-fg)] lg:px-10">
         <button onClick={onBack} className="mb-1 flex w-full items-center gap-1 text-xs opacity-80">
-          <ChevronLeft size={14} /> Voltar
+          <ChevronLeft size={14} strokeWidth={2.75} /> Voltar
         </button>
-        <span className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-white bg-white/16 font-mono text-2xl font-bold">
+        <span className="flex h-[112px] w-[112px] items-center justify-center rounded-full border-2 border-[var(--accent-fg)] bg-[var(--accent-fg)]/20 font-display text-[38px]">
           {artista.charAt(0).toUpperCase()}
         </span>
-        <h1 className="text-xl font-extrabold tracking-tight">{artista}</h1>
+        <h1 className="text-[28px]">{artista}</h1>
       </header>
 
       <div className="mx-auto flex max-w-3xl border-b border-[var(--border)]">
         <button
           onClick={() => setAba('top')}
-          className={`flex-1 py-3 text-sm font-semibold ${
+          className={`flex-1 py-3.5 text-center text-[14.5px] ${
             aba === 'top'
-              ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]'
-              : 'text-[var(--muted)]'
+              ? 'border-b-[3px] border-[var(--accent)] font-bold text-[#3b4a27]'
+              : 'font-semibold text-[var(--muted)]'
           }`}
         >
           Mais acessadas
         </button>
         <button
           onClick={() => setAba('todas')}
-          className={`flex-1 py-3 text-sm font-semibold ${
+          className={`flex-1 py-3.5 text-center text-[14.5px] ${
             aba === 'todas'
-              ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]'
-              : 'text-[var(--muted)]'
+              ? 'border-b-[3px] border-[var(--accent)] font-bold text-[#3b4a27]'
+              : 'font-semibold text-[var(--muted)]'
           }`}
         >
           Ordem alfabética
         </button>
       </div>
 
-      <div className="mx-auto max-w-3xl lg:my-6 lg:rounded-2xl lg:border lg:border-[var(--border)]">
+      <div className="mx-auto max-w-3xl lg:my-[22px] lg:rounded-[24px] lg:border lg:border-[var(--border)]">
         {carregando && (
           <p className="px-4 py-10 text-center text-sm text-[var(--muted)]">carregando…</p>
         )}

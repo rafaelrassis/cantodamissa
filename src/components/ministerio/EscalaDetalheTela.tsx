@@ -19,9 +19,9 @@ interface Props {
 }
 
 const STATUS_LABEL: Record<StatusConfirmacao, { texto: string; cor: string }> = {
-  confirmado: { texto: 'Confirmado', cor: 'text-emerald-500' },
-  pendente: { texto: 'Pendente', cor: 'text-amber-500' },
-  recusado: { texto: 'Recusado', cor: 'text-rose-500' },
+  confirmado: { texto: 'Confirmado', cor: 'text-[#4f6135]' },
+  pendente: { texto: 'Pendente', cor: 'text-[#a67a1f]' },
+  recusado: { texto: 'Recusado', cor: 'text-[#a3111d]' },
 };
 
 /**
@@ -117,33 +117,33 @@ export function EscalaDetalheTela({
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
-        <div className="mb-2 flex items-center justify-between">
-          <button onClick={onBack} className="flex items-center gap-1 text-xs opacity-80">
-            <ChevronLeft size={14} /> Voltar
+      <header className="bg-[var(--accent)] px-4 pb-[18px] pt-4 text-[var(--accent-fg)] lg:px-8">
+        <div className="mb-2 flex items-center justify-between text-xs opacity-85">
+          <button onClick={onBack} className="flex items-center gap-1">
+            <ChevronLeft size={14} strokeWidth={2.75} /> Voltar
           </button>
           {souAdmin && (
-            <div className="flex items-center gap-4">
-              <button onClick={onEditar} aria-label="Editar escala" className="opacity-80">
-                <Pencil size={16} />
+            <div className="flex items-center gap-3.5">
+              <button onClick={onEditar} aria-label="Editar escala">
+                <Pencil size={16} strokeWidth={2.75} />
               </button>
-              <button onClick={excluir} aria-label="Excluir escala" className="opacity-80">
-                <Trash2 size={16} />
+              <button onClick={excluir} aria-label="Excluir escala">
+                <Trash2 size={16} strokeWidth={2.75} />
               </button>
             </div>
           )}
         </div>
-        <h1 className="text-xl font-extrabold tracking-tight">{escala.titulo}</h1>
-        <p className="mt-0.5 text-sm capitalize opacity-80">
+        <h1 className="text-[22px]">{escala.titulo}</h1>
+        <p className="mt-0.5 text-[13.5px] capitalize opacity-85">
           {formatarDataLonga(escala.data)} · {escala.hora}
         </p>
         {confirmandoExclusao && (
-          <div className="mt-3 flex items-center gap-2 rounded-lg bg-black/20 px-3 py-2 text-xs">
+          <div className="mt-3 flex items-center gap-2 rounded-full bg-[#a3111d]/25 px-4 py-2 text-xs">
             <span className="flex-1">Excluir esta escala e tudo relacionado a ela?</span>
             <button onClick={excluir} className="font-bold underline">
               Excluir
             </button>
-            <button onClick={() => setConfirmandoExclusao(false)} className="opacity-80">
+            <button onClick={() => setConfirmandoExclusao(false)} className="opacity-85">
               Cancelar
             </button>
           </div>
@@ -152,9 +152,9 @@ export function EscalaDetalheTela({
 
       <div className="mx-auto max-w-2xl">
         <div className="flex border-b border-[var(--border)] px-2">
-          <AbaBtn icon={<Info size={14} />} label="Detalhes" active={aba === 'detalhes'} onClick={() => setAba('detalhes')} />
+          <AbaBtn icon={<Info size={14} strokeWidth={2.75} />} label="Detalhes" active={aba === 'detalhes'} onClick={() => setAba('detalhes')} />
           <AbaBtn
-            icon={<Users size={14} />}
+            icon={<Users size={14} strokeWidth={2.75} />}
             label={`Participantes (${escala.participantes.length})`}
             active={aba === 'participantes'}
             onClick={() => setAba('participantes')}
@@ -164,7 +164,7 @@ export function EscalaDetalheTela({
         {aba === 'detalhes' && (
           <div className="space-y-3 p-4">
             {minhaParticipacao && (
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+              <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-4">
                 <p className="mb-2 text-sm font-semibold text-[var(--text)]">Sua presença</p>
                 <p className={`mb-3 text-xs font-semibold ${STATUS_LABEL[minhaParticipacao.status].cor}`}>
                   Status atual: {STATUS_LABEL[minhaParticipacao.status].texto}
@@ -172,13 +172,13 @@ export function EscalaDetalheTela({
                 <div className="flex gap-2">
                   <button
                     onClick={() => confirmarMinhaPresenca('confirmado')}
-                    className="flex-1 rounded-lg bg-[var(--accent)] py-2 text-xs font-semibold text-[var(--accent-fg)]"
+                    className="flex-1 rounded-full bg-[var(--accent)] py-2 text-xs font-semibold text-[var(--accent-fg)]"
                   >
                     Confirmar presença
                   </button>
                   <button
                     onClick={() => confirmarMinhaPresenca('recusado')}
-                    className="flex-1 rounded-lg border border-[var(--border)] py-2 text-xs font-semibold text-[var(--muted)]"
+                    className="flex-1 rounded-full border border-[var(--border)] py-2 text-xs font-semibold text-[var(--muted)]"
                   >
                     Não poderei ir
                   </button>
@@ -209,7 +209,7 @@ export function EscalaDetalheTela({
                   }}
                   className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)]"
                 >
-                  <Plus size={16} /> Adicionar
+                  <Plus size={16} strokeWidth={2.75} /> Adicionar
                 </button>
                 <button
                   onClick={() => {
@@ -218,13 +218,13 @@ export function EscalaDetalheTela({
                   }}
                   className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
                 >
-                  <UsersRound size={16} /> Equipes
+                  <UsersRound size={16} strokeWidth={2.75} /> Equipes
                 </button>
                 <button
                   onClick={sortear}
                   className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
                 >
-                  <Shuffle size={16} /> Sortear
+                  <Shuffle size={16} strokeWidth={2.75} /> Sortear
                 </button>
               </div>
             )}
@@ -275,7 +275,7 @@ function AbaBtn({
   return (
     <button
       onClick={onClick}
-      className={`flex flex-1 flex-col items-center gap-1 whitespace-nowrap px-2 py-3 text-[11px] font-semibold ${
+      className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-2 py-3 text-[11.5px] font-bold ${
         active ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'text-[var(--muted)]'
       }`}
     >
@@ -287,7 +287,7 @@ function AbaBtn({
 
 function InfoRow({ label, valor }: { label: string; valor: string }) {
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
+    <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-3">
       <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">{label}</p>
       <p className="mt-0.5 text-sm text-[var(--text)]">{valor}</p>
     </div>

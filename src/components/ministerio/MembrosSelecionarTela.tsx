@@ -89,32 +89,32 @@ export function MembrosSelecionarTela({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4">
+      <header className="flex items-center gap-2.5 border-b border-[var(--border)] px-5 py-[15px]">
         <button onClick={onCancelar} aria-label="Voltar">
-          <ChevronLeft size={20} />
+          <ChevronLeft size={20} strokeWidth={2.75} />
         </button>
-        <h1 className="text-lg font-extrabold tracking-tight">Membros</h1>
+        <h1 className="text-[19px] leading-none">Membros</h1>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5">
-          <Search size={16} className="text-[var(--muted)]" />
+      <div className="flex-1 overflow-y-auto px-5 py-[18px]">
+        <div className="flex items-center gap-2.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-[18px] py-[11px]">
+          <Search size={16} strokeWidth={2.75} className="text-[var(--muted)]" />
           <input
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar por nome ou função"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--muted)]"
+            className="w-full bg-transparent text-sm outline-none placeholder:text-[#99a390]"
           />
         </div>
 
-        <div className="mt-3 flex items-center justify-between text-xs font-semibold text-[var(--accent)]">
+        <div className="mt-3 flex items-center justify-between text-[12px] font-bold text-[var(--accent)]">
           <button onClick={selecionarTodos}>✓✓ Selecionar todos</button>
           <button onClick={limpar} className="text-[var(--muted)]">
             Limpar
           </button>
         </div>
 
-        <div className="mt-3 flex rounded-full bg-[var(--surface)] p-1 text-xs font-semibold">
+        <div className="mt-3 flex gap-[3px] rounded-full bg-[var(--surface)] p-1 text-[11.5px] font-bold">
           {(
             [
               ['todos', `Todos (${membros.length})`],
@@ -126,7 +126,7 @@ export function MembrosSelecionarTela({
             <button
               key={id}
               onClick={() => setAba(id)}
-              className={`flex-1 rounded-full py-1.5 ${
+              className={`flex-1 rounded-full py-[7px] text-center transition ${
                 aba === id ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
               }`}
             >
@@ -136,14 +136,17 @@ export function MembrosSelecionarTela({
         </div>
 
         {aba === 'todos' || aba === 'selecionados' ? (
-          <ul className="mt-3 flex flex-col gap-1">
+          <ul className="mt-3 flex flex-col gap-0.5">
             {listaExibida.length === 0 && (
               <li className="py-8 text-center text-sm text-[var(--muted)]">Nenhum membro encontrado.</li>
             )}
             {listaExibida.map((m) => {
               const indisponivel = indisponiveisIds.has(m.id);
               return (
-                <li key={m.id} className="flex items-center gap-3 rounded-lg px-2 py-2.5">
+                <li
+                  key={m.id}
+                  className="flex items-center gap-3 rounded-[16px] px-2 py-[9px] transition hover:bg-[var(--surface)]"
+                >
                   <span
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${m.avatarCor} ${
                       indisponivel ? 'opacity-40' : ''
@@ -156,19 +159,19 @@ export function MembrosSelecionarTela({
                       {m.nome}
                     </span>
                     {indisponivel && (
-                      <span className="block text-xs text-amber-500">Indisponível nesta data</span>
+                      <span className="block text-xs text-[#8a651a]">Indisponível nesta data</span>
                     )}
                   </span>
                   <button
                     onClick={() => toggle(m.id)}
                     disabled={indisponivel && !selecionados.has(m.id)}
                     aria-label={selecionados.has(m.id) ? 'Remover' : 'Adicionar'}
-                    className={`h-6 w-11 shrink-0 rounded-full transition disabled:opacity-30 ${
+                    className={`h-[26px] w-11 shrink-0 rounded-full transition disabled:opacity-30 ${
                       selecionados.has(m.id) ? 'bg-[var(--accent)]' : 'border border-[var(--border)] bg-[var(--surface)]'
                     }`}
                   >
                     <span
-                      className={`block h-5 w-5 rounded-full bg-white shadow transition ${
+                      className={`block h-5 w-5 rounded-full bg-white shadow-[0_1px_3px_rgba(30,42,20,0.3)] transition ${
                         selecionados.has(m.id) ? 'translate-x-5' : 'translate-x-0.5'
                       }`}
                     />
@@ -178,7 +181,7 @@ export function MembrosSelecionarTela({
             })}
           </ul>
         ) : aba === 'funcoes' ? (
-          <ul className="mt-3 flex flex-col gap-1">
+          <ul className="mt-3 flex flex-col gap-0.5">
             {funcoes.map((f) => {
               const membrosDaFuncao = membros.filter((m) => m.funcoes.includes(f.id));
               const todosSelecionados =
@@ -190,23 +193,23 @@ export function MembrosSelecionarTela({
                   <button
                     onClick={() => toggleFuncao(f.id)}
                     disabled={bloqueada}
-                    className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left disabled:opacity-40"
+                    className="flex w-full items-center gap-3 rounded-[16px] px-2 py-[9px] text-left transition hover:bg-[var(--surface)] disabled:opacity-40"
                   >
                     <span className="text-lg">{f.icone}</span>
                     <span className="flex-1 text-sm font-medium">
                       {f.nome} <span className="text-xs text-[var(--muted)]">({membrosDaFuncao.length})</span>
                       {!todosSelecionados && !algumDisponivel && membrosDaFuncao.length > 0 && (
-                        <span className="block text-xs text-amber-500">Todos indisponíveis nesta data</span>
+                        <span className="block text-xs text-[#8a651a]">Todos indisponíveis nesta data</span>
                       )}
                     </span>
-                    {todosSelecionados && <Check size={16} className="text-[var(--accent)]" />}
+                    {todosSelecionados && <Check size={16} strokeWidth={2.75} className="text-[var(--accent)]" />}
                   </button>
                 </li>
               );
             })}
           </ul>
         ) : (
-          <ul className="mt-3 flex flex-col gap-1">
+          <ul className="mt-3 flex flex-col gap-0.5">
             {equipes.length === 0 && (
               <li className="py-8 text-center text-sm text-[var(--muted)]">
                 Nenhuma equipe criada ainda (Equipe → aba Equipes).
@@ -222,15 +225,15 @@ export function MembrosSelecionarTela({
                   <button
                     onClick={() => toggleEquipe(eq)}
                     disabled={bloqueada}
-                    className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left disabled:opacity-40"
+                    className="flex w-full items-center gap-3 rounded-[16px] px-2 py-[9px] text-left transition hover:bg-[var(--surface)] disabled:opacity-40"
                   >
                     <span className="flex-1 text-sm font-medium">
                       {eq.nome} <span className="text-xs text-[var(--muted)]">({eq.membroIds.length})</span>
                       {!todosSelecionados && !algumDisponivel && eq.membroIds.length > 0 && (
-                        <span className="block text-xs text-amber-500">Todos indisponíveis nesta data</span>
+                        <span className="block text-xs text-[#8a651a]">Todos indisponíveis nesta data</span>
                       )}
                     </span>
-                    {todosSelecionados && <Check size={16} className="text-[var(--accent)]" />}
+                    {todosSelecionados && <Check size={16} strokeWidth={2.75} className="text-[var(--accent)]" />}
                   </button>
                 </li>
               );
@@ -239,8 +242,8 @@ export function MembrosSelecionarTela({
         )}
       </div>
 
-      <footer className="flex items-center justify-between border-t border-[var(--border)] px-4 py-3">
-        <span className="text-sm font-semibold">{selecionados.size} participantes</span>
+      <footer className="flex items-center justify-between border-t border-[var(--border)] px-5 py-[14px]">
+        <span className="text-sm font-bold">{selecionados.size} participantes</span>
         <button
           onClick={() =>
             onConfirmar(
@@ -250,9 +253,9 @@ export function MembrosSelecionarTela({
               }))
             )
           }
-          className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-[var(--accent-fg)]"
+          className="flex items-center gap-[7px] rounded-full bg-[var(--accent)] px-6 py-[10px] text-sm font-bold text-[var(--accent-fg)]"
         >
-          <Check size={15} /> Salvar
+          <Check size={15} strokeWidth={2.75} /> Salvar
         </button>
       </footer>
     </div>

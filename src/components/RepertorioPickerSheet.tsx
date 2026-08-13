@@ -45,21 +45,21 @@ export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFech
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[80vh] w-full max-w-sm overflow-y-auto rounded-t-2xl bg-[var(--bg)] p-6 text-[var(--text)] lg:rounded-2xl"
+        className="max-h-[80vh] w-full max-w-sm overflow-y-auto rounded-t-[28px] bg-[var(--bg)] p-6 text-[var(--text)] shadow-[0_12px_30px_rgba(30,42,20,0.18)] lg:rounded-[28px]"
       >
         <div className="mb-4 flex items-center justify-between">
           {etapa === 'lista' ? (
-            <h2 className="text-lg font-bold">Salvar</h2>
+            <h2 className="text-xl">Salvar</h2>
           ) : (
             <button
               onClick={() => setEtapa('lista')}
               className="flex items-center gap-1 text-sm font-medium text-[var(--muted)]"
             >
-              <ChevronLeft size={16} /> voltar
+              <ChevronLeft size={16} strokeWidth={2.75} /> voltar
             </button>
           )}
           <button onClick={onFechar} aria-label="Fechar" className="text-[var(--muted)]">
-            <X size={20} />
+            <X size={20} strokeWidth={2.75} />
           </button>
         </div>
 
@@ -77,10 +77,10 @@ export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFech
                     setRepertorioEscolhido(r);
                     setEtapa('ritos');
                   }}
-                  className="flex items-center gap-3 rounded-xl px-2 py-2.5 text-left hover:bg-[var(--surface)]"
+                  className="flex items-center gap-3 rounded-[20px] px-[10px] py-2 text-left hover:bg-[var(--surface)]"
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                    <ListMusic size={18} />
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <ListMusic size={18} strokeWidth={2.75} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">{r.nome}</span>
@@ -89,7 +89,7 @@ export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFech
                     </span>
                   </span>
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)]">
-                    <Plus size={15} />
+                    <Plus size={15} strokeWidth={2.75} />
                   </span>
                 </button>
               ))}
@@ -98,7 +98,7 @@ export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFech
 
         {etapa === 'ritos' && repertorioEscolhido && (
           <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--muted)]">
               Rito em {repertorioEscolhido.nome}
             </p>
             {ritosDisponiveis.length === 0 ? (
@@ -112,12 +112,12 @@ export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFech
                       onAdicionar(repertorioEscolhido.id, rito);
                       onFechar();
                     }}
-                    className="flex items-center justify-between rounded-xl px-2 py-2.5 text-left text-sm hover:bg-[var(--surface)]"
+                    className="flex items-center justify-between rounded-[20px] px-[10px] py-[9px] text-left text-sm hover:bg-[var(--surface)]"
                   >
                     <span className="truncate">{rito}</span>
                     {rito === ritoSugerido && (
-                      <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[var(--accent)]">
-                        <Check size={13} /> sugerido
+                      <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-[var(--accent)]">
+                        <Check size={13} strokeWidth={2.75} /> sugerido
                       </span>
                     )}
                   </button>

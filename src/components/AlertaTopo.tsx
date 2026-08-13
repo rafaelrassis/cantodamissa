@@ -16,11 +16,11 @@ export function AlertaTopo({ mensagem, onClick }: Props) {
   return (
     <Tag
       onClick={onClick}
-      className="sticky top-0 z-50 flex w-full items-center gap-2 bg-[var(--accent)] px-4 py-2.5 text-left text-sm font-semibold text-[var(--accent-fg)]"
+      className="sticky top-2 z-50 mx-2 flex items-center gap-2.5 rounded-2xl bg-[var(--accent)] px-5 py-3 text-left text-[14.5px] font-bold text-[var(--accent-fg)] shadow-[0_8px_22px_rgba(30,42,20,.16)] sm:mx-4 sm:max-w-[960px]"
     >
-      <Bell size={15} className="shrink-0" />
+      <Bell size={16} strokeWidth={2.75} className="shrink-0" />
       <span className="min-w-0 flex-1 truncate">{mensagem}</span>
-      {onClick && <ChevronRight size={15} className="shrink-0" />}
+      {onClick && <ChevronRight size={16} strokeWidth={2.75} className="shrink-0" />}
     </Tag>
   );
 }

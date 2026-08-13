@@ -21,15 +21,15 @@ export function ChordDiagramStrip({ chords, onHide }: Props) {
   return (
     <div className="border-b border-[var(--border)] bg-[var(--surface)] lg:hidden">
       <div className="flex items-center justify-between px-4 pt-2">
-        <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--muted)]">
           Acordes
         </span>
         <button
           onClick={onHide}
           aria-label="Ocultar acordes"
-          className="flex items-center gap-1 py-1 text-[10px] font-semibold text-[var(--muted)]"
+          className="flex items-center gap-1 py-1 text-[10px] font-bold text-[var(--muted)]"
         >
-          <EyeOff size={12} /> ocultar
+          <EyeOff size={12} strokeWidth={2.75} /> ocultar
         </button>
       </div>
       <div className="flex gap-2 overflow-x-auto px-4 pb-2.5 pt-1 [overscroll-behavior-x:contain]">
