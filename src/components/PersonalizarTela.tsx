@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Cake, Check, ChevronLeft, ChevronRight, ListPlus, LogOut, Moon, Palette, Sun } from 'lucide-react';
+import { Cake, Check, ChevronLeft, ChevronRight, ListPlus, LogOut, Mail, Moon, Palette, Sun } from 'lucide-react';
 import type { Theme } from '../lib/useTheme';
 
 interface Props {
@@ -18,6 +18,14 @@ interface Props {
   onFechar: () => void;
   onCriarCifra: () => void;
 }
+
+const EMAIL_SUPORTE = 'rafaelrassis@hotmail.com';
+
+const CATEGORIAS_REPORTE = [
+  { valor: 'bug', label: 'Erro / bug' },
+  { valor: 'melhoria', label: 'Sugestão de melhoria' },
+  { valor: 'outro', label: 'Outro' },
+] as const;
 
 const CORES_SUGERIDAS = [
   '#186420', // verde da marca (padrão)
@@ -48,8 +56,17 @@ export function PersonalizarTela({
 }: Props) {
   const [editandoFoto, setEditandoFoto] = useState(false);
   const [fotoRascunho, setFotoRascunho] = useState(foto ?? '🙂');
+  const [categoriaReporte, setCategoriaReporte] = useState<(typeof CATEGORIAS_REPORTE)[number]['valor']>('bug');
+  const [mensagemReporte, setMensagemReporte] = useState('');
 
   const corAtual = corPersonalizada ?? '#186420';
+
+  function enviarReporte() {
+    const categoriaLabel = CATEGORIAS_REPORTE.find((c) => c.valor === categoriaReporte)?.label ?? '';
+    const assunto = `[Canto da Missa] ${categoriaLabel}`;
+    const corpo = `${mensagemReporte}\n\n---\nUsuário: ${userName}\nApp: Canto da Missa`;
+    window.location.href = `mailto:${EMAIL_SUPORTE}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-[var(--bg)] font-sans text-[var(--text)]">
@@ -201,6 +218,47 @@ export function PersonalizarTela({
               </option>
             ))}
           </select>
+        </div>
+
+        <h2 className="mt-8 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Suporte</h2>
+        <div className="mt-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div className="flex items-center gap-2">
+            <Mail size={16} className="shrink-0 text-[var(--accent)]" />
+            <p className="text-sm font-semibold">Reportar erro ou sugerir melhoria</p>
+          </div>
+
+          <div className="mt-3 flex gap-2 rounded-xl bg-[var(--bg)] p-1">
+            {CATEGORIAS_REPORTE.map((c) => (
+              <button
+                key={c.valor}
+                onClick={() => setCategoriaReporte(c.valor)}
+                className={`flex-1 rounded-lg py-2 text-xs font-semibold ${
+                  categoriaReporte === c.valor
+                    ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+                    : 'text-[var(--muted)]'
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+
+          <textarea
+            value={mensagemReporte}
+            onChange={(e) => setMensagemReporte(e.target.value)}
+            placeholder="Descreva o que aconteceu..."
+            rows={4}
+            className="mt-3 w-full resize-none rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm outline-none"
+          />
+
+          <button
+            onClick={enviarReporte}
+            disabled={!mensagemReporte.trim()}
+            className="mt-3 w-full rounded-xl bg-[var(--accent)] py-2.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-40"
+          >
+            Enviar por e-mail
+          </button>
+          <p className="mt-1.5 text-center text-xs text-[var(--muted)]">Abre seu app de e-mail com a mensagem pronta</p>
         </div>
 
         <button
