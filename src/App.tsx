@@ -45,6 +45,9 @@ function App() {
   const [filtroTempo, setFiltroTempo] = useState<TempoLiturgico | undefined>();
   const [cantorSlug, setCantorSlug] = useState<string | null>(null);
   const [artistaNome, setArtistaNome] = useState<string | null>(null);
+  // Atalho "Ver escala" a partir do bloco "Meus próximos repertórios" na
+  // Início — abre o módulo Ministério já direto na EscalaDetalheTela.
+  const [escalaAlvoId, setEscalaAlvoId] = useState<string | null>(null);
   const { theme, toggleTheme, corPersonalizada, definirCorPersonalizada } = useTheme();
   const [fontSize, setFontSize] = useState(DEFAULT_FONT);
   const { isAdmin, login, logout } = useAdminAuth();
@@ -71,6 +74,11 @@ function App() {
     } else {
       setLoginParaMinisterioAberto(true);
     }
+  }
+
+  function abrirEscala(escalaId: string) {
+    setEscalaAlvoId(escalaId);
+    setTela('ministerio');
   }
 
   const repertoriosApi = useRepertorios();
@@ -218,7 +226,12 @@ function App() {
 
   if (tela === 'ministerio' && isLoggedIn) {
     return comAlerta(
-      <MinisterioTela onBack={() => setTela('home')} onAbrirMusica={abrirMusica} ministerio={ministerio} />
+      <MinisterioTela
+        onBack={() => setTela('home')}
+        onAbrirMusica={abrirMusica}
+        ministerio={ministerio}
+        escalaInicialId={escalaAlvoId}
+      />
     );
   }
 
@@ -266,6 +279,7 @@ function App() {
           setRepertorioId(id);
           setTela('repertorio-detalhe');
         }}
+        onAbrirEscala={abrirEscala}
         theme={theme}
         onToggleTheme={toggleTheme}
         corPersonalizada={corPersonalizada}

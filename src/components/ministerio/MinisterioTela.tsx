@@ -26,6 +26,10 @@ interface Props {
   onBack: () => void;
   onAbrirMusica: (musica: Musica, repertorioId?: string | null, tom?: string | null) => void;
   ministerio: Ministerio;
+  /** Abre direto a escala indicada (ex: veio do atalho "Ver escala" na
+   * Início) em vez de cair na aba Início do módulo. Só serve de valor
+   * inicial — a navegação interna daqui pra frente é toda local. */
+  escalaInicialId?: string | null;
 }
 
 type SubTela = 'inicio' | 'escalas' | 'equipe' | 'avisos' | 'panorama' | 'repertorio';
@@ -57,13 +61,13 @@ const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
  * única vez e passado adiante pras duas pontas, pra não duplicar a busca.
  * Login já é exigido antes de chegar aqui (ver App.tsx).
  */
-export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
+export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicialId }: Props) {
   const [subTela, setSubTela] = useState<SubTela>('inicio');
   const escalasApi = useEscalas(ministerio.id);
   const avisosApi = useAvisos(ministerio.id);
   const indisponibilidadesApi = useIndisponibilidades(ministerio.id);
   const equipesApi = useEquipes(ministerio.id);
-  const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(null);
+  const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(escalaInicialId ?? null);
   const [formularioEscala, setFormularioEscala] = useState<'nova' | Escala | null>(null);
   const [configuracoesAbertas, setConfiguracoesAbertas] = useState(false);
   const [seletorMinisterioAberto, setSeletorMinisterioAberto] = useState(false);

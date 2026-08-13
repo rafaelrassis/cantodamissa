@@ -11,6 +11,8 @@ import {
 } from '../lib/musicasApi';
 import { getCantoresPopulares } from '../lib/cantoresApi';
 import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
+import { useEscalas } from '../lib/useEscalas';
+import { useQtdRepertoriosHome } from '../lib/preferenciaRepertoriosHome';
 import { proximoDomingoCalculado, diasAte } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
 import {
@@ -39,6 +41,7 @@ interface Props {
   onAbrirTopMusicas?: () => void;
   onAbrirTopArtistas?: () => void;
   onAbrirRepertorio: (id: string) => void;
+  onAbrirEscala: (escalaId: string) => void;
   onSelectArtista?: (artista: string) => void;
   onSelectCantor?: (slug: string) => void;
   theme: Theme;
@@ -81,6 +84,7 @@ export function Home({
   onSelectArtista,
   onSelectCantor,
   onAbrirRepertorio,
+  onAbrirEscala,
   theme,
   onToggleTheme,
   corPersonalizada,
@@ -120,6 +124,29 @@ export function Home({
   const [repertorioCompartilhado, setRepertorioCompartilhado] = useState<RepertorioTipo | null>(
     null
   );
+
+  // "Meus próximos repertórios" — escalas futuras do ministério ativo em
+  // que eu participo, cruzadas com o repertório vinculado a cada uma (1
+  // escala = 1 repertório). qtdRepertoriosHome = 0 esconde o bloco.
+  const { escalas: escalasDoMinisterio } = useEscalas(ministerio.id);
+  const [qtdRepertoriosHome, definirQtdRepertoriosHome] = useQtdRepertoriosHome();
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const proximosRepertorios = useMemo(() => {
+    if (qtdRepertoriosHome === 0 || !ministerio.meuMembroId) return [];
+    return escalasDoMinisterio
+      .filter(
+        (e) => e.data >= hojeISO && e.participantes.some((p) => p.membroId === ministerio.meuMembroId)
+      )
+      .sort((a, b) => a.data.localeCompare(b.data))
+      .slice(0, qtdRepertoriosHome)
+      .map((escala) => ({
+        escala,
+        repertorio: repertorios.find((r) => r.escalaId === escala.id) ?? null,
+      }))
+      .filter((item): item is { escala: (typeof escalasDoMinisterio)[number]; repertorio: RepertorioTipo } =>
+        item.repertorio !== null
+      );
+  }, [escalasDoMinisterio, repertorios, qtdRepertoriosHome, ministerio.meuMembroId, hojeISO]);
 
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get('rep');
@@ -294,6 +321,51 @@ export function Home({
       {/* Corpo */}
       <div className="flex flex-1 flex-col lg:flex-row lg:gap-6 lg:px-10 lg:py-6">
         <div className="flex-1">
+          {!buscando && proximosRepertorios.length > 0 && (
+            <div className="px-4 py-3 lg:px-0">
+              <h2 className="mb-2 text-sm font-semibold text-[var(--muted)]">
+                Meus próximos repertórios
+              </h2>
+              <div className="flex flex-col gap-2 lg:rounded-2xl lg:border lg:border-[var(--border)] lg:gap-0">
+                {proximosRepertorios.map(({ escala, repertorio }, i) => (
+                  <div
+                    key={escala.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onAbrirRepertorio(repertorio.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') onAbrirRepertorio(repertorio.id);
+                    }}
+                    className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-4 py-3 hover:bg-[var(--surface)] lg:rounded-none lg:border-x-0 lg:border-t-0 ${
+                      i === proximosRepertorios.length - 1 ? 'lg:border-b-0' : ''
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-semibold text-[var(--text)]">
+                        {escala.titulo}
+                      </p>
+                      <p className="truncate text-xs text-[var(--muted)]">
+                        {new Date(`${escala.data}T00:00:00`).toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: 'short',
+                        })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAbrirEscala(escala.id);
+                      }}
+                      className="shrink-0 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent-soft)]"
+                    >
+                      Ver escala
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {!buscando && historico.length > 0 && (
             <div className="px-4 py-3 lg:px-0">
               <div className="mb-2 flex items-center justify-between">
@@ -512,6 +584,8 @@ export function Home({
           onToggleTheme={onToggleTheme}
           corPersonalizada={corPersonalizada}
           onDefinirCorPersonalizada={onDefinirCorPersonalizada}
+          qtdRepertoriosHome={qtdRepertoriosHome}
+          onDefinirQtdRepertoriosHome={definirQtdRepertoriosHome}
           onSair={() => {
             onLogoutUsuario();
             setPersonalizarAberto(false);

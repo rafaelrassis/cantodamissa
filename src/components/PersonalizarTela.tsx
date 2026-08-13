@@ -12,6 +12,8 @@ interface Props {
   onToggleTheme: () => void;
   corPersonalizada: string | null;
   onDefinirCorPersonalizada: (hex: string | null) => void;
+  qtdRepertoriosHome: number;
+  onDefinirQtdRepertoriosHome: (qtd: number) => void;
   onSair: () => void;
   onFechar: () => void;
   onCriarCifra: () => void;
@@ -38,6 +40,8 @@ export function PersonalizarTela({
   onToggleTheme,
   corPersonalizada,
   onDefinirCorPersonalizada,
+  qtdRepertoriosHome,
+  onDefinirQtdRepertoriosHome,
   onSair,
   onFechar,
   onCriarCifra,
@@ -178,6 +182,26 @@ export function PersonalizarTela({
             Restaurar cor padrão
           </button>
         )}
+
+        <h2 className="mt-8 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Início</h2>
+        <div className="mt-2 flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">Meus próximos repertórios</p>
+            <p className="text-xs text-[var(--muted)]">Quantos mostrar na tela inicial</p>
+          </div>
+          <select
+            value={qtdRepertoriosHome}
+            onChange={(e) => onDefinirQtdRepertoriosHome(Number(e.target.value))}
+            className="shrink-0 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm outline-none"
+          >
+            <option value={0}>Não mostrar</option>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <button
           onClick={onSair}
