@@ -70,6 +70,35 @@ export async function listarEscalas(ministerioId: string): Promise<Escala[]> {
   return (data ?? []).map(mapEscala as (e: unknown) => Escala);
 }
 
+export type EscalaResumo = { id: string; titulo: string; data: string };
+
+/**
+ * Versão leve pro card "Meus próximos repertórios" da Início: sem
+ * roteiro_itens (que puxa o roteiro inteiro de cada escala) e filtrando
+ * no servidor por participação do membro + data futura, em vez de trazer
+ * todas as escalas do ministério pra filtrar no cliente (era o gargalo).
+ */
+export async function listarProximasEscalasDoMembro(
+  ministerioId: string,
+  membroId: string,
+  limite: number
+): Promise<EscalaResumo[]> {
+  const hoje = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from('escala_participantes')
+    .select('escalas!inner(id, titulo, data, ministerio_id)')
+    .eq('membro_id', membroId)
+    .eq('escalas.ministerio_id', ministerioId)
+    .gte('escalas.data', hoje)
+    .order('data', { referencedTable: 'escalas', ascending: true })
+    .limit(limite);
+  if (error) throw error;
+  type Linha = { escalas: EscalaResumo | EscalaResumo[] | null };
+  return ((data ?? []) as unknown as Linha[])
+    .map((row) => (Array.isArray(row.escalas) ? row.escalas[0] : row.escalas))
+    .filter((e): e is EscalaResumo => e != null);
+}
+
 export async function criarEscala(ministerioId: string, escala: Escala): Promise<Escala> {
   const { data: nova, error } = await supabase
     .from('escalas')

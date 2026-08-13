@@ -11,7 +11,7 @@ import {
 } from '../lib/musicasApi';
 import { getCantoresPopulares } from '../lib/cantoresApi';
 import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
-import { useEscalas } from '../lib/useEscalas';
+import { useProximosRepertoriosHome } from '../lib/useProximosRepertoriosHome';
 import { useQtdRepertoriosHome } from '../lib/preferenciaRepertoriosHome';
 import { proximoDomingoCalculado, diasAte } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
@@ -128,25 +128,14 @@ export function Home({
   // "Meus próximos repertórios" — escalas futuras do ministério ativo em
   // que eu participo, cruzadas com o repertório vinculado a cada uma (1
   // escala = 1 repertório). qtdRepertoriosHome = 0 esconde o bloco.
-  const { escalas: escalasDoMinisterio } = useEscalas(ministerio.id);
+  // Consulta dedicada e enxuta (não usa useEscalas/useRepertorios
+  // completos) — ver useProximosRepertoriosHome.ts.
   const [qtdRepertoriosHome, definirQtdRepertoriosHome] = useQtdRepertoriosHome();
-  const hojeISO = new Date().toISOString().slice(0, 10);
-  const proximosRepertorios = useMemo(() => {
-    if (qtdRepertoriosHome === 0 || !ministerio.meuMembroId) return [];
-    return escalasDoMinisterio
-      .filter(
-        (e) => e.data >= hojeISO && e.participantes.some((p) => p.membroId === ministerio.meuMembroId)
-      )
-      .sort((a, b) => a.data.localeCompare(b.data))
-      .slice(0, qtdRepertoriosHome)
-      .map((escala) => ({
-        escala,
-        repertorio: repertorios.find((r) => r.escalaId === escala.id) ?? null,
-      }))
-      .filter((item): item is { escala: (typeof escalasDoMinisterio)[number]; repertorio: RepertorioTipo } =>
-        item.repertorio !== null
-      );
-  }, [escalasDoMinisterio, repertorios, qtdRepertoriosHome, ministerio.meuMembroId, hojeISO]);
+  const { itens: proximosRepertorios } = useProximosRepertoriosHome(
+    ministerio.id,
+    ministerio.meuMembroId,
+    qtdRepertoriosHome
+  );
 
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get('rep');
@@ -327,14 +316,14 @@ export function Home({
                 Meus próximos repertórios
               </h2>
               <div className="flex flex-col gap-2 lg:rounded-2xl lg:border lg:border-[var(--border)] lg:gap-0">
-                {proximosRepertorios.map(({ escala, repertorio }, i) => (
+                {proximosRepertorios.map(({ escala, repertorioId }, i) => (
                   <div
                     key={escala.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => onAbrirRepertorio(repertorio.id)}
+                    onClick={() => onAbrirRepertorio(repertorioId)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') onAbrirRepertorio(repertorio.id);
+                      if (e.key === 'Enter') onAbrirRepertorio(repertorioId);
                     }}
                     className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-4 py-3 hover:bg-[var(--surface)] lg:rounded-none lg:border-x-0 lg:border-t-0 ${
                       i === proximosRepertorios.length - 1 ? 'lg:border-b-0' : ''

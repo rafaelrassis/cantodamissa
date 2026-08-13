@@ -241,6 +241,31 @@ export async function obterRepertorioPorEscala(escalaId: string): Promise<Repert
   return data ? mapearRepertorio(data as unknown as LinhaRepertorioSupabase) : null;
 }
 
+export type RepertorioResumo = { id: string; escalaId: string };
+
+/**
+ * Versão leve pro card "Meus próximos repertórios" da Início: só id +
+ * escalaId (sem ritos/músicas), buscando apenas os repertórios das
+ * escalas já filtradas — em vez de listarRepertorios() completo, que traz
+ * ritos e músicas de TODOS os repertórios do dispositivo.
+ */
+export async function listarRepertoriosPorEscalas(escalaIds: string[]): Promise<RepertorioResumo[]> {
+  if (escalaIds.length === 0) return [];
+
+  if (!isSupabaseConfigured) {
+    return lerMock()
+      .filter((r) => r.escalaId && escalaIds.includes(r.escalaId))
+      .map((r) => ({ id: r.id, escalaId: r.escalaId as string }));
+  }
+
+  const { data, error } = await supabase.from('repertorios').select('id, escala_id').in('escala_id', escalaIds);
+  if (error) {
+    console.error('listarRepertoriosPorEscalas:', error.message);
+    return [];
+  }
+  return (data ?? []).map((r) => ({ id: r.id as string, escalaId: r.escala_id as string }));
+}
+
 export async function renomearRepertorio(id: string, nome: string): Promise<void> {
   const nomeFinal = nome.trim();
   if (!nomeFinal) return;
