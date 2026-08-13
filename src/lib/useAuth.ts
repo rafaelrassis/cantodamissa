@@ -46,7 +46,12 @@ export function useAuth() {
     setSession(null);
   }, []);
 
-  const user = session?.user ?? null;
+  // O app também abre sessões anônimas do Supabase Auth por baixo dos
+  // panos (garantirSessaoAnonima, ver supabaseAuth.ts) só pra dar um
+  // auth.uid() real às policies de RLS do Ministério — isso não é
+  // "usuário logado" pro resto do app, senão qualquer visitante que
+  // nunca clicou em "Entrar com Google" já contaria como logado.
+  const user = session?.user && !session.user.is_anonymous ? session.user : null;
 
   return {
     carregando,
