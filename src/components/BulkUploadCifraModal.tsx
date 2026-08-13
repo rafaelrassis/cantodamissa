@@ -5,6 +5,7 @@ import {
   FolderUp,
   Files,
   FileArchive,
+  Link2,
   Loader2,
   CheckCircle2,
   XCircle,
@@ -21,21 +22,25 @@ interface Props {
 }
 
 type StatusItem = 'pendente' | 'extraindo' | 'pronto' | 'enviando' | 'ok' | 'erro' | 'duplicada';
+type Origem = 'arquivo' | 'url';
 
 interface ItemUpload {
   id: string;
-  file: File;
+  origem: Origem;
+  file: File | null; // null quando origem === 'url'
+  url: string | null; // null quando origem === 'arquivo'
   musica: string;
   cantor: string;
-  musicaSugeridaDoNome: string; // chute inicial vindo do nome do arquivo — se o usuário editar, não sobrescreve mais com o título extraído do PDF
+  musicaSugeridaDoNome: string; // chute inicial (nome de arquivo ou URL) — se o usuário editar, não sobrescreve mais com o título extraído
   status: StatusItem;
-  chordsContent: string; // extraído do PDF (editável) — vazio pra imagens ou PDF sem camada de texto
+  chordsContent: string; // extraído do PDF ou raspado do Cifra Club (editável)
   mostrarCifra: boolean;
   erro?: string;
 }
 
 const PASTA_BASE = 'cifra';
 const TIPOS_PERMITIDOS = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+const REGEX_CIFRACLUB = /^https?:\/\/(www\.)?cifraclub\.com\.br\/\S+$/i;
 
 function gerarId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -62,7 +67,8 @@ function sanitizarNomeArquivo(nome: string): string {
 }
 
 // Chave pra comparar música+cantor ignorando maiúsculas/acentos — evita
-// criar duas músicas iguais no banco (ex: reenvio acidental do mesmo lote).
+// criar duas músicas iguais no banco (ex: reenvio acidental do mesmo lote,
+// ou a mesma música vindo por URL e por PDF no mesmo lote).
 function chaveMusica(musica: string, cantor: string): string {
   return `${normalizar(musica)}|${normalizar(cantor)}`;
 }
@@ -97,13 +103,16 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
   const [itens, setItens] = useState<ItemUpload[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [processandoZip, setProcessandoZip] = useState(false);
+  const [textoUrls, setTextoUrls] = useState('');
 
   function atualizarItem(id: string, campos: Partial<ItemUpload>) {
     setItens((atual) => atual.map((it) => (it.id === id ? { ...it, ...campos } : it)));
   }
 
-  async function extrairCifraItem(item: ItemUpload) {
-    if (item.file.type !== 'application/pdf') return;
+  // ---------- Fluxo PDF/imagem ----------
+
+  async function extrairCifraDoArquivo(item: ItemUpload) {
+    if (!item.file || item.file.type !== 'application/pdf') return;
     atualizarItem(item.id, { status: 'extraindo' });
     try {
       const resp = await fetch('/api/cifra-pdf-extract', {
@@ -116,10 +125,6 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
       setItens((atual) =>
         atual.map((it) => {
           if (it.id !== item.id) return it;
-          // só usa o título extraído do PDF se o campo ainda tiver o chute
-          // original do nome do arquivo — esse formato de PDF raramente tem
-          // música/cantor no nome, então o título de dentro do arquivo
-          // costuma ser mais confiável, mas não sobrescreve edição manual
           const musica =
             it.musica === it.musicaSugeridaDoNome && data.tituloSugerido ? data.tituloSugerido : it.musica;
           return { ...it, status: 'pronto', chordsContent: data.chordsContent ?? '', musica };
@@ -155,7 +160,9 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
       const sugestao = chuteInicial(f.name);
       return {
         id: gerarId(),
+        origem: 'arquivo',
         file: f,
+        url: null,
         status: 'pendente',
         chordsContent: '',
         mostrarCifra: false,
@@ -166,11 +173,79 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
     setItens((atual) => [...atual, ...novos]);
 
     for (const item of novos) {
-      if (item.file.type === 'application/pdf') {
-        void extrairCifraItem(item);
+      if (item.file?.type === 'application/pdf') {
+        void extrairCifraDoArquivo(item);
       }
     }
   }
+
+  // ---------- Fluxo URL Cifra Club ----------
+
+  async function extrairCifraDaUrl(item: ItemUpload) {
+    if (!item.url) return;
+    atualizarItem(item.id, { status: 'extraindo' });
+    try {
+      const resp = await fetch('/api/cifraclub-import', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ url: item.url }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Falha ao importar do Cifra Club');
+      setItens((atual) =>
+        atual.map((it) => {
+          if (it.id !== item.id) return it;
+          const musica = it.musica === it.musicaSugeridaDoNome && data.title ? data.title : it.musica;
+          const cantor = !it.cantor && data.artist ? data.artist : it.cantor;
+          return { ...it, status: 'pronto', chordsContent: data.chordsContent ?? '', musica, cantor };
+        })
+      );
+    } catch (err) {
+      atualizarItem(item.id, {
+        status: 'pronto',
+        erro: err instanceof Error ? err.message : 'Falha ao importar do Cifra Club',
+      });
+    }
+  }
+
+  function adicionarUrls() {
+    const linhas = textoUrls
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    const validas: string[] = [];
+    const invalidas: string[] = [];
+    for (const linha of linhas) {
+      if (REGEX_CIFRACLUB.test(linha)) validas.push(linha);
+      else invalidas.push(linha);
+    }
+
+    const novos: ItemUpload[] = validas.map((url) => {
+      const slug = url.replace(/\/$/, '').split('/').pop() || url;
+      const musicaSugerida = slug.replace(/-/g, ' ');
+      return {
+        id: gerarId(),
+        origem: 'url',
+        file: null,
+        url,
+        status: 'pendente',
+        chordsContent: '',
+        mostrarCifra: false,
+        musicaSugeridaDoNome: musicaSugerida,
+        musica: musicaSugerida,
+        cantor: '',
+      };
+    });
+    setItens((atual) => [...atual, ...novos]);
+    setTextoUrls(invalidas.join('\n')); // deixa as inválidas no campo pra corrigir
+
+    for (const item of novos) {
+      void extrairCifraDaUrl(item);
+    }
+  }
+
+  // ---------- Comum ----------
 
   function removerItem(id: string) {
     setItens((atual) => atual.filter((it) => it.id !== id));
@@ -203,14 +278,51 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
       }
 
       atualizarItem(item.id, { status: 'enviando', erro: undefined });
+
+      // URL do Cifra Club: sem blob, sem PDF — a própria URL já serve de
+      // referência da fonte. Fluxo mais simples e mais confiável que PDF.
+      if (item.origem === 'url') {
+        try {
+          if (!item.chordsContent.trim()) {
+            throw new Error('Sem cifra importada dessa URL — nada foi salvo.');
+          }
+          await criarMusica({
+            title: item.musica.trim(),
+            artist: item.cantor.trim(),
+            originalTone: 'C',
+            difficulty: null,
+            capo: 0,
+            youtubeUrl: null,
+            lyrics: null,
+            chordsContent: item.chordsContent,
+            tempoLiturgico: [],
+            ciclo: [],
+            momento: [],
+            sourceFileUrl: item.url ?? undefined,
+          });
+          musicasExistentes.add(chave);
+          atualizarItem(item.id, { status: 'ok' });
+        } catch (err) {
+          atualizarItem(item.id, {
+            status: 'erro',
+            erro: err instanceof Error ? err.message : 'Falha desconhecida',
+          });
+        }
+        continue;
+      }
+
+      // Arquivo (PDF/imagem): blob é só armazenamento de referência do
+      // original — não deve bloquear a criação da música se estiver instável.
+      let sourceFileUrl: string | undefined;
+      let avisoBlob: string | undefined;
       try {
-        const ext = item.file.name.split('.').pop() || 'pdf';
+        const ext = item.file!.name.split('.').pop() || 'pdf';
         const nomeFinal = `${sanitizarNomeArquivo(item.musica)} - ${sanitizarNomeArquivo(item.cantor)}.${ext}`;
         const pastaDestino = `${PASTA_BASE}/${sanitizarNomeArquivo(item.cantor) || 'Sem Cantor'}`;
         const resp = await fetch('/api/blob-upload', {
           method: 'POST',
           headers: {
-            'content-type': item.file.type,
+            'content-type': item.file!.type,
             'x-filename': nomeFinal,
             'x-folder': pastaDestino,
           },
@@ -218,7 +330,14 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Falha no upload');
+        sourceFileUrl = data.url;
+      } catch (err) {
+        avisoBlob = `PDF original não guardado (blob falhou): ${
+          err instanceof Error ? err.message : 'erro desconhecido'
+        }`;
+      }
 
+      try {
         if (item.chordsContent.trim()) {
           await criarMusica({
             title: item.musica.trim(),
@@ -232,12 +351,16 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
             tempoLiturgico: [],
             ciclo: [],
             momento: [],
-            sourceFileUrl: data.url,
+            sourceFileUrl,
           });
           musicasExistentes.add(chave); // evita duplicar de novo dentro do mesmo lote
+          atualizarItem(item.id, { status: 'ok', erro: avisoBlob });
+        } else if (sourceFileUrl) {
+          // sem cifra extraída: só faz sentido guardar se o blob funcionou
+          atualizarItem(item.id, { status: 'ok' });
+        } else {
+          throw new Error('Sem cifra extraída e blob indisponível — nada foi salvo.');
         }
-
-        atualizarItem(item.id, { status: 'ok' });
       } catch (err) {
         atualizarItem(item.id, {
           status: 'erro',
@@ -259,14 +382,34 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
           <div>
             <h2 className="text-lg font-bold">Upload em massa de cifras</h2>
             <p className="text-xs text-[var(--muted)]">
-              Sobe os arquivos pra pasta <code>{PASTA_BASE}/</code> no Blob, organizados por cantor.
-              PDFs com texto real têm a cifra extraída automaticamente (revise antes de enviar) e a
-              música já é criada no banco; imagens e PDFs sem texto extraível só ficam guardados como
-              referência. Nome da música e do cantor são obrigatórios pra cada arquivo.
+              URLs do Cifra Club são importadas direto (sem blob, extração mais confiável). PDFs têm a
+              cifra extraída automaticamente quando têm texto real (revise antes de enviar); o arquivo
+              original só é guardado se o blob estiver disponível — nunca bloqueia a criação da música.
+              Nome da música e do cantor são obrigatórios pra cada item.
             </p>
           </div>
           <button onClick={onFechar} className="shrink-0 text-[var(--muted)] hover:text-[var(--text)]">
             <X size={20} />
+          </button>
+        </div>
+
+        <div className="mb-3 rounded-lg border border-[var(--border)] p-3">
+          <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold">
+            <Link2 size={14} /> URLs do Cifra Club (uma por linha)
+          </label>
+          <textarea
+            value={textoUrls}
+            onChange={(e) => setTextoUrls(e.target.value)}
+            placeholder={'https://www.cifraclub.com.br/artista/musica/\nhttps://www.cifraclub.com.br/artista/musica2/'}
+            rows={3}
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 font-mono text-xs"
+          />
+          <button
+            onClick={adicionarUrls}
+            disabled={!textoUrls.trim()}
+            className="mt-1.5 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-fg)] disabled:opacity-50"
+          >
+            Adicionar URLs
           </button>
         </div>
 
@@ -312,7 +455,7 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
 
         {itens.length === 0 && !processandoZip && (
           <p className="py-8 text-center text-sm text-[var(--muted)]">
-            Nenhum arquivo selecionado. PDFs, imagens (JPG/PNG/WebP) e .zip são aceitos.
+            Nenhum item ainda. Cole URLs do Cifra Club ou selecione PDFs, imagens (JPG/PNG/WebP) e .zip.
           </p>
         )}
 
@@ -329,8 +472,12 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
                     {item.status === 'erro' && <XCircle size={16} className="text-red-600" />}
                     {item.status === 'duplicada' && <Copy size={16} className="text-amber-600" />}
                   </div>
-                  <p className="w-32 shrink-0 truncate text-xs text-[var(--muted)]" title={item.file.name}>
-                    {item.file.name}
+                  <p
+                    className="w-32 shrink-0 truncate text-xs text-[var(--muted)]"
+                    title={item.origem === 'url' ? item.url ?? '' : item.file?.name ?? ''}
+                  >
+                    {item.origem === 'url' ? <Link2 size={11} className="mr-0.5 inline" /> : null}
+                    {item.origem === 'url' ? item.url : item.file?.name}
                   </p>
                   <input
                     placeholder="Música *"
@@ -359,7 +506,7 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
                   </button>
                 </div>
 
-                {item.file.type === 'application/pdf' && item.status !== 'extraindo' && (
+                {(item.origem === 'url' || item.file?.type === 'application/pdf') && item.status !== 'extraindo' && (
                   <div className="mt-1.5 pl-8">
                     {item.chordsContent.trim() ? (
                       <button
@@ -368,12 +515,14 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
                         className="flex items-center gap-1 text-xs text-[var(--accent)] hover:underline"
                       >
                         {item.mostrarCifra ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                        Cifra extraída — revisar antes de enviar
+                        Cifra {item.origem === 'url' ? 'importada' : 'extraída'} — revisar antes de enviar
                       </button>
                     ) : (
                       <p className="flex items-center gap-1 text-xs text-amber-600">
-                        <AlertTriangle size={12} /> Sem texto extraído — só o arquivo será guardado
-                        (edite manualmente depois)
+                        <AlertTriangle size={12} />
+                        {item.origem === 'url'
+                          ? 'Sem cifra importada — nada será salvo pra esse item'
+                          : 'Sem texto extraído — só o arquivo será guardado (edite manualmente depois)'}
                       </p>
                     )}
                     {item.mostrarCifra && (
@@ -405,7 +554,7 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
         <div className="mt-5 flex items-center justify-between gap-2">
           <p className="text-xs text-[var(--muted)]">
             {itens.length > 0 &&
-              `${enviadosOk}/${itens.length} enviado(s) · ${comCifraCount} com cifra extraída` +
+              `${enviadosOk}/${itens.length} enviado(s) · ${comCifraCount} com cifra pronta` +
                 (duplicadasCount > 0 ? ` · ${duplicadasCount} duplicada(s)` : '')}
           </p>
           <div className="flex gap-2">
