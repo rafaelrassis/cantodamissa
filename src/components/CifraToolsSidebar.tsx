@@ -30,9 +30,9 @@ export function CifraToolsSidebar(props: Props) {
       <ToolSection label="Tom">
         <div className="flex items-center gap-2">
           <SquareButton onClick={props.onDecTone} aria-label="Diminuir tom">
-            <Minus size={18} strokeWidth={2.75} />
+            <Minus size={18} />
           </SquareButton>
-          <div className="flex h-11 flex-1 flex-col items-center justify-center rounded-full bg-[var(--accent-soft)]">
+          <div className="flex h-11 flex-1 flex-col items-center justify-center rounded-[11px] bg-[var(--accent-soft)]">
             <span className="font-mono text-base font-bold text-[var(--accent)]">
               {props.currentTone}
             </span>
@@ -41,7 +41,7 @@ export function CifraToolsSidebar(props: Props) {
             </span>
           </div>
           <SquareButton onClick={props.onIncTone} aria-label="Aumentar tom">
-            <Plus size={18} strokeWidth={2.75} />
+            <Plus size={18} />
           </SquareButton>
         </div>
         <div className="mt-2 flex gap-2">
@@ -55,13 +55,13 @@ export function CifraToolsSidebar(props: Props) {
       <ToolSection label="Capotraste">
         <div className="flex h-10 items-center gap-2">
           <SquareButton small onClick={props.onDecCapo} aria-label="Diminuir capo">
-            <Minus size={16} strokeWidth={2.75} />
+            <Minus size={16} />
           </SquareButton>
-          <div className="flex h-10 flex-1 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] font-mono text-sm text-[var(--text)]">
+          <div className="flex h-10 flex-1 items-center justify-center rounded-[11px] border border-[var(--border)] bg-[var(--bg)] font-mono text-sm text-[var(--text)]">
             {props.capoLabel}
           </div>
           <SquareButton small onClick={props.onIncCapo} aria-label="Aumentar capo">
-            <Plus size={16} strokeWidth={2.75} />
+            <Plus size={16} />
           </SquareButton>
         </div>
       </ToolSection>
@@ -69,13 +69,13 @@ export function CifraToolsSidebar(props: Props) {
       <ToolSection label="Rolagem automática">
         <button
           onClick={props.onTogglePlay}
-          className={`flex h-11 w-full items-center justify-center gap-2 rounded-full text-sm font-bold transition-colors ${
+          className={`flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors ${
             props.playing
               ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
               : 'border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] hover:bg-[var(--surface2)]'
           }`}
         >
-          {props.playing ? <Pause size={16} strokeWidth={2.75} /> : <Play size={16} strokeWidth={2.75} />}
+          {props.playing ? <Pause size={16} /> : <Play size={16} />}
           {props.playing ? 'pausar rolagem' : 'rolar automático'}
         </button>
         <div className="mt-2 flex items-center gap-2 text-[11px] text-[var(--muted)]">
@@ -117,7 +117,7 @@ export function CifraToolsSidebar(props: Props) {
                 <button
                   key={item.musicaId}
                   onClick={() => props.onSelectRepertorioItem(item.musicaId)}
-                  className={`flex items-center justify-between gap-2 rounded-[16px] border px-[13px] py-2 text-left ${
+                  className={`flex items-center justify-between gap-2 rounded-[10px] border px-3 py-2 text-left ${
                     active
                       ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
                       : 'border-transparent bg-[var(--bg)] hover:bg-[var(--surface2)]'
@@ -168,8 +168,8 @@ function SquareButton({
   return (
     <button
       onClick={onClick}
-      className={`flex shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] font-mono text-[var(--accent)] hover:bg-[var(--accent-soft)] ${
-        small ? 'h-8 w-8 text-xs font-bold' : 'h-11 w-11'
+      className={`flex shrink-0 items-center justify-center rounded-[11px] border border-[var(--border)] bg-[var(--bg)] font-mono text-[var(--accent)] hover:bg-[var(--accent-soft)] ${
+        small ? 'h-8 w-8 text-xs' : 'h-11 w-11'
       }`}
       {...rest}
     >
@@ -188,7 +188,7 @@ function SecondaryButton({
   return (
     <button
       onClick={onClick}
-      className="h-[34px] flex-1 rounded-full border border-[var(--border)] bg-[var(--bg)] font-mono text-xs text-[var(--text)] hover:bg-[var(--surface2)]"
+      className="h-[34px] flex-1 rounded-[10px] border border-[var(--border)] bg-[var(--bg)] font-mono text-xs text-[var(--text)] hover:bg-[var(--surface2)]"
     >
       {children}
     </button>

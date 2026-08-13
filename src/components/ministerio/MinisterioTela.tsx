@@ -31,12 +31,12 @@ interface Props {
 type SubTela = 'inicio' | 'escalas' | 'equipe' | 'avisos' | 'panorama' | 'repertorio';
 
 const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
-  { id: 'inicio', label: 'Início', icon: <Home size={17} strokeWidth={2.75} /> },
-  { id: 'escalas', label: 'Escalas', icon: <CalendarDays size={17} strokeWidth={2.75} /> },
-  { id: 'repertorio', label: 'Repertório', icon: <ListMusic size={17} strokeWidth={2.75} /> },
-  { id: 'equipe', label: 'Equipe', icon: <Users size={17} strokeWidth={2.75} /> },
-  { id: 'avisos', label: 'Avisos', icon: <Megaphone size={17} strokeWidth={2.75} /> },
-  { id: 'panorama', label: 'Panorama', icon: <BarChart3 size={17} strokeWidth={2.75} /> },
+  { id: 'inicio', label: 'Início', icon: <Home size={16} /> },
+  { id: 'escalas', label: 'Escalas', icon: <CalendarDays size={16} /> },
+  { id: 'repertorio', label: 'Repertório', icon: <ListMusic size={16} /> },
+  { id: 'equipe', label: 'Equipe', icon: <Users size={16} /> },
+  { id: 'avisos', label: 'Avisos', icon: <Megaphone size={16} /> },
+  { id: 'panorama', label: 'Panorama', icon: <BarChart3 size={16} /> },
 ];
 
 /**
@@ -205,30 +205,30 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="bg-[var(--accent)] px-4 pb-5 pt-4 text-[var(--accent-fg)] lg:px-8">
-        <div className="mb-2.5 flex items-center justify-between">
-          <button onClick={onBack} className="flex items-center gap-1.5 text-xs opacity-85">
-            <ChevronLeft size={14} strokeWidth={2.75} /> Voltar
+      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
+        <div className="mb-2 flex items-center justify-between">
+          <button onClick={onBack} className="flex items-center gap-1 text-xs opacity-80">
+            <ChevronLeft size={14} /> Voltar
           </button>
           <button
             onClick={() => setConfiguracoesAbertas(true)}
             aria-label="Configurações do ministério"
-            className="opacity-85"
+            className="text-xs opacity-80"
           >
-            <Settings size={16} strokeWidth={2.75} />
+            <Settings size={16} />
           </button>
         </div>
         <button
           onClick={() => setSeletorMinisterioAberto(true)}
           className="flex w-full items-center gap-3 text-left"
         >
-          {ministerio.foto && <span className="text-[26px] leading-none">{ministerio.foto}</span>}
+          {ministerio.foto && <span className="text-2xl">{ministerio.foto}</span>}
           <div className="min-w-0 flex-1">
-            <span className="flex items-center gap-1.5">
-              <h1 className="truncate text-[22px]">{ministerio.nome}</h1>
-              <ChevronDown size={18} strokeWidth={2.75} className="shrink-0 opacity-80" />
+            <span className="flex items-center gap-1">
+              <h1 className="truncate text-xl font-extrabold tracking-tight">{ministerio.nome}</h1>
+              <ChevronDown size={18} className="shrink-0 opacity-80" />
             </span>
-            <p className="mt-0.5 text-sm opacity-85">{ministerio.membros.length} membros · área restrita</p>
+            <p className="mt-0.5 text-sm opacity-80">{ministerio.membros.length} membros · área restrita</p>
           </div>
         </button>
       </header>
@@ -242,25 +242,24 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
         onAdicionar={() => setAdicionandoMinisterio(true)}
       />
 
-      <div className="lg:flex lg:items-start">
-        <nav className="flex overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] lg:w-[216px] lg:shrink-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:border-b-0 lg:border-r lg:p-3.5">
-          {ABAS.map((a) => (
-            <button
-              key={a.id}
-              onClick={() => setSubTela(a.id)}
-              className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-3 py-3 text-xs font-semibold transition lg:flex-none lg:justify-start lg:gap-2.5 lg:rounded-full lg:px-3.5 lg:py-2.5 lg:text-[14.5px] ${
-                subTela === a.id
-                  ? 'border-b-2 border-[var(--accent)] text-[var(--accent)] lg:border-b-0 lg:bg-[var(--accent)] lg:font-bold lg:text-[var(--accent-fg)]'
-                  : 'text-[var(--muted)] hover:lg:bg-[var(--surface2)] lg:font-medium'
-              }`}
-            >
-              {a.icon}
-              {a.label}
-            </button>
-          ))}
-        </nav>
+      <nav className="mx-auto flex max-w-2xl overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)]">
+        {ABAS.map((a) => (
+          <button
+            key={a.id}
+            onClick={() => setSubTela(a.id)}
+            className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-3 py-3 text-xs font-semibold ${
+              subTela === a.id
+                ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]'
+                : 'text-[var(--muted)]'
+            }`}
+          >
+            {a.icon}
+            {a.label}
+          </button>
+        ))}
+      </nav>
 
-        <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-none lg:min-w-0 lg:flex-1">
+      <div className="mx-auto max-w-2xl">
         {subTela === 'inicio' && (
           <InicioTela
             nomeMinisterio={ministerio.nome}
@@ -346,7 +345,6 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio }: Props) {
             totalMembros={ministerio.membros.length}
           />
         )}
-        </div>
       </div>
     </div>
   );

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  AlertTriangle,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -122,27 +121,27 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-[15px] lg:px-8">
+      <header className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4 lg:px-10">
         <button onClick={onCancelar} aria-label="Voltar">
-          <ChevronLeft size={20} strokeWidth={2.75} />
+          <ChevronLeft size={20} />
         </button>
-        <h1 className="flex-1 text-[19px] leading-none">
+        <h1 className="flex-1 text-lg font-extrabold tracking-tight">
           {escalaExistente ? 'Editar escala' : 'Nova escala'}
         </h1>
         <button
           onClick={handleSalvar}
           disabled={!podeSalvar || participantesIndisponiveis.length > 0 || salvando}
-          className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-5 py-[9px] text-[13.5px] font-bold text-[var(--accent-fg)] disabled:opacity-40"
+          className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-4 py-1.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-40"
         >
-          <Check size={15} strokeWidth={2.75} /> {salvando ? 'Salvando...' : 'Salvar'}
+          <Check size={15} /> {salvando ? 'Salvando...' : 'Salvar'}
         </button>
       </header>
 
-      <div className="mx-auto max-w-3xl px-4 pb-24 pt-4 lg:px-8">
-        <div className="flex max-w-md gap-1.5 rounded-[24px] bg-[var(--surface)] p-1.5">
-          <TabBtn icon={<Info size={18} strokeWidth={2.75} />} label="Detalhes" active={aba === 'detalhes'} onClick={() => setAba('detalhes')} />
+      <div className="mx-auto max-w-2xl px-4 pb-24 pt-4 lg:px-10">
+        <div className="flex rounded-2xl bg-[var(--surface)] p-1.5">
+          <TabBtn icon={<Info size={18} />} label="Detalhes" active={aba === 'detalhes'} onClick={() => setAba('detalhes')} />
           <TabBtn
-            icon={<Users size={18} strokeWidth={2.75} />}
+            icon={<Users size={18} />}
             count={participantes.length}
             label="Participantes"
             active={aba === 'participantes'}
@@ -151,48 +150,48 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
         </div>
 
         {aba === 'detalhes' && (
-          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="mt-4 flex flex-col gap-4">
             <input
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               placeholder="Título *"
-              className="w-full rounded-full border border-[var(--border)] bg-[var(--surface)] px-[18px] py-[13px] text-sm outline-none focus:border-[var(--accent)] lg:col-span-2"
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm outline-none focus:border-[var(--accent)]"
             />
 
-            <div className="grid grid-cols-2 gap-4 lg:contents">
-              <label>
-                <span className="mb-1.5 block text-xs font-semibold text-[var(--muted)]">Data</span>
+            <div className="flex gap-3">
+              <label className="flex-1">
+                <span className="mb-1 block text-xs font-semibold text-[var(--muted)]">Data</span>
                 <input
                   type="date"
                   value={data}
                   onChange={(e) => setData(e.target.value)}
-                  className="w-full rounded-full border border-[var(--border)] bg-[var(--surface)] px-[18px] py-[11px] font-mono text-sm outline-none focus:border-[var(--accent)]"
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
                 />
               </label>
-              <label>
-                <span className="mb-1.5 block text-xs font-semibold text-[var(--muted)]">Hora</span>
+              <label className="flex-1">
+                <span className="mb-1 block text-xs font-semibold text-[var(--muted)]">Hora</span>
                 <input
                   type="time"
                   value={hora}
                   onChange={(e) => setHora(e.target.value)}
-                  className="w-full rounded-full border border-[var(--border)] bg-[var(--surface)] px-[18px] py-[11px] font-mono text-sm outline-none focus:border-[var(--accent)]"
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
                 />
               </label>
             </div>
 
-            <div className="lg:col-span-2">
+            <div>
               <textarea
                 value={observacoes}
                 onChange={(e) => setObservacoes(e.target.value.slice(0, 500))}
                 placeholder="Observações"
                 rows={3}
-                className="w-full resize-none rounded-[24px] border border-[var(--border)] bg-[var(--surface)] px-[18px] py-3.5 text-sm outline-none focus:border-[var(--accent)]"
+                className="w-full resize-none rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm outline-none focus:border-[var(--accent)]"
               />
               <p className="mt-1 text-right text-xs text-[var(--muted)]">{observacoes.length}/500</p>
             </div>
 
-            <div className="flex items-center gap-3.5 rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-4 lg:col-span-2">
-              <Eye size={18} strokeWidth={2.75} className="shrink-0 text-[var(--accent)]" />
+            <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+              <Eye size={18} className="shrink-0 text-[var(--accent)]" />
               <span className="flex-1">
                 <span className="block text-sm font-semibold">Visibilidade</span>
                 <span className="mt-0.5 block text-xs text-[var(--accent)]">
@@ -202,12 +201,12 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
               <ToggleBtn ativo={publicada} onClick={() => setPublicada((v) => !v)} />
             </div>
 
-            <div className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)] lg:col-span-2">
+            <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
               <button
                 onClick={() => setSeletorPaletaAberto((v) => !v)}
-                className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left"
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
               >
-                <Palette size={18} strokeWidth={2.75} className="shrink-0 text-[var(--muted)]" />
+                <Palette size={18} className="shrink-0 text-[var(--muted)]" />
                 <span className="flex-1 text-sm font-semibold">Paleta de cores</span>
                 {corPaleta && (
                   <span
@@ -215,10 +214,10 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
                     style={{ background: PALETAS_CORES.find((p) => p.id === corPaleta)?.cor }}
                   />
                 )}
-                <ChevronRight size={16} strokeWidth={2.75} className="shrink-0 text-[var(--muted)]" />
+                <ChevronRight size={16} className="shrink-0 text-[var(--muted)]" />
               </button>
               {seletorPaletaAberto && (
-                <div className="flex flex-wrap gap-3 border-t border-[var(--border)] px-4 py-3.5">
+                <div className="flex flex-wrap gap-3 border-t border-[var(--border)] px-4 py-3">
                   {PALETAS_CORES.map((p) => (
                     <button
                       key={p.id}
@@ -228,12 +227,12 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
                       title={p.nome}
                       aria-label={p.nome}
                     >
-                      {corPaleta === p.id && <Check size={16} strokeWidth={2.75} className="text-white" />}
+                      {corPaleta === p.id && <Check size={16} className="text-white" />}
                     </button>
                   ))}
                 </div>
               )}
-              <div className="flex items-center gap-3.5 border-t border-[var(--border)] px-4 py-3.5">
+              <div className="flex items-center gap-3 border-t border-[var(--border)] px-4 py-3.5">
                 <span className="flex-1 text-sm font-semibold">Solicitar confirmação dos participantes</span>
                 <ToggleBtn ativo={solicitarConfirmacao} onClick={() => setSolicitarConfirmacao((v) => !v)} />
               </div>
@@ -251,7 +250,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
                 }}
                 className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)]"
               >
-                <Plus size={16} strokeWidth={2.75} /> Adicionar
+                <Plus size={16} /> Adicionar
               </button>
               <button
                 onClick={() => {
@@ -260,41 +259,37 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
                 }}
                 className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
               >
-                <UsersRound size={16} strokeWidth={2.75} /> Equipes
+                <UsersRound size={16} /> Equipes
               </button>
               <button
                 onClick={sortear}
                 className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--text)]"
               >
-                <Shuffle size={16} strokeWidth={2.75} /> Sortear
+                <Shuffle size={16} /> Sortear
               </button>
             </div>
 
             {participantesIndisponiveis.length > 0 && (
-              <p className="mt-3 flex items-start gap-2.5 rounded-[20px] border border-[rgba(166,122,31,0.35)] bg-[rgba(166,122,31,0.10)] px-4 py-[13px] text-[12.5px] leading-[1.45] text-[#8a651a]">
-                <AlertTriangle size={14} strokeWidth={2.75} className="mt-0.5 shrink-0" />
+              <div className="mt-3 rounded-lg bg-amber-500/15 px-3 py-2 text-xs text-amber-500">
                 {participantesIndisponiveis.length} participante{participantesIndisponiveis.length > 1 ? 's' : ''} indisponíve
                 {participantesIndisponiveis.length > 1 ? 'is' : 'l'} nesta data — remova antes de salvar.
-              </p>
+              </div>
             )}
 
             {participantes.length === 0 ? (
               <EmptyState
-                icon={<Users size={40} strokeWidth={2.75} />}
+                icon={<Users size={40} />}
                 texto="Para adicionar um participante, toque no botão: ( + Adicionar )"
               />
             ) : (
-              <ul className="mt-4 flex flex-col gap-0.5">
+              <ul className="mt-4 flex flex-col gap-1">
                 {participantes.map((p) => {
                   const membro = membros.find((m) => m.id === p.membroId);
                   const funcao = funcoes.find((f) => f.id === p.funcaoId);
                   const indisponivel = indisponiveisIds.has(p.membroId);
                   if (!membro) return null;
                   return (
-                    <li
-                      key={p.membroId}
-                      className="flex items-center gap-3 rounded-[16px] px-2 py-[9px] transition hover:bg-[var(--surface)]"
-                    >
+                    <li key={p.membroId} className="flex items-center gap-3 rounded-lg px-2 py-2.5">
                       <span
                         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${membro.avatarCor} ${
                           indisponivel ? 'opacity-40' : ''
@@ -308,7 +303,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
                           {funcao?.icone} {funcao?.nome}
                         </span>
                         {indisponivel && (
-                          <span className="block text-xs font-semibold text-[#8a651a]">Indisponível nesta data</span>
+                          <span className="block text-xs font-semibold text-amber-500">Indisponível nesta data</span>
                         )}
                       </span>
                       <button
@@ -316,7 +311,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
                         aria-label="Remover participante"
                         className="text-[var(--muted)]"
                       >
-                        <Trash2 size={15} strokeWidth={2.75} />
+                        <Trash2 size={15} />
                       </button>
                     </li>
                   );
@@ -346,7 +341,7 @@ function TabBtn({
   return (
     <button
       onClick={onClick}
-      className={`flex flex-1 flex-col items-center gap-1 rounded-[18px] py-2.5 text-[11px] font-semibold ${
+      className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-2.5 text-[11px] font-semibold ${
         active ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
       }`}
     >
@@ -364,14 +359,12 @@ function ToggleBtn({ ativo, onClick }: { ativo: boolean; onClick: () => void }) 
     <button
       onClick={onClick}
       aria-pressed={ativo}
-      className={`h-[26px] w-11 shrink-0 rounded-full transition ${
+      className={`h-6 w-11 shrink-0 rounded-full transition ${
         ativo ? 'bg-[var(--accent)]' : 'border border-[var(--border)] bg-[var(--bg)]'
       }`}
     >
       <span
-        className={`block h-5 w-5 rounded-full bg-white shadow-[0_1px_3px_rgba(30,42,20,0.3)] transition ${
-          ativo ? 'translate-x-5' : 'translate-x-0.5'
-        }`}
+        className={`block h-5 w-5 rounded-full bg-white shadow transition ${ativo ? 'translate-x-5' : 'translate-x-0.5'}`}
       />
     </button>
   );
@@ -379,11 +372,11 @@ function ToggleBtn({ ativo, onClick }: { ativo: boolean; onClick: () => void }) 
 
 function EmptyState({ icon, texto }: { icon: React.ReactNode; texto: string }) {
   return (
-    <div className="mt-4 flex flex-col items-center rounded-[28px] border border-[var(--border)] bg-[var(--bg)] px-[26px] py-10 text-center">
+    <div className="mt-10 flex flex-col items-center text-center">
       <span className="flex h-24 w-24 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--accent)]">
         {icon}
       </span>
-      <p className="mt-4 max-w-[22ch] text-sm leading-[1.5] text-[var(--muted)]">{texto}</p>
+      <p className="mt-4 max-w-xs text-sm text-[var(--muted)]">{texto}</p>
     </div>
   );
 }

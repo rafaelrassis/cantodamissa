@@ -18,7 +18,7 @@ interface Props {
 }
 
 const CORES_SUGERIDAS = [
-  '#4f6135', // verde da marca (padrão)
+  '#186420', // verde da marca (padrão)
   '#2563eb', // azul
   '#a3111d', // vermelho
   '#5b2d90', // roxo litúrgico
@@ -45,23 +45,23 @@ export function PersonalizarTela({
   const [editandoFoto, setEditandoFoto] = useState(false);
   const [fotoRascunho, setFotoRascunho] = useState(foto ?? '🙂');
 
-  const corAtual = corPersonalizada ?? '#4f6135';
+  const corAtual = corPersonalizada ?? '#186420';
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="flex items-center gap-2.5 border-b border-[var(--border)] px-[22px] py-[15px]">
+      <header className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4">
         <button onClick={onFechar} aria-label="Voltar">
-          <ChevronLeft size={20} strokeWidth={2.75} />
+          <ChevronLeft size={20} />
         </button>
-        <h1 className="text-[19px]">Personalizar</h1>
+        <h1 className="text-lg font-extrabold tracking-tight">Personalizar</h1>
       </header>
 
-      <div className="mx-auto w-full max-w-2xl px-4 py-6 lg:px-8">
+      <div className="mx-auto w-full max-w-2xl px-4 py-5 lg:px-10">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setEditandoFoto((v) => !v)}
             aria-label="Alterar foto"
-            className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[26px] text-[var(--accent-fg)]"
+            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-3xl text-[var(--accent-fg)]"
           >
             {foto ?? userName[0]?.toUpperCase()}
           </button>
@@ -70,21 +70,21 @@ export function PersonalizarTela({
 
         <button
           onClick={onCriarCifra}
-          className="mt-4 flex w-full items-center gap-3 rounded-[24px] border border-[var(--border)] bg-[var(--surface)] px-[18px] py-[14px] text-left"
+          className="mt-4 flex w-full items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5 text-left"
         >
-          <ListPlus size={18} strokeWidth={2.75} className="shrink-0 text-[var(--accent)]" />
+          <ListPlus size={18} className="shrink-0 text-[var(--accent)]" />
           <span className="flex-1 text-sm font-semibold">Criar nova cifra</span>
-          <ChevronRight size={16} strokeWidth={2.75} className="shrink-0 text-[var(--muted)]" />
+          <ChevronRight size={16} className="shrink-0 text-[var(--muted)]" />
         </button>
 
         {editandoFoto && (
-          <div className="mt-3 flex items-center gap-2.5 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-3.5">
+          <div className="mt-3 flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
             <input
               autoFocus
               value={fotoRascunho}
               onChange={(e) => setFotoRascunho(e.target.value)}
               maxLength={2}
-              className="w-14 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-2 py-2 text-center text-xl"
+              className="w-14 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 py-2 text-center text-xl"
             />
             <p className="flex-1 text-xs text-[var(--muted)]">Emoji como foto — escolha o que quiser.</p>
             <button
@@ -92,53 +92,53 @@ export function PersonalizarTela({
                 onDefinirFoto(fotoRascunho.trim() || null);
                 setEditandoFoto(false);
               }}
-              className="shrink-0 rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-bold text-[var(--accent-fg)]"
+              className="shrink-0 rounded-lg bg-[var(--accent)] px-3 py-2 text-xs font-semibold text-[var(--accent-fg)]"
             >
               Ok
             </button>
           </div>
         )}
 
-        <h2 className="mt-[26px] mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
+        <h2 className="mt-8 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
           Data de nascimento
         </h2>
-        <div className="flex items-center gap-3 rounded-[24px] border border-[var(--border)] bg-[var(--surface)] px-[18px] py-[14px]">
-          <Cake size={18} strokeWidth={2.75} className="shrink-0 text-[var(--accent)]" />
+        <div className="mt-2 flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+          <Cake size={18} className="shrink-0 text-[var(--accent)]" />
           <input
             type="date"
             value={dataNascimento ?? ''}
             onChange={(e) => onDefinirDataNascimento(e.target.value || null)}
             max={new Date().toISOString().slice(0, 10)}
-            className="w-full bg-transparent font-mono text-sm outline-none"
+            className="w-full bg-transparent text-sm outline-none"
           />
         </div>
-        <p className="mt-1.5 text-xs text-[var(--muted)]">Usada pro seu aniversário aparecer no Ministério.</p>
+        <p className="mt-1 text-xs text-[var(--muted)]">Usada pro seu aniversário aparecer no Ministério.</p>
 
-        <h2 className="mt-[26px] mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">Aparência</h2>
-        <div className="flex gap-1.5 rounded-[24px] bg-[var(--surface)] p-1.5">
+        <h2 className="mt-8 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Aparência</h2>
+        <div className="mt-2 flex gap-2 rounded-2xl bg-[var(--surface)] p-1.5">
           <button
             onClick={() => theme === 'dark' && onToggleTheme()}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-[18px] py-[11px] text-sm font-bold ${
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold ${
               theme === 'light' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
             }`}
           >
-            <Sun size={16} strokeWidth={2.75} /> Claro
+            <Sun size={16} /> Claro
           </button>
           <button
             onClick={() => theme === 'light' && onToggleTheme()}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-[18px] py-[11px] text-sm font-bold ${
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold ${
               theme === 'dark' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
             }`}
           >
-            <Moon size={16} strokeWidth={2.75} /> Escuro
+            <Moon size={16} /> Escuro
           </button>
         </div>
 
-        <h2 className="mt-[26px] mb-1 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">Cor do app</h2>
-        <p className="mb-3 text-sm text-[var(--muted)]">Escolha a cor de destaque que preferir.</p>
+        <h2 className="mt-8 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Cor do app</h2>
+        <p className="mt-0.5 text-sm text-[var(--muted)]">Escolha a cor de destaque que preferir.</p>
 
-        <div className="flex items-center gap-3.5 rounded-[24px] border border-[var(--border)] bg-[var(--surface)] px-[18px] py-[14px]">
-          <div className="relative flex h-[46px] w-[46px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--border)]">
+        <div className="mt-3 flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--border)]">
             <input
               type="color"
               value={corAtual}
@@ -149,23 +149,23 @@ export function PersonalizarTela({
           </div>
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1.5 text-sm font-semibold">
-              <Palette size={14} strokeWidth={2.75} /> {corAtual}
+              <Palette size={14} /> {corAtual}
             </p>
             <p className="text-xs text-[var(--muted)]">Toque no círculo pra abrir o seletor de cor</p>
           </div>
         </div>
 
-        <div className="mt-[14px] flex flex-wrap gap-3">
+        <div className="mt-3 flex flex-wrap gap-3">
           {CORES_SUGERIDAS.map((cor) => (
             <button
               key={cor}
-              onClick={() => onDefinirCorPersonalizada(cor === '#4f6135' ? null : cor)}
+              onClick={() => onDefinirCorPersonalizada(cor === '#186420' ? null : cor)}
               className="flex h-9 w-9 items-center justify-center rounded-full"
               style={{ background: cor }}
               title={cor}
               aria-label={`Usar cor ${cor}`}
             >
-              {(corPersonalizada ?? '#4f6135') === cor && <Check size={16} strokeWidth={2.75} className="text-white" />}
+              {(corPersonalizada ?? '#186420') === cor && <Check size={16} className="text-white" />}
             </button>
           ))}
         </div>
@@ -173,7 +173,7 @@ export function PersonalizarTela({
         {corPersonalizada && (
           <button
             onClick={() => onDefinirCorPersonalizada(null)}
-            className="mt-[14px] text-xs font-bold text-[var(--accent)] underline-offset-2 hover:underline"
+            className="mt-3 text-xs font-semibold text-[var(--accent)] underline-offset-2 hover:underline"
           >
             Restaurar cor padrão
           </button>
@@ -181,9 +181,9 @@ export function PersonalizarTela({
 
         <button
           onClick={onSair}
-          className="mt-[28px] flex w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] py-[14px] text-sm font-bold"
+          className="mt-10 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border)] py-3 text-sm font-semibold"
         >
-          <LogOut size={16} strokeWidth={2.75} /> Sair
+          <LogOut size={16} /> Sair
         </button>
       </div>
     </div>

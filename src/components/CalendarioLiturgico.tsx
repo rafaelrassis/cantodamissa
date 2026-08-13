@@ -54,37 +54,39 @@ export function CalendarioLiturgico({ onBack, onFiltrarTempo }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="bg-[var(--accent)] px-4 py-5 text-[var(--accent-fg)] lg:px-10 lg:pb-6">
+      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
         <button onClick={onBack} className="mb-2 flex items-center gap-1 text-xs opacity-80">
-          <Back size={14} strokeWidth={2.75} /> Voltar
+          <Back size={14} /> Voltar
         </button>
-        <div className="flex items-start justify-between">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-[30px]">Calendário Litúrgico</h1>
-            <p className="mt-1 text-[14.5px] opacity-85">
+            <h1 className="text-xl font-extrabold tracking-tight lg:text-2xl">
+              Calendário Litúrgico
+            </h1>
+            <p className="mt-0.5 text-sm opacity-80">
               Ano litúrgico {labelPeriodo} · Ciclo {ciclo}
             </p>
           </div>
-          <div className="flex shrink-0 gap-2">
+          <div className="flex shrink-0 gap-1.5">
             <button
               onClick={() => setAnoAncora((a) => a - 1)}
               aria-label="Ano litúrgico anterior"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-fg)]/20"
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/16"
             >
-              <ChevronLeft size={16} strokeWidth={2.75} />
+              <ChevronLeft size={16} />
             </button>
             <button
               onClick={() => setAnoAncora((a) => a + 1)}
               aria-label="Próximo ano litúrgico"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-fg)]/20"
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/16"
             >
-              <ChevronRight size={16} strokeWidth={2.75} />
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl px-4 py-4 lg:px-0 lg:py-[24px]">
+      <div className="mx-auto max-w-3xl px-4 py-4 lg:px-10">
         {domingos.map((d, i) => {
           const isHoje = d.data.getTime() === hoje.data.getTime();
           const { dia, mes } = formatarData(d.data);
@@ -94,38 +96,38 @@ export function CalendarioLiturgico({ onBack, onFiltrarTempo }: Props) {
           return (
             <div key={d.data.toISOString()}>
               {primeiroDoMes && (
-                <p className="mb-3 mt-5 text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--muted)] first:mt-0">
+                <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)] first:mt-0">
                   {d.data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                 </p>
               )}
               <button
                 onClick={() => onFiltrarTempo?.(d.tempo)}
-                className={`flex w-full items-center gap-3.5 rounded-[24px] border px-4 py-3 text-left transition-colors ${
+                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors ${
                   isHoje
                     ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
-                    : 'border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)]'
+                    : 'border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--surface)]'
                 }`}
-                style={{ marginBottom: 8 }}
+                style={{ marginBottom: 6 }}
               >
                 <span
-                  className="h-[38px] w-1.5 shrink-0 rounded-full"
+                  className="h-9 w-1.5 shrink-0 rounded-full"
                   style={{ backgroundColor: COR_HEX[d.corLiturgica] }}
                   aria-hidden
                 />
                 <div className="w-11 shrink-0 text-center">
-                  <div className="font-mono text-[17px] font-bold leading-none">{dia}</div>
-                  <div className="text-[10.5px] uppercase text-[var(--muted)]">{mes}</div>
+                  <div className="font-mono text-base font-bold leading-none">{dia}</div>
+                  <div className="text-[10px] uppercase text-[var(--muted)]">{mes}</div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[14.5px] font-semibold">
+                  <p className="truncate text-sm font-semibold">
                     {d.nome}
                     {isHoje && (
-                      <span className="ml-2 rounded-full bg-[var(--accent)] px-2.5 py-1 text-[11px] font-extrabold text-[var(--accent-fg)]">
+                      <span className="ml-2 rounded-full bg-[var(--accent)] px-2 py-0.5 text-[10px] font-bold text-[var(--accent-fg)]">
                         próximo
                       </span>
                     )}
                   </p>
-                  <p className="truncate text-[12.5px] text-[var(--muted)]">
+                  <p className="truncate text-xs text-[var(--muted)]">
                     {LABEL_TEMPO[d.tempo]}
                     {d.numeroSemana ? ` · ${d.numeroSemana}ª semana` : ''}
                   </p>

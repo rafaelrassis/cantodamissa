@@ -30,8 +30,8 @@ export function PainelRepertorios({
   return (
     <>
       {repertorioCompartilhado && (
-        <div className="rounded-[24px] border-2 border-[var(--accent)] p-[14px]">
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--accent)]">
+        <div className="rounded-xl border-2 border-[var(--accent)] p-3">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[var(--accent)]">
             Compartilhado com você
           </p>
           <p className="mb-2 text-sm font-semibold text-[var(--text)]">
@@ -44,7 +44,7 @@ export function PainelRepertorios({
                 const musica = await getMusicaById(item.musicaId);
                 if (musica) onSelectMusica(musica, repertorioCompartilhado.id);
               }}
-              className="flex w-full items-center justify-between gap-2 rounded-[14px] px-2 py-1.5 text-left hover:bg-[var(--surface)]"
+              className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-[var(--surface)]"
             >
               <span className="min-w-0 flex-1 truncate text-sm text-[var(--text)]">
                 {item.title}
@@ -58,7 +58,7 @@ export function PainelRepertorios({
       )}
 
       {repertorios.length === 0 && (
-        <div className="rounded-[24px] bg-[var(--accent-soft)] p-[14px] text-xs text-[var(--muted)]">
+        <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
           Você ainda não tem repertórios. É necessário criar um repertório no menu Ministério.
         </div>
       )}
@@ -66,10 +66,10 @@ export function PainelRepertorios({
       {repertorios.map((r) => (
         <div
           key={r.id}
-          className="flex w-full items-center gap-[10px] rounded-[24px] border border-[var(--border)] p-[14px] hover:bg-[var(--surface)]"
+          className="flex w-full items-center gap-2 rounded-xl border border-[var(--border)] p-3 hover:bg-[var(--surface)]"
         >
           <button onClick={() => onAbrirRepertorio(r.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[var(--accent-soft)] font-mono text-sm font-bold text-[#3b4a27]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-soft)] font-mono text-sm font-bold text-[var(--accent)]">
               {r.itens.length}
             </span>
             <div className="min-w-0 flex-1">
@@ -85,15 +85,15 @@ export function PainelRepertorios({
               onClick={() => onClonar(r.id)}
               title="Clonar repertório"
               aria-label={`Clonar ${r.nome}`}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
             >
-              <Copy size={15} strokeWidth={2.75} />
+              <Copy size={15} />
             </button>
           )}
         </div>
       ))}
 
-      <div className="rounded-[24px] bg-[var(--accent-soft)] p-[14px] text-xs text-[var(--muted)]">
+      <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
         Monte o repertório da missa por rito e compartilhe com o ministério.
       </div>
     </>
