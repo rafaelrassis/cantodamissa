@@ -1,57 +1,71 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from './useAuth';
 
-const STORAGE_KEY = 'user_fake_auth_name';
-const FOTO_KEY = 'user_fake_auth_foto';
-const NASCIMENTO_KEY = 'user_fake_auth_nascimento';
+const FOTO_KEY_PREFIX = 'user_foto_emoji_'; // sufixo = user.id, emoji é por conta
+const NASCIMENTO_KEY_PREFIX = 'user_nascimento_'; // idem
 
 /**
- * Login fake baseado em localStorage — placeholder até termos OAuth Google
- * real (Fase 2, ver SPEC.md §8.2). Usado pro botão "Entrar" do usuário
- * comum na Home; não tem relação com o login de admin (useAdminAuth).
+ * Login real do usuário (Google, via useAuth/Supabase Auth) — substitui o
+ * antigo login fake em localStorage. Mantém a mesma interface externa
+ * (isLoggedIn, userName, foto, dataNascimento, login, logout,
+ * definirFoto, definirDataNascimento) pra não quebrar App.tsx/Home.tsx.
  *
- * `foto` é um emoji (avatar) — upload de imagem real fica pra quando tiver
- * Storage ligado ao perfil do usuário. `dataNascimento` é coletada uma vez
- * na criação da conta (ver UserLoginModal) e persiste mesmo se o usuário
- * deslogar — sair não é "excluir conta" neste mock. É usada como
- * aniversário do integrante "você" no módulo Ministério.
+ * `foto` aqui é o emoji-avatar opcional que o usuário escolhe em
+ * "Personalizar" (independente da foto real do Google) — mantém o
+ * comportamento anterior. `dataNascimento` ainda vive em localStorage,
+ * agora namespaced por user.id em vez de global: é um dado por conta, mas
+ * threading isso pro Supabase (tabela de perfil) fica pra depois — anotado
+ * como pendência, não bloqueia o login real.
  */
 export function useUserAuth() {
-  const [userName, setUserName] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
-  const [foto, setFotoState] = useState<string | null>(() => localStorage.getItem(FOTO_KEY));
-  const [dataNascimento, setDataNascimentoState] = useState<string | null>(() =>
-    localStorage.getItem(NASCIMENTO_KEY)
+  const { user, email, nome, carregando, signInWithGoogle, signOut } = useAuth();
+
+  const [foto, setFotoState] = useState<string | null>(null);
+  const [dataNascimento, setDataNascimentoState] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setFotoState(null);
+      setDataNascimentoState(null);
+      return;
+    }
+    setFotoState(localStorage.getItem(FOTO_KEY_PREFIX + user.id));
+    setDataNascimentoState(localStorage.getItem(NASCIMENTO_KEY_PREFIX + user.id));
+  }, [user]);
+
+  const login = useCallback(async () => {
+    await signInWithGoogle();
+  }, [signInWithGoogle]);
+
+  const logout = useCallback(async () => {
+    await signOut();
+  }, [signOut]);
+
+  const definirFoto = useCallback(
+    (emoji: string | null) => {
+      if (!user) return;
+      if (emoji) localStorage.setItem(FOTO_KEY_PREFIX + user.id, emoji);
+      else localStorage.removeItem(FOTO_KEY_PREFIX + user.id);
+      setFotoState(emoji);
+    },
+    [user]
   );
 
-  const login = useCallback((novaDataNascimento?: string) => {
-    const nome = 'Você';
-    localStorage.setItem(STORAGE_KEY, nome);
-    setUserName(nome);
-    if (novaDataNascimento) {
-      localStorage.setItem(NASCIMENTO_KEY, novaDataNascimento);
-      setDataNascimentoState(novaDataNascimento);
-    }
-  }, []);
-
-  const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setUserName(null);
-  }, []);
-
-  const definirFoto = useCallback((emoji: string | null) => {
-    if (emoji) localStorage.setItem(FOTO_KEY, emoji);
-    else localStorage.removeItem(FOTO_KEY);
-    setFotoState(emoji);
-  }, []);
-
-  const definirDataNascimento = useCallback((iso: string | null) => {
-    if (iso) localStorage.setItem(NASCIMENTO_KEY, iso);
-    else localStorage.removeItem(NASCIMENTO_KEY);
-    setDataNascimentoState(iso);
-  }, []);
+  const definirDataNascimento = useCallback(
+    (iso: string | null) => {
+      if (!user) return;
+      if (iso) localStorage.setItem(NASCIMENTO_KEY_PREFIX + user.id, iso);
+      else localStorage.removeItem(NASCIMENTO_KEY_PREFIX + user.id);
+      setDataNascimentoState(iso);
+    },
+    [user]
+  );
 
   return {
-    isLoggedIn: userName !== null,
-    userName,
+    isLoggedIn: user !== null,
+    carregandoAuth: carregando,
+    userName: nome,
+    userEmail: email,
     foto,
     dataNascimento,
     login,

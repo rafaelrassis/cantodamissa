@@ -3,7 +3,6 @@ import { Home } from './components/Home';
 import { CifraReader } from './components/CifraReader';
 import { CalendarioLiturgico } from './components/CalendarioLiturgico';
 import { AdminPanel } from './components/AdminPanel';
-import { AdminLogin } from './components/AdminLogin';
 import { TopMusicasTela } from './components/TopMusicasTela';
 import { TopArtistasTela } from './components/TopArtistasTela';
 import { RepertorioDetalheTela } from './components/RepertorioDetalheTela';
@@ -12,6 +11,7 @@ import { ArtistaTela } from './components/ArtistaTela';
 import { BuscaTela } from './components/BuscaTela';
 import { MinisterioTela } from './components/ministerio/MinisterioTela';
 import { UserLoginModal } from './components/UserLoginModal';
+import { CompletarPerfilModal } from './components/CompletarPerfilModal';
 import { AlertaTopo } from './components/AlertaTopo';
 import { BottomNavBar } from './components/BottomNavBar';
 import { useTheme } from './lib/useTheme';
@@ -50,10 +50,10 @@ function App() {
   const [escalaAlvoId, setEscalaAlvoId] = useState<string | null>(null);
   const { theme, toggleTheme, corPersonalizada, definirCorPersonalizada } = useTheme();
   const [fontSize, setFontSize] = useState(DEFAULT_FONT);
-  const { isAdmin, login, logout } = useAdminAuth();
   const {
     isLoggedIn,
     userName,
+    userEmail,
     foto,
     dataNascimento,
     login: loginUsuario,
@@ -61,7 +61,20 @@ function App() {
     definirFoto,
     definirDataNascimento,
   } = useUserAuth();
+  const { isAdmin } = useAdminAuth(userEmail);
   const [loginParaMinisterioAberto, setLoginParaMinisterioAberto] = useState(false);
+  const [perfilPulado, setPerfilPulado] = useState(false);
+
+  // Login Google é redirect (a página sai e volta) — a intenção "ir pro
+  // Ministério depois de logar" não sobrevive ao remount sozinha, então
+  // fica guardada aqui e é consumida assim que a sessão aparecer.
+  const CHAVE_POS_LOGIN = 'cdm_pos_login_ir_ministerio';
+  useEffect(() => {
+    if (isLoggedIn && sessionStorage.getItem(CHAVE_POS_LOGIN)) {
+      sessionStorage.removeItem(CHAVE_POS_LOGIN);
+      setTela('ministerio');
+    }
+  }, [isLoggedIn]);
 
   // Levantado até aqui (em vez de ficar dentro de MinisterioTela) pra
   // sobreviver à troca de tela e alimentar o alerta global abaixo.
@@ -189,13 +202,21 @@ function App() {
 
   if (tela === 'admin') {
     if (!isAdmin) {
-      return comAlerta(<AdminLogin onLogin={login} onBack={() => setTela('home')} />);
+      return comAlerta(
+        <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[var(--bg)] px-4 text-center text-[var(--text)]">
+          <p className="text-sm text-[var(--muted)]">Acesso restrito.</p>
+          <button onClick={() => setTela('home')} className="text-sm font-semibold text-[var(--accent)] underline">
+            Voltar
+          </button>
+        </div>,
+        { semNav: true }
+      );
     }
     return comAlerta(
       <AdminPanel
         onBack={() => setTela('home')}
         onLogout={() => {
-          logout();
+          logoutUsuario();
           setTela('home');
         }}
       />
@@ -269,8 +290,8 @@ function App() {
         onSelectMusica={(m, repId) => abrirMusica(m, repId ?? null)}
         filtroInicial={filtroTempo}
         onAbrirCalendario={() => setTela('calendario')}
-        onAbrirModeracao={() => setTela('admin')}
-        onAbrirLoginAdmin={() => setTela('admin')}
+        onAbrirAreaAdmin={() => setTela('admin')}
+        isAdmin={isAdmin}
         onAbrirTopMusicas={() => setTela('top-musicas')}
         onAbrirTopArtistas={() => setTela('top-artistas')}
         onSelectArtista={abrirArtista}
@@ -297,17 +318,19 @@ function App() {
 
       {loginParaMinisterioAberto && (
         <UserLoginModal
-          precisaDataNascimento={!dataNascimento}
-          onLogin={(nascimento) => {
-            loginUsuario(nascimento);
+          onLogin={() => {
+            sessionStorage.setItem(CHAVE_POS_LOGIN, '1');
+            loginUsuario();
             setLoginParaMinisterioAberto(false);
-            setTela('ministerio');
           }}
           onClose={() => setLoginParaMinisterioAberto(false)}
-          onAdminLogin={() => {
-            setLoginParaMinisterioAberto(false);
-            setTela('admin');
-          }}
+        />
+      )}
+
+      {isLoggedIn && !dataNascimento && !perfilPulado && (
+        <CompletarPerfilModal
+          onSalvar={(iso) => definirDataNascimento(iso)}
+          onPular={() => setPerfilPulado(true)}
         />
       )}
     </>

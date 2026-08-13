@@ -93,7 +93,7 @@ Formato de armazenamento: **ChordPro** — `"[G]Como são belos os [Em]pés..."`
 ## 8. Decisões de Produto (registro de refinamento)
 
 1. **Direitos autorais**: modelo notice-and-takedown. Botão "solicitar remoção" em toda música/cantor. Atende em prazo declarado nos Termos de Uso. Não reivindicar autoria da letra/melodia original. **Risco jurídico reconhecido e aceito pelo cliente.**
-2. **Autenticação**: só necessária para salvar offline e participar de grupo/repertório compartilhado. Google OAuth. **Fica pra Fase 2.**
+2. **Autenticação**: só necessária para salvar offline e participar de grupo/repertório compartilhado. Google OAuth via Supabase Auth — login único do app, sem modo separado de "entrar como administrador". Quem é admin é decidido comparando o e-mail logado contra a allowlist em `VITE_ADMIN_EMAILS` (ver `.env.example`), o que libera o botão "Área Admin" na Home.
 3. **Cadastro de músicas**: usuários comuns podem **sugerir** música nova ou correção (tabela `submissoes`). Só admin publica de fato. Colaboradores que ajudaram em correções recebem crédito visível na música.
 4. **Calendário litúrgico**: calculado automaticamente por algoritmo (não manual). Terá tela pública de calendário anual navegável (mês a mês, mostrando tempo/ciclo/cor de cada domingo) — não fica restrito só à busca de música.
 5. **Seed inicial de músicas**: sem número fixo definido. Cliente tem cifras em PDF/Word para fornecer — vai exigir pipeline de extração (parser de texto e/ou OCR conforme o formato dos arquivos, a definir após ver amostras).
@@ -111,7 +111,7 @@ Formato de armazenamento: **ChordPro** — `"[G]Como são belos os [Em]pés..."`
 6. Fluxo de submissão de música/correção + moderação admin
 7. Dataset de diagramas de acorde + componente visual
 8. Módulo de Repertório (banda/ministério)
-9. Fase 2: Capacitor, Dexie, AdMob, Google OAuth, Keep Awake nativo
+9. Fase 2: Capacitor, Dexie, AdMob, Keep Awake nativo
 
 ## 10. Restrições e convenções de projeto
 

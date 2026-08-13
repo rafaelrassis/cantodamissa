@@ -1,24 +1,24 @@
-import { useCallback, useState } from 'react';
-
-const STORAGE_KEY = 'admin_fake_auth';
-
 /**
- * Login fake baseado em localStorage — placeholder até termos OAuth Google
- * real (Fase 2, ver SPEC.md §8.2). Só usado para esconder a tela de
- * moderação de sugestões de acesso público.
+ * "Área Admin" não tem login próprio — é o mesmo login Google único do
+ * app. Quem é admin é decidido comparando o e-mail da sessão contra a
+ * allowlist em VITE_ADMIN_EMAILS (lista separada por vírgula, configurada
+ * no ambiente/Vercel). Sem sessão ou e-mail fora da lista, isAdmin = false
+ * e o botão de Área Admin nem aparece (ver Home.tsx/App.tsx).
+ *
+ * Isso é conveniência de UI, não segurança de verdade — a allowlist só
+ * decide o que aparece no client. Qualquer ação real do AdminPanel que
+ * grava no banco deve continuar protegida por RLS/policy no Supabase, não
+ * só por este check.
  */
-export function useAdminAuth() {
-  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem(STORAGE_KEY) === 'true');
+function listaAdmins(): string[] {
+  const bruto = import.meta.env.VITE_ADMIN_EMAILS ?? '';
+  return bruto
+    .split(',')
+    .map((e: string) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
 
-  const login = useCallback(() => {
-    localStorage.setItem(STORAGE_KEY, 'true');
-    setIsAdmin(true);
-  }, []);
-
-  const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setIsAdmin(false);
-  }, []);
-
-  return { isAdmin, login, logout };
+export function useAdminAuth(email: string | null) {
+  const isAdmin = !!email && listaAdmins().includes(email.toLowerCase());
+  return { isAdmin };
 }

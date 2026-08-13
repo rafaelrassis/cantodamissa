@@ -36,8 +36,8 @@ interface Props {
   onSelectMusica: (musica: Musica, repertorioId?: string) => void;
   filtroInicial?: TempoLiturgico;
   onAbrirCalendario?: () => void;
-  onAbrirModeracao?: () => void;
-  onAbrirLoginAdmin?: () => void;
+  onAbrirAreaAdmin?: () => void;
+  isAdmin?: boolean;
   onAbrirTopMusicas?: () => void;
   onAbrirTopArtistas?: () => void;
   onAbrirRepertorio: (id: string) => void;
@@ -53,7 +53,7 @@ interface Props {
   userName: string | null;
   foto: string | null;
   dataNascimento: string | null;
-  onLoginUsuario: (dataNascimento?: string) => void;
+  onLoginUsuario: () => void;
   onLogoutUsuario: () => void;
   onDefinirFoto: (emoji: string | null) => void;
   onDefinirDataNascimento: (iso: string | null) => void;
@@ -77,8 +77,8 @@ export function Home({
   onSelectMusica,
   filtroInicial,
   onAbrirCalendario,
-  onAbrirModeracao,
-  onAbrirLoginAdmin,
+  onAbrirAreaAdmin,
+  isAdmin,
   onAbrirTopMusicas,
   onAbrirTopArtistas,
   onSelectArtista,
@@ -530,12 +530,12 @@ export function Home({
         espaço reservado para anúncio
       </footer>
 
-      {onAbrirModeracao && (
+      {isAdmin && onAbrirAreaAdmin && (
         <button
-          onClick={onAbrirModeracao}
+          onClick={onAbrirAreaAdmin}
           className="border-t border-[var(--border)] py-2 text-center text-[11px] text-[var(--muted)] underline-offset-2 hover:underline"
         >
-          Revisar sugestões da comunidade
+          Área Admin
         </button>
       )}
 
@@ -549,16 +549,11 @@ export function Home({
 
       {loginAberto && (
         <UserLoginModal
-          precisaDataNascimento={!dataNascimento}
-          onLogin={(nascimento) => {
-            onLoginUsuario(nascimento);
+          onLogin={() => {
+            onLoginUsuario();
             setLoginAberto(false);
           }}
           onClose={() => setLoginAberto(false)}
-          onAdminLogin={() => {
-            setLoginAberto(false);
-            onAbrirLoginAdmin?.();
-          }}
         />
       )}
 
