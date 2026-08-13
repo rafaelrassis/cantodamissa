@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { X, Link2, Upload, PenLine, Loader2, FolderSearch, FileText } from 'lucide-react';
+import { X, Link2, PenLine, Loader2 } from 'lucide-react';
 import type { Musica, TempoLiturgico, CicloDominical, MomentoMissa } from '../types/musica';
 import type { DadosMusica } from '../lib/musicasApi';
 import type { Cantor } from '../types/cantor';
@@ -12,14 +12,7 @@ interface Props {
   onFechar: () => void;
 }
 
-type ModoEntrada = 'manual' | 'upload' | 'link';
-
-interface ArquivoBlob {
-  url: string;
-  pathname: string;
-  size: number;
-  uploadedAt: string;
-}
+type ModoEntrada = 'manual' | 'link';
 
 const TODOS_TEMPOS: TempoLiturgico[] = ['Advento', 'Natal', 'Quaresma', 'Pascoa', 'TempoComum'];
 const TODOS_CICLOS: CicloDominical[] = ['A', 'B', 'C'];
@@ -67,12 +60,8 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
   );
   const [linkCifraClub, setLinkCifraClub] = useState('');
   const [importando, setImportando] = useState(false);
-  const [enviandoArquivo, setEnviandoArquivo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
-  const [arquivosExistentes, setArquivosExistentes] = useState<ArquivoBlob[] | null>(null);
-  const [carregandoArquivos, setCarregandoArquivos] = useState(false);
-  const [filtroArquivos, setFiltroArquivos] = useState('');
   const [cantores, setCantores] = useState<Cantor[]>([]);
 
   useEffect(() => {
@@ -118,46 +107,6 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
     }
   }
 
-  async function enviarArquivo(file: File) {
-    setErro(null);
-    setEnviandoArquivo(true);
-    try {
-      const resp = await fetch('/api/blob-upload', {
-        method: 'POST',
-        headers: { 'content-type': file.type, 'x-filename': file.name },
-        body: file,
-      });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'Falha no upload');
-      atualizar('sourceFileUrl', data.url);
-      setModo('manual'); // arquivo é só referência — cifra ainda é preenchida/colada manualmente
-    } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Falha no upload do arquivo');
-    } finally {
-      setEnviandoArquivo(false);
-    }
-  }
-
-  async function carregarArquivosExistentes() {
-    setErro(null);
-    setCarregandoArquivos(true);
-    try {
-      const resp = await fetch('/api/blob-list?prefix=cifra');
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'Falha ao listar arquivos');
-      setArquivosExistentes(data.blobs);
-    } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Falha ao listar arquivos');
-    } finally {
-      setCarregandoArquivos(false);
-    }
-  }
-
-  function escolherArquivoExistente(url: string) {
-    atualizar('sourceFileUrl', url);
-    setModo('manual'); // arquivo é só referência — cifra ainda é preenchida/colada manualmente
-  }
-
   async function handleSalvar() {
     setErro(null);
     if (!form.title.trim() || !form.chordsContent.trim()) {
@@ -187,94 +136,12 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
         {!musicaExistente && (
           <div className="mb-4 flex gap-1 rounded-lg border border-[var(--border)] p-1">
             <AbaModo icon={PenLine} label="Manual" ativo={modo === 'manual'} onClick={() => setModo('manual')} />
-            <AbaModo icon={Upload} label="Upload de arquivo" ativo={modo === 'upload'} onClick={() => setModo('upload')} />
             <AbaModo icon={Link2} label="Link Cifra Club" ativo={modo === 'link'} onClick={() => setModo('link')} />
           </div>
         )}
 
         {erro && (
           <p className="mb-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">{erro}</p>
-        )}
-
-        {modo === 'upload' && (
-          <div className="mb-4 rounded-lg border border-dashed border-[var(--border)] p-4 text-center">
-            <p className="mb-2 text-sm text-[var(--muted)]">
-              Sobe o PDF/imagem da cifra pro Vercel Blob — vira um link de referência anexado à
-              música. Não faz OCR: o texto da cifra ainda precisa ser colado no campo abaixo.
-            </p>
-            <input
-              type="file"
-              accept="application/pdf,image/png,image/jpeg,image/webp"
-              disabled={enviandoArquivo}
-              onChange={(e) => e.target.files?.[0] && enviarArquivo(e.target.files[0])}
-              className="mx-auto text-sm"
-            />
-            {enviandoArquivo && (
-              <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-[var(--muted)]">
-                <Loader2 size={12} className="animate-spin" /> Enviando...
-              </p>
-            )}
-            {form.sourceFileUrl && (
-              <a
-                href={form.sourceFileUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 block truncate text-xs text-[var(--accent)] underline"
-              >
-                {form.sourceFileUrl}
-              </a>
-            )}
-
-            <div className="mt-4 border-t border-[var(--border)] pt-3 text-left">
-              {arquivosExistentes === null ? (
-                <button
-                  type="button"
-                  onClick={carregarArquivosExistentes}
-                  disabled={carregandoArquivos}
-                  className="mx-auto flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline disabled:opacity-50"
-                >
-                  {carregandoArquivos ? (
-                    <Loader2 size={12} className="animate-spin" />
-                  ) : (
-                    <FolderSearch size={12} />
-                  )}
-                  Ver arquivos já enviados
-                </button>
-              ) : (
-                <>
-                  <input
-                    value={filtroArquivos}
-                    onChange={(e) => setFiltroArquivos(e.target.value)}
-                    placeholder="Filtrar por nome ou cantor..."
-                    className="mb-2 w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-1.5 text-xs"
-                  />
-                  <div className="max-h-48 space-y-1 overflow-y-auto">
-                    {arquivosExistentes
-                      .filter((a) => a.pathname.toLowerCase().includes(filtroArquivos.toLowerCase()))
-                      .map((a) => (
-                        <button
-                          type="button"
-                          key={a.url}
-                          onClick={() => escolherArquivoExistente(a.url)}
-                          className={`flex w-full items-center gap-1.5 truncate rounded-md px-2 py-1.5 text-left text-xs hover:bg-[var(--bg)] ${
-                            form.sourceFileUrl === a.url ? 'bg-[var(--bg)] font-semibold' : ''
-                          }`}
-                          title={a.pathname}
-                        >
-                          <FileText size={12} className="shrink-0 text-[var(--muted)]" />
-                          <span className="truncate">{a.pathname.replace(/^cifra\//, '')}</span>
-                        </button>
-                      ))}
-                    {arquivosExistentes.length === 0 && (
-                      <p className="py-2 text-center text-xs text-[var(--muted)]">
-                        Nenhum arquivo encontrado.
-                      </p>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
         )}
 
         {modo === 'link' && (

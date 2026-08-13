@@ -38,7 +38,6 @@ interface ItemUpload {
   erro?: string;
 }
 
-const PASTA_BASE = 'cifra';
 const TIPOS_PERMITIDOS = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 const REGEX_CIFRACLUB = /^https?:\/\/(www\.)?cifraclub\.com\.br\/\S+$/i;
 
@@ -55,15 +54,6 @@ function chuteInicial(nomeArquivo: string): { musica: string; cantor: string } {
     return { musica: partes[0].trim(), cantor: partes.slice(1).join(' - ').trim() };
   }
   return { musica: semExtensao.trim(), cantor: '' };
-}
-
-function sanitizarNomeArquivo(nome: string): string {
-  return nome
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // remove acentos
-    .replace(/[^a-zA-Z0-9\- ]/g, '')
-    .trim()
-    .replace(/\s+/g, ' ');
 }
 
 // Chave pra comparar música+cantor ignorando maiúsculas/acentos — evita
@@ -311,56 +301,27 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
         continue;
       }
 
-      // Arquivo (PDF/imagem): blob é só armazenamento de referência do
-      // original — não deve bloquear a criação da música se estiver instável.
-      let sourceFileUrl: string | undefined;
-      let avisoBlob: string | undefined;
+      // Arquivo (PDF/imagem): o original é descartado após a extração —
+      // só a cifra convertida (chordsContent) é salva no Supabase.
       try {
-        const ext = item.file!.name.split('.').pop() || 'pdf';
-        const nomeFinal = `${sanitizarNomeArquivo(item.musica)} - ${sanitizarNomeArquivo(item.cantor)}.${ext}`;
-        const pastaDestino = `${PASTA_BASE}/${sanitizarNomeArquivo(item.cantor) || 'Sem Cantor'}`;
-        const resp = await fetch('/api/blob-upload', {
-          method: 'POST',
-          headers: {
-            'content-type': item.file!.type,
-            'x-filename': nomeFinal,
-            'x-folder': pastaDestino,
-          },
-          body: item.file,
-        });
-        const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error || 'Falha no upload');
-        sourceFileUrl = data.url;
-      } catch (err) {
-        avisoBlob = `PDF original não guardado (blob falhou): ${
-          err instanceof Error ? err.message : 'erro desconhecido'
-        }`;
-      }
-
-      try {
-        if (item.chordsContent.trim()) {
-          await criarMusica({
-            title: item.musica.trim(),
-            artist: item.cantor.trim(),
-            originalTone: 'C',
-            difficulty: null,
-            capo: 0,
-            youtubeUrl: null,
-            lyrics: null,
-            chordsContent: item.chordsContent,
-            tempoLiturgico: [],
-            ciclo: [],
-            momento: [],
-            sourceFileUrl,
-          });
-          musicasExistentes.add(chave); // evita duplicar de novo dentro do mesmo lote
-          atualizarItem(item.id, { status: 'ok', erro: avisoBlob });
-        } else if (sourceFileUrl) {
-          // sem cifra extraída: só faz sentido guardar se o blob funcionou
-          atualizarItem(item.id, { status: 'ok' });
-        } else {
-          throw new Error('Sem cifra extraída e blob indisponível — nada foi salvo.');
+        if (!item.chordsContent.trim()) {
+          throw new Error('Sem cifra extraída desse arquivo — nada foi salvo.');
         }
+        await criarMusica({
+          title: item.musica.trim(),
+          artist: item.cantor.trim(),
+          originalTone: 'C',
+          difficulty: null,
+          capo: 0,
+          youtubeUrl: null,
+          lyrics: null,
+          chordsContent: item.chordsContent,
+          tempoLiturgico: [],
+          ciclo: [],
+          momento: [],
+        });
+        musicasExistentes.add(chave); // evita duplicar de novo dentro do mesmo lote
+        atualizarItem(item.id, { status: 'ok' });
       } catch (err) {
         atualizarItem(item.id, {
           status: 'erro',
@@ -382,10 +343,9 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
           <div>
             <h2 className="text-lg font-bold">Upload em massa de cifras</h2>
             <p className="text-xs text-[var(--muted)]">
-              URLs do Cifra Club são importadas direto (sem blob, extração mais confiável). PDFs têm a
-              cifra extraída automaticamente quando têm texto real (revise antes de enviar); o arquivo
-              original só é guardado se o blob estiver disponível — nunca bloqueia a criação da música.
-              Nome da música e do cantor são obrigatórios pra cada item.
+              URLs do Cifra Club são importadas direto. PDFs têm a cifra extraída automaticamente quando
+              têm texto real (revise antes de enviar) — o arquivo original não é guardado, só a cifra
+              convertida. Nome da música e do cantor são obrigatórios pra cada item.
             </p>
           </div>
           <button onClick={onFechar} className="shrink-0 text-[var(--muted)] hover:text-[var(--text)]">
