@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronLeft, Info, Pencil, Plus, Shuffle, Trash2, Users, UsersRound } from 'lucide-react';
 import { formatarDataLonga } from '../../lib/ministerioUtils';
+import { obterRepertorioPorEscala } from '../../lib/repertorios';
 import type { Equipe, Escala, FuncaoMinisterio, Indisponibilidade, MembroMinisterio, StatusConfirmacao } from '../../types/ministerio';
 import { MembrosSelecionarTela } from './MembrosSelecionarTela';
 
@@ -47,6 +48,9 @@ export function EscalaDetalheTela({
   const [selecionandoMembros, setSelecionandoMembros] = useState(false);
   const [abaMembrosSelecionar, setAbaMembrosSelecionar] = useState<'todos' | 'equipes'>('todos');
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const [repertorioVinculado, setRepertorioVinculado] = useState<{ id: string; nome: string } | null | undefined>(
+    undefined // undefined = ainda não verificado
+  );
 
   const indisponiveisIds = useMemo(
     () => new Set(indisponibilidades.filter((i) => i.data === escala.data).map((i) => i.membroId)),
@@ -56,6 +60,16 @@ export function EscalaDetalheTela({
   async function excluir() {
     if (!confirmandoExclusao) {
       setConfirmandoExclusao(true);
+      // Verifica se há repertório vinculado pra avisar antes de excluir —
+      // deletar a escala não apaga o repertório (fica órfão, sem tela de
+      // acesso), então o aviso é a única chance de o usuário perceber.
+      try {
+        const rep = await obterRepertorioPorEscala(escala.id);
+        setRepertorioVinculado(rep ? { id: rep.id, nome: rep.nome } : null);
+      } catch (err) {
+        console.error('verificar repertório vinculado:', err);
+        setRepertorioVinculado(null);
+      }
       return;
     }
     try {
@@ -138,14 +152,32 @@ export function EscalaDetalheTela({
           {formatarDataLonga(escala.data)} · {escala.hora}
         </p>
         {confirmandoExclusao && (
-          <div className="mt-3 flex items-center gap-2 rounded-lg bg-black/20 px-3 py-2 text-xs">
-            <span className="flex-1">Excluir esta escala e tudo relacionado a ela?</span>
-            <button onClick={excluir} className="font-bold underline">
-              Excluir
-            </button>
-            <button onClick={() => setConfirmandoExclusao(false)} className="opacity-80">
-              Cancelar
-            </button>
+          <div className="mt-3 rounded-lg bg-black/20 px-3 py-2 text-xs">
+            {repertorioVinculado === undefined ? (
+              <span className="opacity-80">Verificando repertório vinculado...</span>
+            ) : (
+              <>
+                <p className="mb-1.5">
+                  {repertorioVinculado
+                    ? `Excluir esta escala também deixará o repertório "${repertorioVinculado.nome}" órfão — ele não será apagado, mas ficará sem escala vinculada. Excluir mesmo assim?`
+                    : 'Excluir esta escala e tudo relacionado a ela?'}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button onClick={excluir} className="font-bold underline">
+                    Excluir
+                  </button>
+                  <button
+                    onClick={() => {
+                      setConfirmandoExclusao(false);
+                      setRepertorioVinculado(undefined);
+                    }}
+                    className="opacity-80"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </header>
