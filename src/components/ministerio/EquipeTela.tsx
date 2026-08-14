@@ -364,8 +364,8 @@ export function EquipeTela({
       )}
 
       {convidarAberto && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 lg:items-center">
-          <div className="w-full max-w-sm rounded-t-2xl bg-[var(--bg)] p-6 lg:rounded-2xl">
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 md:items-center">
+          <div className="w-full max-w-sm rounded-t-2xl bg-[var(--bg)] p-6 md:rounded-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-[var(--text)]">Convidar membros</h2>
               <button onClick={() => setConvidarAberto(false)} aria-label="Fechar" className="text-[var(--muted)]">

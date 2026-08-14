@@ -40,8 +40,8 @@ export function SubmissaoForm({ modo, musicaBase, onSubmit, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 lg:items-center">
-      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-[var(--bg)] p-5 lg:max-w-lg lg:rounded-2xl">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 md:items-center">
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-[var(--bg)] p-5 md:max-w-lg md:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-[var(--text)]">
             {modo === 'nova' ? 'Sugerir nova música' : 'Sugerir correção'}

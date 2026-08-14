@@ -52,14 +52,14 @@ export function ConfiguracoesMinisterioTela({
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4 lg:px-10">
+      <header className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4 md:px-10">
         <button onClick={onBack} aria-label="Voltar">
           <ChevronLeft size={20} />
         </button>
         <h1 className="text-lg font-extrabold tracking-tight">Configurações do ministério</h1>
       </header>
 
-      <div className="mx-auto max-w-2xl px-4 py-5 lg:px-10">
+      <div className="mx-auto max-w-2xl px-4 py-5 md:px-10">
         <div className="flex items-center gap-4">
           <button
             onClick={() => souAdmin && setEditandoFoto((v) => !v)}

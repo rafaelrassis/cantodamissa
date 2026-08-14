@@ -51,7 +51,7 @@ export function CantoresAdmin() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-4 lg:px-10">
+    <div className="mx-auto max-w-2xl px-4 py-4 md:px-10">
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-[var(--muted)]">{cantores.length} cantor(es)</p>
         <button

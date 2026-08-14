@@ -25,7 +25,7 @@ export function CifraBottomBar(props: Props) {
       <button
         onClick={props.onTogglePlay}
         aria-label="Pausar rolagem automática"
-        className="fixed bottom-5 left-1/2 z-30 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)] lg:hidden"
+        className="fixed bottom-5 left-1/2 z-30 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)] md:hidden"
       >
         <Pause size={18} />
       </button>
@@ -33,7 +33,7 @@ export function CifraBottomBar(props: Props) {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-1 border-t border-[var(--border)] bg-[var(--surface)] px-3 pb-[22px] pt-2 lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-1 border-t border-[var(--border)] bg-[var(--surface)] px-3 pb-[22px] pt-2 md:hidden">
       <div className="flex items-center gap-1">
         <button
           onClick={props.onDecTone}

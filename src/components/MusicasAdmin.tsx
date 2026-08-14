@@ -52,7 +52,7 @@ export function MusicasAdmin() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-4 lg:px-10">
+    <div className="mx-auto max-w-2xl px-4 py-4 md:px-10">
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-[var(--muted)]">{musicas.length} música(s)</p>
         <div className="flex gap-2">

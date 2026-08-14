@@ -41,11 +41,11 @@ export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFech
   return (
     <div
       onClick={onFechar}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 font-sans lg:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 font-sans md:items-center"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[80vh] w-full max-w-sm overflow-y-auto rounded-t-2xl bg-[var(--bg)] p-6 text-[var(--text)] lg:rounded-2xl"
+        className="max-h-[80vh] w-full max-w-sm overflow-y-auto rounded-t-2xl bg-[var(--bg)] p-6 text-[var(--text)] md:rounded-2xl"
       >
         <div className="mb-4 flex items-center justify-between">
           {etapa === 'lista' ? (

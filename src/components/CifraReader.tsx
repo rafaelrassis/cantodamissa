@@ -219,7 +219,7 @@ export function CifraReader({
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-[var(--bg)] font-sans text-[var(--text)]">
       {/* Header desktop */}
-      <header className="hidden items-center justify-between gap-4 bg-[var(--accent)] px-6 py-4 text-[var(--accent-fg)] lg:flex">
+      <header className="hidden items-center justify-between gap-4 bg-[var(--accent)] px-6 py-4 text-[var(--accent-fg)] md:flex">
         <div className="flex min-w-0 items-center gap-3">
           <button
             onClick={onClose}
@@ -286,7 +286,7 @@ export function CifraReader({
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {/* Toolbar desktop */}
-          <div className="hidden items-center gap-2.5 border-b border-[var(--border)] bg-[var(--surface)] px-5 py-2.5 lg:flex">
+          <div className="hidden items-center gap-2.5 border-b border-[var(--border)] bg-[var(--surface)] px-5 py-2.5 md:flex">
             <button
               onClick={autoScroll.toggle}
               aria-label="Alternar rolagem automática"
@@ -345,7 +345,7 @@ export function CifraReader({
 
           <div
             ref={scrollRef}
-            className="cifra-content min-h-0 flex-1 overflow-y-auto px-5 pb-24 pt-8 font-mono lg:px-10"
+            className="cifra-content min-h-0 flex-1 overflow-y-auto px-5 pb-24 pt-8 font-mono md:px-10"
             style={
               {
                 lineHeight: 2.35,
@@ -357,7 +357,7 @@ export function CifraReader({
             <div className="mx-auto max-w-[840px]">
               {/* Header mobile — vive dentro da área rolável de propósito, então
                   some conforme o usuário rola pra baixo (não fica fixo/preso). */}
-              <header className="-mx-5 -mt-8 mb-6 bg-[var(--accent)] px-4 pb-3 pt-4 font-sans text-[var(--accent-fg)] lg:hidden">
+              <header className="-mx-5 -mt-8 mb-6 bg-[var(--accent)] px-4 pb-3 pt-4 font-sans text-[var(--accent-fg)] md:hidden">
                 <button onClick={onClose} className="mb-1 text-xs opacity-80">
                   {repertorio ? `← Repertório · ${repertorio.nome}` : '← Voltar'}
                 </button>
@@ -411,11 +411,11 @@ export function CifraReader({
       {colaboradoresAbertos && (
         <div
           onClick={() => setColaboradoresAbertos(false)}
-          className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 font-sans lg:items-center"
+          className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 font-sans md:items-center"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-t-2xl bg-[var(--bg)] p-6 lg:rounded-2xl"
+            className="w-full max-w-sm rounded-t-2xl bg-[var(--bg)] p-6 md:rounded-2xl"
           >
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-base font-bold text-[var(--text)]">Colaboradores desta cifra</h2>

@@ -207,7 +207,7 @@ export function Home({
       {/* Header */}
       <header className="bg-[var(--accent)] text-[var(--accent-fg)]">
         {/* Nav desktop */}
-        <div className="hidden items-center justify-between px-10 py-4 lg:flex">
+        <div className="hidden items-center justify-between px-10 py-4 md:flex">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
               <img src="/logo-header.png" alt="" className="h-8 w-8" />
@@ -236,7 +236,7 @@ export function Home({
         </div>
 
         {/* Nav mobile */}
-        <div className="flex items-center justify-between px-4 pt-4 lg:hidden">
+        <div className="flex items-center justify-between px-4 pt-4 md:hidden">
           <div className="flex items-center gap-2 text-base font-extrabold tracking-tight">
             <img src="/logo-header.png" alt="" className="h-8 w-8" />
             Canto da Missa
@@ -253,7 +253,7 @@ export function Home({
           />
         </div>
 
-        <div className="px-4 pb-5 pt-4 lg:px-10 lg:pb-6">
+        <div className="px-4 pb-5 pt-4 md:px-10 md:pb-6">
           {ehHoje ? (
             <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-[var(--accent)]">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
@@ -269,23 +269,23 @@ export function Home({
               {diasParaDomingo === 1 ? 'amanhã' : `daqui a ${diasParaDomingo} dias`}
             </p>
           )}
-          <h1 className="text-xl font-extrabold tracking-tight lg:text-[34px] lg:tracking-[-0.02em]">
+          <h1 className="text-xl font-extrabold tracking-tight md:text-[34px] md:tracking-[-0.02em]">
             {domingoAtual.nome}
           </h1>
           <p className="mt-0.5 text-sm opacity-80">
             Ciclo {domingoAtual.ciclo} · {LABEL_TEMPO[domingoAtual.tempo]}
           </p>
 
-          <div className="mt-4 flex items-center gap-2 rounded-xl bg-white/15 px-4 lg:h-14 lg:rounded-2xl">
+          <div className="mt-4 flex items-center gap-2 rounded-xl bg-white/15 px-4 md:h-14 md:rounded-2xl">
             <Search size={18} className="shrink-0 opacity-70" />
             <input
               ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar por título, letra ou artista..."
-              className="w-full bg-transparent py-2.5 text-sm placeholder:text-white/60 focus:outline-none lg:py-0"
+              className="w-full bg-transparent py-2.5 text-sm placeholder:text-white/60 focus:outline-none md:py-0"
             />
-            <span className="hidden shrink-0 rounded-md bg-white/15 px-1.5 py-0.5 font-mono text-[11px] opacity-80 lg:inline">
+            <span className="hidden shrink-0 rounded-md bg-white/15 px-1.5 py-0.5 font-mono text-[11px] opacity-80 md:inline">
               ⌘K
             </span>
           </div>
@@ -293,7 +293,7 @@ export function Home({
       </header>
 
       {/* Faixa de filtro litúrgico (momento) */}
-      <div className="flex gap-2 overflow-x-auto border-b border-[var(--border)] px-4 py-3 lg:px-10 lg:py-[18px]">
+      <div className="flex gap-2 overflow-x-auto border-b border-[var(--border)] px-4 py-3 md:px-10 md:py-[18px]">
         <FiltroChip
           ativo={momento === undefined}
           label="Todos"
@@ -310,14 +310,14 @@ export function Home({
       </div>
 
       {/* Corpo */}
-      <div className="flex flex-1 flex-col lg:flex-row lg:gap-6 lg:px-10 lg:py-6">
+      <div className="flex flex-1 flex-col md:flex-row md:gap-6 md:px-10 md:py-6">
         <div className="flex-1">
           {isLoggedIn && !buscando && proximosRepertorios.length > 0 && (
-            <div className="px-4 py-3 lg:px-0">
+            <div className="px-4 py-3 md:px-0">
               <h2 className="mb-2 text-sm font-semibold text-[var(--muted)]">
                 Meus próximos repertórios
               </h2>
-              <div className="flex flex-col gap-2 lg:rounded-2xl lg:border lg:border-[var(--border)] lg:gap-0">
+              <div className="flex flex-col gap-2 md:rounded-2xl md:border md:border-[var(--border)] md:gap-0">
                 {proximosRepertorios.map(({ escala, repertorioId }, i) => (
                   <div
                     key={escala.id}
@@ -327,8 +327,8 @@ export function Home({
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') onAbrirRepertorio(repertorioId);
                     }}
-                    className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-4 py-3 hover:bg-[var(--surface)] lg:rounded-none lg:border-x-0 lg:border-t-0 ${
-                      i === proximosRepertorios.length - 1 ? 'lg:border-b-0' : ''
+                    className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-4 py-3 hover:bg-[var(--surface)] md:rounded-none md:border-x-0 md:border-t-0 ${
+                      i === proximosRepertorios.length - 1 ? 'md:border-b-0' : ''
                     }`}
                   >
                     <div className="min-w-0 flex-1">
@@ -358,7 +358,7 @@ export function Home({
           )}
 
           {!buscando && historico.length > 0 && (
-            <div className="px-4 py-3 lg:px-0">
+            <div className="px-4 py-3 md:px-0">
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--muted)]">Visto recentemente</h2>
                 <button
@@ -372,7 +372,7 @@ export function Home({
                 items={historico.slice(0, 9)}
                 pageSize={3}
                 renderPage={(pageItems) => (
-                  <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+                  <div className="md:rounded-2xl md:border md:border-[var(--border)]">
                     {pageItems.map((h) => (
                       <div
                         key={h.id}
@@ -408,7 +408,7 @@ export function Home({
             <CantoresPopularesSection cantores={cantoresPopulares} onSelectCantor={onSelectCantor} />
           )}
 
-          <div className="flex items-center justify-between px-4 py-3 lg:px-0">
+          <div className="flex items-center justify-between px-4 py-3 md:px-0">
             <h2 className="text-sm font-semibold text-[var(--muted)]">
               {buscando ? `Resultados para "${query}"` : listTitle}
             </h2>
@@ -434,7 +434,7 @@ export function Home({
           )}
 
           {buscando ? (
-            <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+            <div className="md:rounded-2xl md:border md:border-[var(--border)]">
               {resultados.map((musica) => (
                 <MusicaCard
                   key={musica.id}
@@ -451,7 +451,7 @@ export function Home({
               items={resultados}
               pageSize={5}
               renderPage={(pageItems, pageIndex) => (
-                <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+                <div className="md:rounded-2xl md:border md:border-[var(--border)]">
                   {pageItems.map((musica, i) => (
                     <MusicaCard
                       key={musica.id}
@@ -469,7 +469,7 @@ export function Home({
 
           {!buscando && (
             <div className="mt-6">
-              <div className="flex items-center justify-between px-4 py-3 lg:px-0">
+              <div className="flex items-center justify-between px-4 py-3 md:px-0">
                 <h2 className="text-sm font-semibold text-[var(--muted)]">
                   Artistas mais ouvidos
                 </h2>
@@ -483,7 +483,7 @@ export function Home({
                   </button>
                 )}
               </div>
-              <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+              <div className="md:rounded-2xl md:border md:border-[var(--border)]">
                 {artistas.map((a, i) => (
                   <button
                     key={a.artist}
@@ -512,7 +512,7 @@ export function Home({
         </div>
 
         {/* Meus repertórios (desktop) */}
-        <aside className="hidden w-[340px] shrink-0 flex-col gap-3 lg:flex">
+        <aside className="hidden w-[340px] shrink-0 flex-col gap-3 md:flex">
           <h2 className="text-sm font-semibold text-[var(--muted)]">Meus repertórios</h2>
           <PainelRepertorios
             repertorios={repertorios}
@@ -527,7 +527,7 @@ export function Home({
       {/* Ad-slot: some no modo leitor, aqui fica acima da bottom nav no mobile */}
       <footer
         id="ad-slot"
-        className="flex h-14 items-center justify-center border-t border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--muted)] lg:sticky lg:bottom-0"
+        className="flex h-14 items-center justify-center border-t border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--muted)] md:sticky md:bottom-0"
       >
         espaço reservado para anúncio
       </footer>

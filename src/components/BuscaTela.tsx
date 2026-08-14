@@ -70,20 +70,20 @@ export function BuscaTela({
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
+      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] md:px-10">
         <button onClick={onBack} className="mb-2 flex items-center gap-1 text-xs opacity-80">
           <ChevronLeft size={14} /> Voltar
         </button>
         <h1 className="text-xl font-extrabold tracking-tight">Busca</h1>
 
-        <div className="mt-4 flex items-center gap-2 rounded-xl bg-white/15 px-4 lg:h-14 lg:rounded-2xl">
+        <div className="mt-4 flex items-center gap-2 rounded-xl bg-white/15 px-4 md:h-14 md:rounded-2xl">
           <Search size={18} className="shrink-0 opacity-70" />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar por título, letra ou artista..."
-            className="w-full bg-transparent py-2.5 text-sm placeholder:text-white/60 focus:outline-none lg:py-0"
+            className="w-full bg-transparent py-2.5 text-sm placeholder:text-white/60 focus:outline-none md:py-0"
           />
           {query && (
             <button onClick={() => setQuery('')} aria-label="Limpar busca" className="shrink-0">
@@ -93,7 +93,7 @@ export function BuscaTela({
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl px-4 py-4 lg:px-0">
+      <div className="mx-auto max-w-3xl px-4 py-4 md:px-0">
         {buscando ? (
           <>
             <div className="flex items-center justify-between py-2">
@@ -111,7 +111,7 @@ export function BuscaTela({
               </div>
             )}
 
-            <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+            <div className="md:rounded-2xl md:border md:border-[var(--border)]">
               {resultados.map((musica) => (
                 <MusicaCard
                   key={musica.id}
@@ -136,7 +136,7 @@ export function BuscaTela({
                     limpar
                   </button>
                 </div>
-                <div className="lg:rounded-2xl lg:border lg:border-[var(--border)]">
+                <div className="md:rounded-2xl md:border md:border-[var(--border)]">
                   {historico.map((h) => (
                     <div
                       key={h.id}

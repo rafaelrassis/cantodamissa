@@ -26,7 +26,7 @@ export function AdminPanel({ onBack, onLogout }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
+      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] md:px-10">
         <div className="mb-2 flex items-center justify-between">
           <button onClick={onBack} className="flex items-center gap-1 text-xs opacity-80">
             <ChevronLeft size={14} /> Voltar
@@ -38,7 +38,7 @@ export function AdminPanel({ onBack, onLogout }: Props) {
         <h1 className="text-xl font-extrabold tracking-tight">Painel administrativo</h1>
       </header>
 
-      <nav className="flex gap-1 border-b border-[var(--border)] bg-[var(--surface)] px-4 lg:px-10">
+      <nav className="flex gap-1 border-b border-[var(--border)] bg-[var(--surface)] px-4 md:px-10">
         {abas.map(({ id, label, icon: Icon, badge }) => (
           <button
             key={id}
@@ -69,7 +69,7 @@ export function AdminPanel({ onBack, onLogout }: Props) {
       {aba === 'cantores' && <CantoresAdmin />}
 
       {aba === 'repertorios' && (
-        <div className="mx-auto max-w-2xl px-4 py-10 text-center lg:px-10">
+        <div className="mx-auto max-w-2xl px-4 py-10 text-center md:px-10">
           <ListMusic size={28} className="mx-auto mb-3 text-[var(--muted)]" />
           <p className="text-sm text-[var(--muted)]">
             Montagem de repertório por domingo/ciclo — em breve nesta aba.

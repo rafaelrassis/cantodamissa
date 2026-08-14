@@ -27,7 +27,7 @@ export function ModeracaoSubmissoes({ onBack, onLogout, embedded }: Props) {
   const resolvidas = submissoes.filter((s) => s.status !== 'pendente');
 
   const conteudo = (
-    <div className="mx-auto max-w-2xl px-4 py-4 lg:px-10">
+    <div className="mx-auto max-w-2xl px-4 py-4 md:px-10">
         {submissoes.length === 0 && (
           <p className="py-10 text-center text-sm text-[var(--muted)]">
             Nenhuma sugestão enviada ainda.
@@ -109,7 +109,7 @@ export function ModeracaoSubmissoes({ onBack, onLogout, embedded }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
+      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] md:px-10">
         <div className="mb-2 flex items-center justify-between">
           <button onClick={onBack} className="flex items-center gap-1 text-xs opacity-80">
             <ChevronLeft size={14} /> Voltar

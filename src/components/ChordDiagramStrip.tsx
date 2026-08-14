@@ -9,7 +9,7 @@ interface Props {
 
 /**
  * No desktop os diagramas ficam na sidebar (`ChordDictionary`, hidden
- * lg:flex). No mobile não tinha nenhuma forma de ver os diagramas — esse
+ * md:flex). No mobile não tinha nenhuma forma de ver os diagramas — esse
  * componente cobre isso com uma fileira horizontal rolável no topo da
  * cifra, compacta pra não dominar a tela pequena.
  */
@@ -19,7 +19,7 @@ export function ChordDiagramStrip({ chords, onHide }: Props) {
   if (diagramas.length === 0) return null;
 
   return (
-    <div className="border-b border-[var(--border)] bg-[var(--surface)] lg:hidden">
+    <div className="border-b border-[var(--border)] bg-[var(--surface)] md:hidden">
       <div className="flex items-center justify-between px-4 pt-2">
         <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
           Acordes

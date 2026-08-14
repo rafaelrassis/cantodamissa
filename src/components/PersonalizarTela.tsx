@@ -77,7 +77,7 @@ export function PersonalizarTela({
         <h1 className="text-lg font-extrabold tracking-tight">Personalizar</h1>
       </header>
 
-      <div className="mx-auto w-full max-w-2xl px-4 py-5 lg:px-10">
+      <div className="mx-auto w-full max-w-2xl px-4 py-5 md:px-10">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setEditandoFoto((v) => !v)}

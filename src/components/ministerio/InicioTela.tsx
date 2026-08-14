@@ -52,7 +52,7 @@ export function InicioTela({
     .sort((a, b) => new Date(a.aniversario!).getDate() - new Date(b.aniversario!).getDate());
 
   return (
-    <div className="px-4 py-5 lg:px-10">
+    <div className="px-4 py-5 md:px-10">
       <div className="rounded-2xl bg-[var(--accent)] p-4 text-[var(--accent-fg)]">
         <p className="text-base font-bold">{nomeMinisterio}</p>
         <div className="mt-2 flex items-center gap-4 text-xs opacity-90">

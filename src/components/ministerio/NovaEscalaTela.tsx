@@ -121,7 +121,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4 lg:px-10">
+      <header className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4 md:px-10">
         <button onClick={onCancelar} aria-label="Voltar">
           <ChevronLeft size={20} />
         </button>
@@ -137,7 +137,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
         </button>
       </header>
 
-      <div className="mx-auto max-w-2xl px-4 pb-24 pt-4 lg:px-10">
+      <div className="mx-auto max-w-2xl px-4 pb-24 pt-4 md:px-10">
         <div className="flex rounded-2xl bg-[var(--surface)] p-1.5">
           <TabBtn icon={<Info size={18} />} label="Detalhes" active={aba === 'detalhes'} onClick={() => setAba('detalhes')} />
           <TabBtn

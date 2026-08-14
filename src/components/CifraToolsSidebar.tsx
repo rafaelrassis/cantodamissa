@@ -26,7 +26,7 @@ interface Props {
 
 export function CifraToolsSidebar(props: Props) {
   return (
-    <aside className="hidden w-[272px] shrink-0 flex-col gap-[22px] overflow-y-auto border-r border-[var(--border)] bg-[var(--surface)] p-5 lg:flex">
+    <aside className="hidden w-[272px] shrink-0 flex-col gap-[22px] overflow-y-auto border-r border-[var(--border)] bg-[var(--surface)] p-5 md:flex">
       <ToolSection label="Tom">
         <div className="flex items-center gap-2">
           <SquareButton onClick={props.onDecTone} aria-label="Diminuir tom">

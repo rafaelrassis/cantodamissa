@@ -27,7 +27,7 @@ interface Props {
 export function CifraBottomSheet(props: Props) {
   return (
     <div
-      className={`fixed inset-x-0 z-20 rounded-t-[22px] border-t border-[var(--border)] bg-[var(--surface)] p-5 pb-7 shadow-[0_-18px_40px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] lg:hidden ${
+      className={`fixed inset-x-0 z-20 rounded-t-[22px] border-t border-[var(--border)] bg-[var(--surface)] p-5 pb-7 shadow-[0_-18px_40px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden ${
         props.open ? 'translate-y-0' : 'translate-y-[130%]'
       }`}
       style={{ bottom: 86 }}

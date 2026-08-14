@@ -19,7 +19,7 @@ interface Props {
  */
 export function BottomNavBar({ ativa, onIrHome, onIrBusca, onIrCalendario, onIrMinisterio }: Props) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-[var(--border)] bg-[var(--surface)] py-2 lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-[var(--border)] bg-[var(--surface)] py-2 md:hidden">
       <TabItem icon={<HomeIcon size={18} />} label="Início" active={ativa === 'home'} onClick={onIrHome} />
       <TabItem icon={<Search size={18} />} label="Buscar" active={ativa === 'busca'} onClick={onIrBusca} />
       <TabItem

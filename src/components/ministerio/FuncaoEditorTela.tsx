@@ -17,7 +17,7 @@ export function FuncaoEditorTela({ titulo, nomeInicial, iconeInicial, onVoltar, 
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-[var(--border)] bg-[var(--bg)] px-4 py-4 lg:px-10">
+      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-[var(--border)] bg-[var(--bg)] px-4 py-4 md:px-10">
         <button onClick={onVoltar} aria-label="Voltar" className="text-[var(--text)]">
           <ChevronRight size={20} className="rotate-180" />
         </button>
@@ -31,7 +31,7 @@ export function FuncaoEditorTela({ titulo, nomeInicial, iconeInicial, onVoltar, 
         </button>
       </header>
 
-      <div className="mx-auto max-w-2xl px-4 py-6 lg:px-10">
+      <div className="mx-auto max-w-2xl px-4 py-6 md:px-10">
         <label className="block text-xs font-semibold text-[var(--muted)]">Nome *</label>
         <input
           value={nome}

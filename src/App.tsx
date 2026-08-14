@@ -176,7 +176,7 @@ function App() {
         {precisaAtualizar && <AtualizacaoDisponivelBanner onAtualizar={atualizarAgora} />}
         {!opts?.semNav && (
           <>
-            <div className="h-16 lg:hidden" aria-hidden />
+            <div className="h-16 md:hidden" aria-hidden />
             <BottomNavBar
               ativa={telaNavAtiva()}
               onIrHome={() => setTela('home')}

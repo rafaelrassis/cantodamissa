@@ -54,13 +54,13 @@ export function CalendarioLiturgico({ onBack, onFiltrarTempo }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] lg:px-10">
+      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] md:px-10">
         <button onClick={onBack} className="mb-2 flex items-center gap-1 text-xs opacity-80">
           <Back size={14} /> Voltar
         </button>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight lg:text-2xl">
+            <h1 className="text-xl font-extrabold tracking-tight md:text-2xl">
               Calendário Litúrgico
             </h1>
             <p className="mt-0.5 text-sm opacity-80">
@@ -86,7 +86,7 @@ export function CalendarioLiturgico({ onBack, onFiltrarTempo }: Props) {
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl px-4 py-4 lg:px-10">
+      <div className="mx-auto max-w-3xl px-4 py-4 md:px-10">
         {domingos.map((d, i) => {
           const isHoje = d.data.getTime() === hoje.data.getTime();
           const { dia, mes } = formatarData(d.data);

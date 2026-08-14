@@ -56,7 +56,7 @@ export function ArtistaTela({ artista, onBack, onSelectMusica }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="flex flex-col items-center gap-3 bg-[var(--accent)] px-4 py-6 text-[var(--accent-fg)] lg:px-10">
+      <header className="flex flex-col items-center gap-3 bg-[var(--accent)] px-4 py-6 text-[var(--accent-fg)] md:px-10">
         <button onClick={onBack} className="mb-1 flex w-full items-center gap-1 text-xs opacity-80">
           <ChevronLeft size={14} /> Voltar
         </button>
@@ -89,7 +89,7 @@ export function ArtistaTela({ artista, onBack, onSelectMusica }: Props) {
         </button>
       </div>
 
-      <div className="mx-auto max-w-3xl lg:my-6 lg:rounded-2xl lg:border lg:border-[var(--border)]">
+      <div className="mx-auto max-w-3xl md:my-6 md:rounded-2xl md:border md:border-[var(--border)]">
         {carregando && (
           <p className="px-4 py-10 text-center text-sm text-[var(--muted)]">carregando…</p>
         )}
