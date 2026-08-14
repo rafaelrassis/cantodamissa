@@ -306,6 +306,8 @@ function App() {
         onSelectMusica={(m, repId) => abrirMusica(m, repId ?? null)}
         filtroInicial={filtroTempo}
         onAbrirCalendario={() => setTela('calendario')}
+        onAbrirBusca={() => setTela('busca')}
+        onAbrirMinisterio={abrirMinisterio}
         onAbrirAreaAdmin={() => setTela('admin')}
         isAdmin={isAdmin}
         onAbrirTopMusicas={() => setTela('top-musicas')}

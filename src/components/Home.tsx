@@ -36,6 +36,8 @@ interface Props {
   onSelectMusica: (musica: Musica, repertorioId?: string) => void;
   filtroInicial?: TempoLiturgico;
   onAbrirCalendario?: () => void;
+  onAbrirBusca?: () => void;
+  onAbrirMinisterio?: () => void;
   onAbrirAreaAdmin?: () => void;
   isAdmin?: boolean;
   onAbrirTopMusicas?: () => void;
@@ -77,6 +79,8 @@ export function Home({
   onSelectMusica,
   filtroInicial,
   onAbrirCalendario,
+  onAbrirBusca,
+  onAbrirMinisterio,
   onAbrirAreaAdmin,
   isAdmin,
   onAbrirTopMusicas,
@@ -209,14 +213,12 @@ export function Home({
               <img src="/logo-header.png" alt="" className="h-8 w-8" />
               Canto da Missa
             </div>
-            <nav className="flex items-center gap-6 text-sm font-medium opacity-90">
-              <span>Músicas</span>
-              <button onClick={onAbrirCalendario} className="hover:opacity-100">
-                Calendário
-              </button>
-              <button onClick={() => setRepertorioSheetAberto(true)} className="hover:opacity-100">
-                Repertórios
-              </button>
+            <nav className="flex items-center gap-1 text-sm font-medium">
+              <NavItemDesktop label="Início" ativo />
+              <NavItemDesktop label="Buscar" onClick={onAbrirBusca} />
+              <NavItemDesktop label="Calendário" onClick={onAbrirCalendario} />
+              <NavItemDesktop label="Repertórios" onClick={() => setRepertorioSheetAberto(true)} />
+              <NavItemDesktop label="Ministério" onClick={onAbrirMinisterio} />
             </nav>
           </div>
           <div className="flex shrink-0 items-center gap-3">
@@ -608,6 +610,20 @@ export function Home({
         </div>
       )}
     </div>
+  );
+}
+
+function NavItemDesktop({ label, onClick, ativo }: { label: string; onClick?: () => void; ativo?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={!onClick && !ativo}
+      className={`rounded-lg px-3 py-2 transition-colors ${
+        ativo ? 'bg-white/15 text-[var(--accent-fg)]' : 'text-[var(--accent-fg)]/85 hover:bg-white/10 hover:text-[var(--accent-fg)]'
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
