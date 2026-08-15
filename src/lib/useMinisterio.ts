@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as api from './ministerioApi';
-import { mensagemDeErro } from './supabaseUtils';
+import { useCanalErro } from './erroContext';
 import type { MinisterioIdentidade, MinisterioResumo } from './ministerioApi';
 import type { SolicitacaoIngresso } from '../types/ministerio';
 
@@ -27,7 +27,7 @@ export function useMinisterio(perfil: PerfilUsuario = {}) {
   const [ministerio, setMinisterio] = useState<MinisterioIdentidade | null>(null);
   const [meusMinisterios, setMeusMinisterios] = useState<MinisterioResumo[]>([]);
   const [carregando, setCarregando] = useState(true);
-  const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const { reportar } = useCanalErro();
 
   /**
    * Envolve uma mutação para que a falha vire mensagem na tela em vez de
@@ -37,16 +37,16 @@ export function useMinisterio(perfil: PerfilUsuario = {}) {
    * enquanto a tela estava aberta) e o usuário precisa saber por que nada
    * mudou.
    */
-  const executar = useCallback(async (acao: () => Promise<void>) => {
-    setErroAcao(null);
-    try {
-      await acao();
-    } catch (err) {
-      setErroAcao(mensagemDeErro(err));
-    }
-  }, []);
-
-  const limparErroAcao = useCallback(() => setErroAcao(null), []);
+  const executar = useCallback(
+    async (acao: () => Promise<void>) => {
+      try {
+        await acao();
+      } catch (err) {
+        reportar(err);
+      }
+    },
+    [reportar]
+  );
 
   /**
    * Refaz a lista de ministérios do device e recarrega o ministério ativo
@@ -245,8 +245,6 @@ export function useMinisterio(perfil: PerfilUsuario = {}) {
 
   return {
     carregando,
-    erroAcao,
-    limparErroAcao,
     pertence,
     meusMinisterios,
     trocarMinisterio,

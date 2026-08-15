@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, Home, ListMusic, Megaphone, Settings, Users } from 'lucide-react';
 import { useRepertorios } from '../../lib/repertoriosContext';
+import { useCanalErro } from '../../lib/erroContext';
 import { useEscalas } from '../../lib/useEscalas';
 import { useAvisos } from '../../lib/useAvisos';
 import { useIndisponibilidades } from '../../lib/useIndisponibilidades';
@@ -76,6 +77,17 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
 
   const repertoriosApi = useRepertorios();
   const [repertorioAbertoId, setRepertorioAbertoId] = useState<string | null>(null);
+  const { reportar: reportarErro } = useCanalErro();
+
+  /**
+   * Roda uma gravação do módulo mostrando a falha pro usuário em vez de
+   * deixá-la morrer no console. Escalas, avisos, equipes e
+   * indisponibilidades só aceitam escrita de admin (RLS), então "não
+   * pode" é um resultado possível de qualquer uma dessas ações.
+   */
+  function comErro<T>(promessa: Promise<T>, padrao: string): Promise<T | void> {
+    return promessa.catch((e) => reportarErro(e, padrao));
+  }
 
   if (!ministerio.pertence || adicionandoMinisterio) {
     const primeiroMinisterio = !ministerio.pertence;
@@ -158,10 +170,10 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
         indisponibilidades={indisponibilidadesApi.indisponibilidades}
         onBack={() => setEscalaAbertaId(null)}
         onAtualizar={(atualizada) =>
-          escalasApi.atualizar(atualizada).catch((e) => console.error('Falha ao atualizar escala', e))
+          comErro(escalasApi.atualizar(atualizada), 'Não foi possível atualizar a escala.')
         }
         onEditar={() => setFormularioEscala(escalaAberta)}
-        onExcluir={(id) => escalasApi.excluir(id)}
+        onExcluir={(id) => comErro(escalasApi.excluir(id), 'Não foi possível excluir a escala.')}
       />
     );
   }
@@ -309,9 +321,10 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
             indisponibilidades={indisponibilidadesApi.indisponibilidades}
             onAdicionarIndisponibilidade={(data, motivo) => {
               if (ministerio.meuMembroId) {
-                indisponibilidadesApi
-                  .criar(ministerio.meuMembroId, data, motivo)
-                  .catch((e) => console.error('Falha ao adicionar indisponibilidade', e));
+                comErro(
+                  indisponibilidadesApi.criar(ministerio.meuMembroId, data, motivo),
+                  'Não foi possível marcar a indisponibilidade.'
+                );
               }
             }}
             souAdmin={ministerio.souAdmin}
@@ -325,9 +338,15 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
             onCriarFuncao={ministerio.criarFuncao}
             onEditarFuncao={ministerio.editarFuncao}
             onRemoverFuncao={ministerio.removerFuncao}
-            onCriarEquipe={equipesApi.criar}
-            onEditarEquipe={equipesApi.editar}
-            onRemoverEquipe={equipesApi.excluir}
+            onCriarEquipe={(nome, membroIds) =>
+              comErro(equipesApi.criar(nome, membroIds), 'Não foi possível criar a equipe.')
+            }
+            onEditarEquipe={(id, nome, membroIds) =>
+              comErro(equipesApi.editar(id, nome, membroIds), 'Não foi possível salvar a equipe.')
+            }
+            onRemoverEquipe={(id) =>
+              comErro(equipesApi.excluir(id), 'Não foi possível excluir a equipe.')
+            }
           />
         )}
 
@@ -335,7 +354,10 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
           <AvisosTela
             avisos={avisosApi.avisos}
             onCriar={(titulo, descricao, emDestaque) =>
-              avisosApi.criar(titulo, descricao, emDestaque).catch((e) => console.error('Falha ao criar aviso', e))
+              comErro(
+                avisosApi.criar(titulo, descricao, emDestaque),
+                'Não foi possível publicar o aviso.'
+              )
             }
             souAdmin={ministerio.souAdmin}
           />

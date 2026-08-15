@@ -1,5 +1,6 @@
 import { ChevronLeft, Check, X as XIcon } from 'lucide-react';
 import { useSubmissoes } from '../lib/useSubmissoes';
+import { useCanalErro } from '../lib/erroContext';
 import type { StatusSubmissao } from '../lib/submissoes';
 
 interface Props {
@@ -23,6 +24,16 @@ const COR_STATUS: Record<StatusSubmissao, string> = {
 
 export function ModeracaoSubmissoes({ onBack, onLogout, embedded }: Props) {
   const { submissoes, atualizarStatus } = useSubmissoes();
+  const { reportar } = useCanalErro();
+
+  // A moderação grava no banco e só admin pode: se a permissão não
+  // estiver mais lá, o usuário precisa ver o motivo em vez de o botão
+  // simplesmente não fazer nada.
+  function moderar(id: string, status: 'aprovada' | 'rejeitada') {
+    void atualizarStatus(id, status).catch((e) =>
+      reportar(e, 'Não foi possível salvar a moderação.')
+    );
+  }
   const pendentes = submissoes.filter((s) => s.status === 'pendente');
   const resolvidas = submissoes.filter((s) => s.status !== 'pendente');
 
@@ -64,13 +75,13 @@ export function ModeracaoSubmissoes({ onBack, onLogout, embedded }: Props) {
 
             <div className="flex gap-2">
               <button
-                onClick={() => atualizarStatus(s.id, 'aprovada')}
+                onClick={() => moderar(s.id, 'aprovada')}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[var(--accent)] py-2 text-xs font-semibold text-[var(--accent-fg)]"
               >
                 <Check size={14} /> Aprovar
               </button>
               <button
-                onClick={() => atualizarStatus(s.id, 'rejeitada')}
+                onClick={() => moderar(s.id, 'rejeitada')}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] py-2 text-xs font-semibold text-[var(--muted)]"
               >
                 <XIcon size={14} /> Rejeitar

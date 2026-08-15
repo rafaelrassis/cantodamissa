@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as api from './repertorios';
-import { mensagemDeErro } from './supabaseUtils';
+import { useCanalErro } from './erroContext';
 import type { ItemRepertorio, Repertorio } from './repertorios';
 
 /**
@@ -17,19 +17,19 @@ import type { ItemRepertorio, Repertorio } from './repertorios';
 export function useRepertoriosEstado() {
   const [repertorios, setRepertorios] = useState<Repertorio[]>([]);
   const [carregando, setCarregando] = useState(true);
-  const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const { reportar } = useCanalErro();
 
   /** Mesma ideia de useMinisterio.executar: falha vira mensagem na tela. */
-  const executar = useCallback(async (acao: () => Promise<void>) => {
-    setErroAcao(null);
-    try {
-      await acao();
-    } catch (err) {
-      setErroAcao(mensagemDeErro(err));
-    }
-  }, []);
-
-  const limparErroAcao = useCallback(() => setErroAcao(null), []);
+  const executar = useCallback(
+    async (acao: () => Promise<void>) => {
+      try {
+        await acao();
+      } catch (err) {
+        reportar(err);
+      }
+    },
+    [reportar]
+  );
 
   const recarregar = useCallback(async () => {
     const lista = await api.listarRepertorios();
@@ -157,8 +157,6 @@ export function useRepertoriosEstado() {
   return {
     repertorios,
     carregando,
-    erroAcao,
-    limparErroAcao,
     criar,
     renomear,
     remover,

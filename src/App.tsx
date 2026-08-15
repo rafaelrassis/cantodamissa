@@ -19,6 +19,7 @@ import { useAdminAuth } from './lib/useAdminAuth';
 import { useUserAuth } from './lib/useUserAuth';
 import { useMinisterio } from './lib/useMinisterio';
 import { useServiceWorkerAtualizacao } from './lib/useServiceWorkerAtualizacao';
+import { useCanalErro } from './lib/erroContext';
 import type { Musica, TempoLiturgico } from './types/musica';
 
 // A Área Admin carrega só quando é aberta: ela traz junto o formulário de
@@ -77,6 +78,7 @@ function App() {
   } = useUserAuth();
   const { isAdmin } = useAdminAuth(userEmail);
   const { precisaAtualizar, atualizarAgora } = useServiceWorkerAtualizacao();
+  const { erro, limpar: limparErro } = useCanalErro();
   const [loginParaMinisterioAberto, setLoginParaMinisterioAberto] = useState(false);
   const [escalaAlvoPosLogin, setEscalaAlvoPosLogin] = useState<string | null>(null);
   const [perfilPulado, setPerfilPulado] = useState(false);
@@ -176,23 +178,9 @@ function App() {
   function comAlerta(conteudo: React.ReactNode, opts?: { semNav?: boolean }) {
     return (
       <>
-        {/* Falha de uma ação do Ministério (ex.: gravação barrada por
-            falta de permissão). Fica aqui em cima porque as ações partem
-            de várias telas do módulo e o hook é único (ver useMinisterio). */}
-        {ministerio.erroAcao && (
-          <AlertaTopo
-            tipo="erro"
-            mensagem={ministerio.erroAcao}
-            onFechar={ministerio.limparErroAcao}
-          />
-        )}
-        {repertoriosApi.erroAcao && (
-          <AlertaTopo
-            tipo="erro"
-            mensagem={repertoriosApi.erroAcao}
-            onFechar={repertoriosApi.limparErroAcao}
-          />
-        )}
+        {/* Falha de qualquer ação do app (ex.: gravação barrada por falta
+            de permissão), reportada pelo canal único — ver erroContext.ts. */}
+        {erro && <AlertaTopo tipo="erro" mensagem={erro} onFechar={limparErro} />}
         {mostrarAlertaGlobal && (
           <AlertaTopo
             mensagem={`${ministerio.solicitacoes.length} solicitação${
