@@ -81,16 +81,6 @@ function vincularMembroLegado(): Promise<void> {
 }
 
 /**
- * Busca o primeiro ministério ao qual esta conta pertence, já montado com
- * membros (+ funções de cada um), funções e solicitações pendentes.
- */
-export async function buscarMeuMinisterio(): Promise<MinisterioIdentidade | null> {
-  const meus = await listarMeusMinisterios();
-  if (meus.length === 0) return null;
-  return buscarMinisterioPorId(meus[0].id);
-}
-
-/**
  * Ministérios desta conta (até LIMITE_MINISTERIOS), em ordem de ingresso.
  * Vem por RPC porque a policy de `ministerios` só deixa ler o que já é
  * meu — a própria lista precisa ser resolvida do lado do banco.

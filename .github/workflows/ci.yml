@@ -22,6 +22,22 @@ jobs:
       # e a pasta api/ (ver tsconfig.api.json).
       - run: npm run build
 
+      # Teste de fumaça num navegador de verdade: pega o que os unitários
+      # não pegam (provider faltando, promessa rejeitada sem tratamento,
+      # chamada de rede num ambiente sem credenciais).
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Subir o preview e rodar o smoke
+        run: |
+          npx vite preview --port 4173 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:4173 >/dev/null && break
+            sleep 1
+          done
+          SMOKE_URL=http://localhost:4173/ \
+          CHROMIUM_PATH="$(node -e "console.log(require('playwright-core').chromium.executablePath())")" \
+          npm run smoke
+
   rls:
     name: Policies do Supabase
     runs-on: ubuntu-latest

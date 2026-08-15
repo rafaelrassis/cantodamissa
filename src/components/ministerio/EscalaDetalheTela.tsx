@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronLeft, Info, Pencil, Plus, Shuffle, Trash2, Users, UsersRound } from 'lucide-react';
 import { formatarDataLonga } from '../../lib/ministerioUtils';
+import { useCanalErro } from '../../lib/erroContext';
 import { obterRepertorioPorEscala } from '../../lib/repertorios';
 import type { Equipe, Escala, FuncaoMinisterio, Indisponibilidade, MembroMinisterio, StatusConfirmacao } from '../../types/ministerio';
 import { MembrosSelecionarTela } from './MembrosSelecionarTela';
@@ -48,6 +49,7 @@ export function EscalaDetalheTela({
   const [selecionandoMembros, setSelecionandoMembros] = useState(false);
   const [abaMembrosSelecionar, setAbaMembrosSelecionar] = useState<'todos' | 'equipes'>('todos');
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const { reportar } = useCanalErro();
   const [repertorioVinculado, setRepertorioVinculado] = useState<{ id: string; nome: string } | null | undefined>(
     undefined // undefined = ainda não verificado
   );
@@ -76,8 +78,9 @@ export function EscalaDetalheTela({
       await onExcluir(escala.id);
       onBack();
     } catch (err) {
-      console.error('excluir escala:', err);
-      alert('Não foi possível excluir a escala. Veja o console.');
+      // A mensagem em si é responsabilidade de quem passou onExcluir (ver
+      // comErro em MinisterioTela) — aqui só desfazemos a confirmação.
+      reportar(err, 'Não foi possível excluir a escala.');
       setConfirmandoExclusao(false);
     }
   }

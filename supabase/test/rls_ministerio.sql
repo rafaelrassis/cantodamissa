@@ -394,3 +394,173 @@ $$, 'entrar como admin num ministério sem membros');
 
 set role postgres;
 reset request.jwt.claim.sub;
+
+-- ==========================================================
+-- 6. Migração das linhas legadas (device_key sem auth_uid)
+-- ==========================================================
+-- Este é o caminho por onde TODO usuário atual passa no primeiro acesso
+-- depois do deploy: as linhas de membro criadas antes de existir auth_uid
+-- não casam com nenhuma policy até serem vinculadas. Se a RPC não
+-- funcionar, o ministério simplesmente some pra quem já usava o app.
+set role postgres;
+insert into auth.users (id, email, is_anonymous)
+values ('55555555-5555-5555-5555-555555555555', 'carlos@exemplo.com', false)
+on conflict do nothing;
+
+set role authenticated;
+set request.jwt.claim.sub = '55555555-5555-5555-5555-555555555555';
+
+-- Antes de vincular: a linha existe no banco, mas não é "minha".
+select teste.espera_linhas($$
+  select 1 from public.ministerio_membros
+   where ministerio_id = 'aaaaaaaa-0000-0000-0000-000000000001'
+$$, 0, 'usuário legado antes do vínculo não enxerga a equipe');
+
+do $$
+declare v_ids uuid[];
+begin
+  select array_agg(t) into v_ids from public.vincular_membro_legado('device-carlos') t;
+  if v_ids is null or array_length(v_ids, 1) <> 1 then
+    raise exception 'FALHOU: vínculo legado não encontrou a linha do device';
+  end if;
+  raise notice 'ok (rpc): device antigo reivindica a própria linha de membro';
+end
+$$;
+
+-- 4 = Ana, Bruno, Carlos (recém-vinculado) e o Espião da seção 5.
+select teste.espera_linhas($$
+  select 1 from public.ministerio_membros
+   where ministerio_id = 'aaaaaaaa-0000-0000-0000-000000000001'
+$$, 4, 'depois do vínculo, o usuário legado enxerga a equipe');
+
+-- Carlos era admin na linha legada, e continua sendo depois do vínculo
+-- (o vínculo grava só auth_uid, nunca mexe em admin).
+do $$
+begin
+  if not public.eh_admin('aaaaaaaa-0000-0000-0000-000000000001') then
+    raise exception 'FALHOU: admin legado perdeu o papel de admin no vínculo';
+  end if;
+  raise notice 'ok: vínculo preserva o papel que a linha legada já tinha';
+end
+$$;
+
+-- Rodar de novo não duplica nem rouba nada.
+do $$
+declare v_qtd integer;
+begin
+  select count(*) into v_qtd from public.vincular_membro_legado('device-carlos') t;
+  if v_qtd <> 0 then
+    raise exception 'FALHOU: segundo vínculo mexeu em % linha(s)', v_qtd;
+  end if;
+  raise notice 'ok: vincular de novo é no-op';
+end
+$$;
+
+-- E ninguém reivindica a linha órfã de outro device.
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+set role postgres;
+insert into public.ministerio_membros (ministerio_id, device_key, nome, admin, auth_uid)
+values ('aaaaaaaa-0000-0000-0000-000000000001', 'device-orfao', 'Órfão', true, null);
+set role authenticated;
+
+do $$
+declare v_qtd integer;
+begin
+  -- Bruno já é membro deste ministério: mesmo com a device_key em mãos,
+  -- o vínculo não pode dar a ele uma segunda linha (que por acaso é admin).
+  select count(*) into v_qtd from public.vincular_membro_legado('device-orfao') t;
+  if v_qtd <> 0 then
+    raise exception 'FALHOU (brecha aberta): membro assumiu uma segunda linha do mesmo ministério';
+  end if;
+  raise notice 'ok: quem já é membro não assume uma segunda linha órfã';
+end
+$$;
+
+set role postgres;
+reset request.jwt.claim.sub;
+
+-- ==========================================================
+-- 7. Demais tabelas do módulo (equipes, funções, modelos de roteiro,
+--    indisponibilidades, funções por membro)
+-- ==========================================================
+-- Mesma regra das escalas: membro lê, admin escreve — com a exceção das
+-- indisponibilidades, que cada um gerencia pra si.
+set role postgres;
+insert into public.equipes (id, ministerio_id, nome)
+values ('dddddddd-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Equipe A');
+insert into public.funcoes (id, ministerio_id, nome, icone)
+values ('ffffffff-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Violão', '🪕');
+insert into public.modelos_roteiro (id, ministerio_id, nome)
+values ('eeeeeeee-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Missa dominical');
+
+-- O Espião (aprovado na seção 5) é o membro comum daqui em diante.
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+
+select teste.espera_linhas($$
+  select 1 from public.equipes where ministerio_id = 'aaaaaaaa-0000-0000-0000-000000000001'
+$$, 1, 'membro lendo as equipes do ministério');
+
+select teste.espera_bloqueio($$
+  insert into public.equipes (ministerio_id, nome)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'Equipe pirata')
+$$, 'membro comum criando equipe');
+
+select teste.espera_bloqueio($$
+  delete from public.equipes where id = 'dddddddd-0000-0000-0000-000000000001'
+$$, 'membro comum excluindo equipe');
+
+select teste.espera_bloqueio($$
+  insert into public.funcoes (ministerio_id, nome, icone)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'Função pirata', '🎺')
+$$, 'membro comum criando função');
+
+select teste.espera_bloqueio($$
+  insert into public.membro_funcoes (membro_id, funcao_id)
+  values ('bbbbbbbb-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000001')
+$$, 'membro comum atribuindo função a alguém');
+
+select teste.espera_bloqueio($$
+  insert into public.modelos_roteiro (ministerio_id, nome)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'Modelo pirata')
+$$, 'membro comum criando modelo de roteiro');
+
+-- Indisponibilidade: a própria sim, a dos outros não.
+do $$
+declare v_meu uuid;
+begin
+  v_meu := public.meu_membro_id('aaaaaaaa-0000-0000-0000-000000000001');
+  if v_meu is null then raise exception 'FALHOU: meu_membro_id não achou o membro'; end if;
+
+  insert into public.indisponibilidades (ministerio_id, membro_id, data, motivo)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', v_meu, '2026-09-20', 'viagem');
+  raise notice 'ok (permitido): membro marcando a própria indisponibilidade';
+end
+$$;
+
+select teste.espera_bloqueio($$
+  insert into public.indisponibilidades (ministerio_id, membro_id, data, motivo)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002',
+          '2026-09-27', 'inventada')
+$$, 'membro marcando indisponibilidade no nome de outro');
+
+-- Admin escreve em tudo isso.
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+
+select teste.espera_ok($$
+  insert into public.membro_funcoes (membro_id, funcao_id)
+  values ('bbbbbbbb-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000001')
+$$, 'admin atribuindo função a um membro');
+
+select teste.espera_ok($$
+  insert into public.modelo_roteiro_itens (modelo_id, ordem, titulo)
+  values ('eeeeeeee-0000-0000-0000-000000000001', 0, 'Acolhida')
+$$, 'admin montando modelo de roteiro');
+
+select teste.espera_ok($$
+  update public.equipes set nome = 'Equipe A (renomeada)'
+   where id = 'dddddddd-0000-0000-0000-000000000001'
+$$, 'admin renomeando equipe');
+
+set role postgres;
+reset request.jwt.claim.sub;

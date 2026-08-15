@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { formatarDataCurta } from '../../lib/ministerioUtils';
+import { useCanalErro } from '../../lib/erroContext';
 import type { Repertorio } from '../../lib/repertorios';
 import type { Escala } from '../../types/ministerio';
 
@@ -33,6 +34,7 @@ export function MinisterioRepertoriosTela({
   const [escolhendoEvento, setEscolhendoEvento] = useState(false);
   const [criandoParaId, setCriandoParaId] = useState<string | null>(null);
   const [verTudoEventos, setVerTudoEventos] = useState(false);
+  const { reportar } = useCanalErro();
 
   const comRepertorio = escalas
     .map((escala) => ({ escala, repertorio: repertorios.find((r) => r.escalaId === escala.id) ?? null }))
@@ -52,8 +54,7 @@ export function MinisterioRepertoriosTela({
       setEscolhendoEvento(false);
       onAbrirRepertorio(rep.id);
     } catch (err) {
-      console.error('criarPara (criar repertório da escala):', err);
-      alert('Não deu pra criar o repertório desse evento. Veja o console.');
+      reportar(err, 'Não foi possível criar o repertório desse evento.');
     } finally {
       setCriandoParaId(null);
     }

@@ -24,6 +24,7 @@ npm run dev
 - `npm run build` — build de produção (`tsc -b && vite build`; o `tsc -b` cobre `src/`, `vite.config.ts` e `api/`)
 - `npm run lint` — lint (oxlint)
 - `npm test` — testes unitários (vitest)
+- `npm run smoke` — teste de fumaça num navegador (precisa do `npm run dev` rodando; ver `e2e/smoke.mjs`)
 - `npm run preview` — preview do build de produção
 
 ## Banco de dados
