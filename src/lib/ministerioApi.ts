@@ -1,16 +1,20 @@
-// Camada de dados real do Ministério (Supabase) — substitui o estado
-// levantado em memória do protótipo original.
+// Camada de dados real do Ministério (Supabase).
 //
-// Sem auth ainda (ver ADR no chat "remover auth"): cada dispositivo tem uma
-// device_key (mesma função getDeviceKey() de repertorios.ts) que funciona
-// como "dono" pseudônimo. RLS das tabelas de ministério é pública
-// temporária (ver supabase/migrations/0009_ministerio.sql) — quando
-// entrar auth de verdade, troca-se por policies com auth.uid() e esta
-// camada muda pouco (só o campo usado como "quem sou eu").
+// Quem é "eu" aqui é o auth.uid() da sessão do Supabase (anônima por
+// dispositivo, ou a conta Google quando a pessoa entra) — é o único
+// identificador que as policies de RLS conseguem verificar, porque vem
+// assinado no JWT. A device_key continua na tabela só como ponte pras
+// linhas criadas antes disso existir (ver vincularMembroLegado).
+//
+// Os fluxos que precisam enxergar além do que a sessão pode (fundar um
+// ministério, pedir ingresso por código, aprovar alguém) passam por RPCs
+// security definer, que validam a regra dentro do banco — ver
+// supabase/migrations/0013_ministerio_rls_por_membro.sql.
 
 import { supabase } from './supabase';
 import { getDeviceKey } from './repertorios';
-import { garantirSessaoAnonima, obterAuthUidReal } from './supabaseAuth';
+import { garantirSessaoAnonima } from './supabaseAuth';
+import { exigirLinha, exigirLinhas } from './supabaseUtils';
 import type { FuncaoMinisterio, MembroMinisterio, SolicitacaoIngresso } from '../types/ministerio';
 
 export const FUNCOES_PADRAO: Omit<FuncaoMinisterio, 'id'>[] = [
@@ -44,21 +48,40 @@ export type MinisterioResumo = {
   foto: string | null;
 };
 
-/** Limite de ministérios que um mesmo device_key pode integrar. */
+/** Limite de ministérios que a mesma conta pode integrar (espelha public.limite_ministerios()). */
 export const LIMITE_MINISTERIOS = 5;
 
-function gerarCodigo(): string {
-  const alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let sufixo = '';
-  for (let i = 0; i < 4; i++) sufixo += alfabeto[Math.floor(Math.random() * alfabeto.length)];
-  return `CDM-${sufixo}`;
+/** Resultado possível de um pedido de ingresso por código. */
+export type StatusIngresso = 'OK' | 'CODIGO_INVALIDO' | 'JA_MEMBRO' | 'JA_SOLICITADO' | 'LIMITE_MINISTERIOS';
+
+/**
+ * Vincula a sessão atual às linhas de membro criadas quando "eu" ainda era
+ * só uma device_key. Roda uma vez por sessão: sem isso, um aparelho que já
+ * usava o app antes da migration 0013 não é reconhecido como membro por
+ * nenhuma policy e o ministério some da tela.
+ */
+let vinculoLegadoFeito: Promise<void> | null = null;
+function vincularMembroLegado(): Promise<void> {
+  if (!vinculoLegadoFeito) {
+    vinculoLegadoFeito = (async () => {
+      await garantirSessaoAnonima();
+      const { error } = await supabase.rpc('vincular_membro_legado', {
+        p_device_key: getDeviceKey(),
+      });
+      if (error) {
+        // Não é fatal: só significa que o self-heal não rodou agora. Quem
+        // já tem auth_uid gravado segue funcionando normalmente.
+        console.error('vincular_membro_legado:', error.message);
+        vinculoLegadoFeito = null;
+      }
+    })();
+  }
+  return vinculoLegadoFeito;
 }
 
 /**
- * Busca o ministério ao qual este dispositivo pertence (se houver), já
- * montado com membros (+ funções de cada um), funções do ministério e
- * solicitações pendentes. Retorna null se o device_key não é membro de
- * nenhum ministério.
+ * Busca o primeiro ministério ao qual esta conta pertence, já montado com
+ * membros (+ funções de cada um), funções e solicitações pendentes.
  */
 export async function buscarMeuMinisterio(): Promise<MinisterioIdentidade | null> {
   const meus = await listarMeusMinisterios();
@@ -67,68 +90,35 @@ export async function buscarMeuMinisterio(): Promise<MinisterioIdentidade | null
 }
 
 /**
- * Lista todos os ministérios (até LIMITE_MINISTERIOS) aos quais este
- * device_key pertence, em ordem de ingresso. Usado pelo seletor de
- * ministério (trocar/adicionar) — ver useMinisterio.ts.
- *
- * Se a sessão for uma conta Google de verdade (não anônima), também
- * busca por auth_uid — é o que faz "logar num aparelho novo" reconhecer
- * o ministério sem depender do device_key local daquele aparelho (ver
- * obterAuthUidReal em supabaseAuth.ts).
+ * Ministérios desta conta (até LIMITE_MINISTERIOS), em ordem de ingresso.
+ * Vem por RPC porque a policy de `ministerios` só deixa ler o que já é
+ * meu — a própria lista precisa ser resolvida do lado do banco.
  */
 export async function listarMeusMinisterios(): Promise<MinisterioResumo[]> {
-  const deviceKey = getDeviceKey();
-  const authUid = await obterAuthUidReal();
-  let query = supabase.from('ministerio_membros').select('ministerio_id, criado_em, ministerios(id, nome)');
-  query = authUid ? query.or(`device_key.eq.${deviceKey},auth_uid.eq.${authUid}`) : query.eq('device_key', deviceKey);
-  const { data, error } = await query.order('criado_em', { ascending: true });
+  await vincularMembroLegado();
+  const { data, error } = await supabase.rpc('meus_ministerios');
   if (error) throw error;
-  const resultado: MinisterioResumo[] = [];
-  const idsVistos = new Set<string>();
-  for (const m of data ?? []) {
-    const mn = Array.isArray(m.ministerios) ? m.ministerios[0] : m.ministerios;
-    // dedupe: se a pessoa tem uma linha "órfã" por device_key e outra já
-    // vinculada por auth_uid no mesmo ministério, a busca .or() traria as
-    // duas — só a primeira ocorrência importa aqui (é só o resumo p/ o
-    // seletor, não o membro em si).
-    if (mn && !idsVistos.has(mn.id as string)) {
-      idsVistos.add(mn.id as string);
-      resultado.push({ id: mn.id as string, nome: mn.nome as string, foto: null });
-    }
-  }
-  return resultado;
+  return ((data ?? []) as { id: string; nome: string }[]).map((m) => ({
+    id: m.id,
+    nome: m.nome,
+    foto: null,
+  }));
 }
 
-/** Carrega um ministério específico (já sabendo que o device pertence a ele). */
+/** Carrega um ministério específico (já sabendo que a conta pertence a ele). */
 export async function buscarMinisterioPorId(ministerioId: string): Promise<MinisterioIdentidade> {
-  const authUid = await garantirSessaoAnonima();
-  const deviceKey = getDeviceKey();
-
-  // Self-heal: vincula esta sessão ao membro (ver 0011_ministerio_rls_admin.sql)
-  // — sem isso as policies de admin não reconhecem este device/conta.
-  // Busca por device_key (aparelho já conhecido) OU por auth_uid (conta
-  // Google já linkada em outro aparelho, ainda não neste device_key) —
-  // o que encontrar primeiro é "eu".
-  let query = supabase.from('ministerio_membros').select('id, auth_uid').eq('ministerio_id', ministerioId);
-  query = authUid ? query.or(`device_key.eq.${deviceKey},auth_uid.eq.${authUid}`) : query.eq('device_key', deviceKey);
-  const { data: meusMembros } = await query;
-  const meuMembro =
-    (meusMembros ?? []).find((m) => m.auth_uid === authUid) ?? (meusMembros ?? [])[0] ?? null;
-  if (meuMembro && authUid && meuMembro.auth_uid !== authUid) {
-    await supabase.from('ministerio_membros').update({ auth_uid: authUid }).eq('id', meuMembro.id);
-  }
-
+  await vincularMembroLegado();
   return carregarMinisterio(ministerioId);
 }
 
 async function carregarMinisterio(ministerioId: string): Promise<MinisterioIdentidade> {
-  const authUid = await obterAuthUidReal();
+  const authUid = await garantirSessaoAnonima();
   const [{ data: ministerio, error: e1 }, { data: membrosRaw, error: e2 }, { data: funcoesRaw, error: e3 }, { data: solicitacoesRaw, error: e4 }] =
     await Promise.all([
       supabase.from('ministerios').select('*').eq('id', ministerioId).single(),
       supabase
         .from('ministerio_membros')
-        .select('id, nome, avatar_cor, admin, aniversario, device_key, auth_uid, membro_funcoes(funcao_id)')
+        .select('id, nome, avatar_cor, admin, aniversario, auth_uid, membro_funcoes(funcao_id)')
         .eq('ministerio_id', ministerioId),
       supabase.from('funcoes').select('*').eq('ministerio_id', ministerioId),
       supabase
@@ -142,7 +132,6 @@ async function carregarMinisterio(ministerioId: string): Promise<MinisterioIdent
   if (e3) throw e3;
   if (e4) throw e4;
 
-  const deviceKey = getDeviceKey();
   const membros: MembroMinisterio[] = (membrosRaw ?? []).map((m) => ({
     id: m.id,
     nome: m.nome,
@@ -151,14 +140,9 @@ async function carregarMinisterio(ministerioId: string): Promise<MinisterioIdent
     aniversario: m.aniversario ?? undefined,
     funcoes: (m.membro_funcoes ?? []).map((mf: { funcao_id: string }) => mf.funcao_id),
   }));
-  // Prioriza o match por auth_uid (conta Google, vale em qualquer
-  // aparelho) — só cai pro device_key se não houver sessão real ou não
-  // houver match por auth_uid ainda (ex: acabou de logar, self-heal de
-  // buscarMinisterioPorId roda antes disso, mas por garantia).
+
   const meuMembroId: string | null =
-    (authUid ? (membrosRaw ?? []).find((m) => m.auth_uid === authUid)?.id : undefined) ??
-    (membrosRaw ?? []).find((m) => m.device_key === deviceKey)?.id ??
-    null;
+    (membrosRaw ?? []).find((m) => m.auth_uid && m.auth_uid === authUid)?.id ?? null;
 
   return {
     id: ministerio!.id,
@@ -173,162 +157,143 @@ async function carregarMinisterio(ministerioId: string): Promise<MinisterioIdent
 }
 
 /**
- * Cria o ministério, o membro admin ("você", com aniversário da conta se
- * houver) e semeia a lista padrão de funções. `funcoesCustom` (opcional)
- * substitui a lista padrão — vem da personalização feita em
- * AdicionarMinisterioTela antes de salvar.
+ * Cria o ministério, o membro admin ("eu") e as funções — tudo numa
+ * transação só, do lado do banco. Antes eram três inserts soltos: se o
+ * segundo falhasse sobrava um ministério sem dono, que ninguém conseguia
+ * nem usar nem apagar (delete exige ser admin dele).
  */
 export async function criarMinisterio(
   nome: string,
   dataNascimento?: string | null,
-  funcoesCustom?: { nome: string; icone: string }[]
+  funcoesCustom?: { nome: string; icone: string }[],
+  nomeMembro?: string | null
 ): Promise<MinisterioIdentidade> {
-  const authUid = await garantirSessaoAnonima();
-  const deviceKey = getDeviceKey();
+  await garantirSessaoAnonima();
+  const listaFuncoes = funcoesCustom?.length ? funcoesCustom : FUNCOES_PADRAO;
 
-  if ((await listarMeusMinisterios()).length >= LIMITE_MINISTERIOS) {
-    throw new Error(`LIMITE_MINISTERIOS`);
+  const { data, error } = await supabase.rpc('criar_ministerio', {
+    p_nome: nome,
+    p_device_key: getDeviceKey(),
+    p_nome_membro: nomeMembro || 'Você',
+    p_aniversario: dataNascimento || null,
+    p_funcoes: listaFuncoes,
+  });
+  if (error) {
+    // a RPC sinaliza o limite levantando exceção com esta mensagem
+    if (error.message.includes('LIMITE_MINISTERIOS')) throw new Error('LIMITE_MINISTERIOS');
+    throw error;
   }
 
-  const codigoConvite = gerarCodigo();
-
-  const { data: ministerio, error: erroMinisterio } = await supabase
-    .from('ministerios')
-    .insert({ nome, codigo_convite: codigoConvite, criado_por_device_key: deviceKey })
-    .select()
-    .single();
-  if (erroMinisterio) throw erroMinisterio;
-
-  const { error: erroMembro } = await supabase.from('ministerio_membros').insert({
-    ministerio_id: ministerio.id,
-    device_key: deviceKey,
-    auth_uid: authUid,
-    nome: 'Você',
-    avatar_cor: 'bg-teal-500',
-    admin: true,
-    aniversario: dataNascimento || null,
-  });
-  if (erroMembro) throw erroMembro;
-
-  const listaFuncoes = funcoesCustom?.length ? funcoesCustom : FUNCOES_PADRAO;
-  const { error: erroFuncoes } = await supabase
-    .from('funcoes')
-    .insert(listaFuncoes.map((f) => ({ ministerio_id: ministerio.id, nome: f.nome, icone: f.icone })));
-  if (erroFuncoes) throw erroFuncoes;
-
-  return carregarMinisterio(ministerio.id);
+  return carregarMinisterio(data as string);
 }
 
-/** Confere se o código existe; se sim, cria a solicitação de ingresso. */
-export async function solicitarIngresso(codigo: string, nomeSolicitante: string): Promise<boolean> {
-  const authUid = await garantirSessaoAnonima();
-
-  const meusMinisterios = await listarMeusMinisterios();
-  if (meusMinisterios.length >= LIMITE_MINISTERIOS) {
-    throw new Error(`LIMITE_MINISTERIOS`);
-  }
-
-  const codigoNormalizado = codigo.trim().toUpperCase();
-  const { data: ministerio, error: erroBusca } = await supabase
-    .from('ministerios')
-    .select('id')
-    .eq('codigo_convite', codigoNormalizado)
-    .maybeSingle();
-  if (erroBusca) throw erroBusca;
-  if (!ministerio) return false;
-
-  // Já é membro (admin ou não) desse ministério — não faz sentido abrir
-  // uma nova solicitação de ingresso pra algo que já pertence.
-  if (meusMinisterios.some((m) => m.id === ministerio.id)) {
-    throw new Error('JA_MEMBRO');
-  }
-
-  const { error: erroInsert } = await supabase.from('solicitacoes_ingresso').insert({
-    ministerio_id: ministerio.id,
-    device_key: getDeviceKey(),
-    auth_uid: authUid,
-    nome: nomeSolicitante,
-    codigo_usado: codigoNormalizado,
+/**
+ * Pede ingresso por código de convite. A resolução código -> ministério
+ * acontece no banco: sem ser membro, o cliente não enxerga a linha do
+ * ministério pra fazer essa busca sozinho.
+ */
+export async function solicitarIngresso(
+  codigo: string,
+  nomeSolicitante: string
+): Promise<StatusIngresso> {
+  await garantirSessaoAnonima();
+  const { data, error } = await supabase.rpc('solicitar_ingresso', {
+    p_codigo: codigo,
+    p_nome: nomeSolicitante,
+    p_device_key: getDeviceKey(),
   });
-  if (erroInsert) throw erroInsert;
-  return true;
+  if (error) throw error;
+  return data as StatusIngresso;
 }
 
 export async function renomearMinisterio(ministerioId: string, nome: string) {
-  const { error } = await supabase.from('ministerios').update({ nome }).eq('id', ministerioId);
-  if (error) throw error;
+  await exigirLinha(
+    supabase.from('ministerios').update({ nome }).eq('id', ministerioId).select('id'),
+    'renomearMinisterio'
+  );
 }
 
 export async function regenerarCodigoConvite(ministerioId: string): Promise<string> {
-  const codigo = gerarCodigo();
-  const { error } = await supabase.from('ministerios').update({ codigo_convite: codigo }).eq('id', ministerioId);
+  const { data, error } = await supabase.rpc('gerar_codigo_convite');
   if (error) throw error;
+  const codigo = data as string;
+  await exigirLinha(
+    supabase.from('ministerios').update({ codigo_convite: codigo }).eq('id', ministerioId).select('id'),
+    'regenerarCodigoConvite'
+  );
   return codigo;
 }
 
+/**
+ * Sai do ministério. Antes apagava por device_key: quem tinha entrado pela
+ * conta Google em outro aparelho não apagava linha nenhuma e continuava
+ * membro, sem nenhum aviso.
+ */
 export async function sairDoMinisterio(ministerioId: string) {
-  const { error } = await supabase
-    .from('ministerio_membros')
-    .delete()
-    .eq('ministerio_id', ministerioId)
-    .eq('device_key', getDeviceKey());
-  if (error) throw error;
+  const authUid = await garantirSessaoAnonima();
+  if (!authUid) throw new Error('sairDoMinisterio: sessão indisponível');
+  await exigirLinhas(
+    supabase
+      .from('ministerio_membros')
+      .delete()
+      .eq('ministerio_id', ministerioId)
+      .eq('auth_uid', authUid)
+      .select('id'),
+    'sairDoMinisterio'
+  );
 }
 
 export async function excluirMinisterio(ministerioId: string) {
-  const { error } = await supabase.from('ministerios').delete().eq('id', ministerioId);
-  if (error) throw error;
+  await exigirLinha(
+    supabase.from('ministerios').delete().eq('id', ministerioId).select('id'),
+    'excluirMinisterio'
+  );
 }
 
 export async function definirAdmin(membroId: string, admin: boolean) {
-  const { error } = await supabase.from('ministerio_membros').update({ admin }).eq('id', membroId);
-  if (error) throw error;
+  await exigirLinha(
+    supabase.from('ministerio_membros').update({ admin }).eq('id', membroId).select('id'),
+    'definirAdmin'
+  );
 }
 
 export async function removerMembro(membroId: string) {
-  const { error } = await supabase.from('ministerio_membros').delete().eq('id', membroId);
-  if (error) throw error;
+  await exigirLinha(
+    supabase.from('ministerio_membros').delete().eq('id', membroId).select('id'),
+    'removerMembro'
+  );
 }
 
-/** Aprova: cria o membro (sem funções ainda — atribuídas depois na Equipe) e remove a solicitação. */
-export async function aprovarSolicitacao(ministerioId: string, solicitacao: SolicitacaoIngresso) {
-  const { data: solicitacaoRaw, error: erroBusca } = await supabase
-    .from('solicitacoes_ingresso')
-    .select('device_key, auth_uid')
-    .eq('id', solicitacao.id)
-    .single();
-  if (erroBusca) throw erroBusca;
-
-  const { error: erroMembro } = await supabase.from('ministerio_membros').insert({
-    ministerio_id: ministerioId,
-    device_key: solicitacaoRaw.device_key,
-    auth_uid: solicitacaoRaw.auth_uid,
-    nome: solicitacao.nome,
-    avatar_cor: 'bg-slate-500',
-    admin: false,
-  });
-  if (erroMembro) throw erroMembro;
-
-  const { error: erroDelete } = await supabase.from('solicitacoes_ingresso').delete().eq('id', solicitacao.id);
-  if (erroDelete) throw erroDelete;
+/** Aprova o ingresso: cria o membro (sem funções ainda) e consome a solicitação. */
+export async function aprovarSolicitacao(_ministerioId: string, solicitacao: SolicitacaoIngresso) {
+  const { error } = await supabase.rpc('aprovar_solicitacao', { p_solicitacao_id: solicitacao.id });
+  if (error) throw error;
 }
 
 export async function recusarSolicitacao(id: string) {
-  const { error } = await supabase.from('solicitacoes_ingresso').delete().eq('id', id);
-  if (error) throw error;
+  await exigirLinha(
+    supabase.from('solicitacoes_ingresso').delete().eq('id', id).select('id'),
+    'recusarSolicitacao'
+  );
 }
 
 export async function criarFuncao(ministerioId: string, nome: string, icone: string) {
-  const { error } = await supabase.from('funcoes').insert({ ministerio_id: ministerioId, nome, icone });
-  if (error) throw error;
+  await exigirLinha(
+    supabase.from('funcoes').insert({ ministerio_id: ministerioId, nome, icone }).select('id'),
+    'criarFuncao'
+  );
 }
 
 export async function editarFuncao(funcaoId: string, nome: string, icone: string) {
-  const { error } = await supabase.from('funcoes').update({ nome, icone }).eq('id', funcaoId);
-  if (error) throw error;
+  await exigirLinha(
+    supabase.from('funcoes').update({ nome, icone }).eq('id', funcaoId).select('id'),
+    'editarFuncao'
+  );
 }
 
 export async function removerFuncao(funcaoId: string) {
-  const { error } = await supabase.from('funcoes').delete().eq('id', funcaoId);
-  if (error) throw error;
+  await exigirLinha(
+    supabase.from('funcoes').delete().eq('id', funcaoId).select('id'),
+    'removerFuncao'
+  );
 }

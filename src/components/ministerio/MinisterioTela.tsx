@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, Home, ListMusic, Megaphone, Settings, Users } from 'lucide-react';
-import { useRepertorios } from '../../lib/useRepertorios';
+import { useRepertorios } from '../../lib/repertoriosContext';
 import { useEscalas } from '../../lib/useEscalas';
 import { useAvisos } from '../../lib/useAvisos';
 import { useIndisponibilidades } from '../../lib/useIndisponibilidades';

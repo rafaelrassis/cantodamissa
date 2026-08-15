@@ -83,20 +83,32 @@ export async function listarProximasEscalasDoMembro(
   membroId: string,
   limite: number
 ): Promise<EscalaResumo[]> {
-  const hoje = new Date().toISOString().slice(0, 10);
+  // Data local, não UTC: `toISOString()` num fuso a oeste de Greenwich já
+  // devolve o dia seguinte durante a noite, o que sumia com a escala de
+  // hoje enquanto ela ainda não aconteceu.
+  const agora = new Date();
+  const hoje = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(
+    agora.getDate()
+  ).padStart(2, '0')}`;
+
+  // A consulta parte de `escalas` (e não de escala_participantes) porque
+  // ordenar por coluna de tabela referenciada só ordena o embed, não as
+  // linhas de fora — com `.limit()` junto, o corte pegava escalas
+  // arbitrárias em vez das mais próximas.
   const { data, error } = await supabase
-    .from('escala_participantes')
-    .select('escalas!inner(id, titulo, data, ministerio_id)')
-    .eq('membro_id', membroId)
-    .eq('escalas.ministerio_id', ministerioId)
-    .gte('escalas.data', hoje)
-    .order('data', { referencedTable: 'escalas', ascending: true })
+    .from('escalas')
+    .select('id, titulo, data, escala_participantes!inner(membro_id)')
+    .eq('ministerio_id', ministerioId)
+    .eq('escala_participantes.membro_id', membroId)
+    .gte('data', hoje)
+    .order('data', { ascending: true })
     .limit(limite);
   if (error) throw error;
-  type Linha = { escalas: EscalaResumo | EscalaResumo[] | null };
-  return ((data ?? []) as unknown as Linha[])
-    .map((row) => (Array.isArray(row.escalas) ? row.escalas[0] : row.escalas))
-    .filter((e): e is EscalaResumo => e != null);
+  return ((data ?? []) as unknown as EscalaResumo[]).map((e) => ({
+    id: e.id,
+    titulo: e.titulo,
+    data: e.data,
+  }));
 }
 
 export async function criarEscala(ministerioId: string, escala: Escala): Promise<Escala> {
@@ -146,19 +158,51 @@ export async function excluirEscala(escalaId: string): Promise<void> {
   if (error) throw error;
 }
 
+/**
+ * Sincroniza a lista de participantes preservando o que já foi respondido.
+ *
+ * Antes isto apagava tudo e reinseria com o `status` que estava na cópia em
+ * memória do admin — ou seja, qualquer confirmação feita por um membro
+ * depois que a tela de edição foi aberta voltava pra "pendente" assim que o
+ * admin salvasse qualquer outra coisa (mudar o horário, por exemplo).
+ * Agora só as linhas que realmente saíram são apagadas, e o status de quem
+ * continua na escala vem do banco, não da tela.
+ */
 async function gravarParticipantes(escalaId: string, participantes: ParticipanteEscala[]) {
-  const { error: erroDelete } = await supabase.from('escala_participantes').delete().eq('escala_id', escalaId);
-  if (erroDelete) throw erroDelete;
-  if (participantes.length === 0) return;
-  const { error: erroInsert } = await supabase.from('escala_participantes').insert(
-    participantes.map((p) => ({
-      escala_id: escalaId,
-      membro_id: p.membroId,
-      funcao_id: p.funcaoId || null,
-      status: p.status,
-    }))
+  const { data: atuaisRaw, error: erroLeitura } = await supabase
+    .from('escala_participantes')
+    .select('id, membro_id, funcao_id, status')
+    .eq('escala_id', escalaId);
+  if (erroLeitura) throw erroLeitura;
+
+  const chave = (membroId: string, funcaoId: string | null) => `${membroId}|${funcaoId ?? ''}`;
+  const atuais = new Map(
+    (atuaisRaw ?? []).map((p) => [chave(p.membro_id, p.funcao_id), p as { id: string; status: string }])
   );
-  if (erroInsert) throw erroInsert;
+  const desejados = new Map(
+    participantes.map((p) => [chave(p.membroId, p.funcaoId || null), p])
+  );
+
+  const idsParaRemover = [...atuais.entries()]
+    .filter(([k]) => !desejados.has(k))
+    .map(([, linha]) => linha.id);
+  if (idsParaRemover.length > 0) {
+    const { error } = await supabase.from('escala_participantes').delete().in('id', idsParaRemover);
+    if (error) throw error;
+  }
+
+  const novos = [...desejados.entries()].filter(([k]) => !atuais.has(k));
+  if (novos.length > 0) {
+    const { error } = await supabase.from('escala_participantes').insert(
+      novos.map(([, p]) => ({
+        escala_id: escalaId,
+        membro_id: p.membroId,
+        funcao_id: p.funcaoId || null,
+        status: p.status,
+      }))
+    );
+    if (error) throw error;
+  }
 }
 
 async function gravarRoteiro(escalaId: string, roteiro: ItemRoteiro[]) {

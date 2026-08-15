@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import { getMusicasPorArtista } from '../lib/musicasApi';
-import { useRepertorios } from '../lib/useRepertorios';
+import { useRepertorios } from '../lib/repertoriosContext';
 import { MusicaCard } from './MusicaCard';
 
 type Aba = 'top' | 'todas';

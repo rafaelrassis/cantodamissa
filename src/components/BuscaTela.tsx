@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { CalendarDays, ChevronLeft, ListMusic, Search, TrendingUp, X } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import { getMusicaById, searchMusicas } from '../lib/musicasApi';
+import { useDebounce } from '../lib/useDebounce';
 import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
-import { useRepertorios } from '../lib/useRepertorios';
+import { useRepertorios } from '../lib/repertoriosContext';
 import { MusicaCard } from './MusicaCard';
 
 interface Props {
@@ -25,7 +26,9 @@ export function BuscaTela({
   const [query, setQuery] = useState('');
   const [resultados, setResultados] = useState<Musica[]>([]);
   const [carregando, setCarregando] = useState(false);
-  const buscando = query.trim().length > 0;
+  // Espera a digitação parar antes de consultar — ver useDebounce.
+  const queryBuscada = useDebounce(query.trim(), 300);
+  const buscando = queryBuscada.length > 0;
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { historico, remover: removerHistorico, limpar: limparHistorico } = useHistoricoMusicas();
@@ -42,7 +45,7 @@ export function BuscaTela({
     }
     let cancelado = false;
     setCarregando(true);
-    searchMusicas(query).then((lista) => {
+    searchMusicas(queryBuscada).then((lista) => {
       if (!cancelado) {
         setResultados(lista);
         setCarregando(false);
@@ -51,7 +54,7 @@ export function BuscaTela({
     return () => {
       cancelado = true;
     };
-  }, [query, buscando]);
+  }, [queryBuscada, buscando]);
 
   async function abrirDoHistorico(id: string) {
     const musica = await getMusicaById(id);

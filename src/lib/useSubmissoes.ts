@@ -1,42 +1,49 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as api from './submissoes';
-import type { Submissao, StatusSubmissao } from './submissoes';
+import type { DadosSubmissao, StatusSubmissao, Submissao } from './submissoes';
 
+/**
+ * Estado reativo das submissões. Virou assíncrono junto com a camada de
+ * dados (antes era localStorage síncrono, ver submissoes.ts).
+ */
 export function useSubmissoes() {
   const [submissoes, setSubmissoes] = useState<Submissao[]>([]);
+  const [carregando, setCarregando] = useState(true);
 
-  const recarregar = useCallback(() => {
-    setSubmissoes(api.listarSubmissoes());
+  const recarregar = useCallback(async () => {
+    const lista = await api.listarSubmissoes();
+    setSubmissoes(lista);
+    setCarregando(false);
   }, []);
 
   useEffect(() => {
-    recarregar();
+    void recarregar();
   }, [recarregar]);
 
   const criar = useCallback(
-    (dados: Parameters<typeof api.criarSubmissao>[0]) => {
-      const nova = api.criarSubmissao(dados);
-      recarregar();
+    async (dados: DadosSubmissao) => {
+      const nova = await api.criarSubmissao(dados);
+      await recarregar();
       return nova;
     },
     [recarregar]
   );
 
   const atualizarStatus = useCallback(
-    (id: string, status: StatusSubmissao) => {
-      api.atualizarStatus(id, status);
-      recarregar();
+    async (id: string, status: StatusSubmissao) => {
+      await api.atualizarStatus(id, status);
+      await recarregar();
     },
     [recarregar]
   );
 
   const remover = useCallback(
-    (id: string) => {
-      api.removerSubmissao(id);
-      recarregar();
+    async (id: string) => {
+      await api.removerSubmissao(id);
+      await recarregar();
     },
     [recarregar]
   );
 
-  return { submissoes, criar, atualizarStatus, remover };
+  return { submissoes, carregando, criar, atualizarStatus, remover };
 }

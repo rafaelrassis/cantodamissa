@@ -10,6 +10,7 @@ import {
   type ArtistaEmAlta,
 } from '../lib/musicasApi';
 import { getCantoresPopulares } from '../lib/cantoresApi';
+import { useDebounce } from '../lib/useDebounce';
 import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
 import { useProximosRepertoriosHome } from '../lib/useProximosRepertoriosHome';
 import { useQtdRepertoriosHome } from '../lib/preferenciaRepertoriosHome';
@@ -19,7 +20,7 @@ import {
   obterRepertorioPorToken,
   type Repertorio as RepertorioTipo,
 } from '../lib/repertorios';
-import { useRepertorios } from '../lib/useRepertorios';
+import { useRepertorios } from '../lib/repertoriosContext';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import type { Theme } from '../lib/useTheme';
 import type { Ministerio } from '../lib/useMinisterio';
@@ -122,7 +123,10 @@ export function Home({
   const domingoAtual = useMemo(() => proximoDomingoCalculado(new Date()), []);
   const diasParaDomingo = useMemo(() => diasAte(domingoAtual.data, new Date()), [domingoAtual]);
   const ehHoje = diasParaDomingo === 0;
-  const buscando = query.trim().length > 0;
+  // A consulta só sai quando a digitação para (ver useDebounce); `query`
+  // continua controlando o input, pra ele não engasgar.
+  const queryBuscada = useDebounce(query.trim(), 300);
+  const buscando = queryBuscada.length > 0;
 
   const { repertorios, adicionarMusica, duplicar } = useRepertorios();
   const [repertorioCompartilhado, setRepertorioCompartilhado] = useState<RepertorioTipo | null>(
@@ -177,7 +181,7 @@ export function Home({
     let cancelado = false;
     setCarregando(true);
     const filtro = { tempo, momento };
-    const promise = buscando ? searchMusicas(query, filtro) : getTop50(filtro, 15);
+    const promise = buscando ? searchMusicas(queryBuscada, filtro) : getTop50(filtro, 15);
     promise.then((lista) => {
       if (!cancelado) {
         setResultados(lista);
@@ -187,7 +191,7 @@ export function Home({
     return () => {
       cancelado = true;
     };
-  }, [query, tempo, momento, buscando]);
+  }, [queryBuscada, tempo, momento, buscando]);
 
   useEffect(() => {
     function onKeydown(e: KeyboardEvent) {
@@ -545,7 +549,9 @@ export function Home({
         <SubmissaoForm
           modo="nova"
           onClose={() => setFormularioAberto(false)}
-          onSubmit={(dados) => criarSubmissao({ ...dados, tipo: 'nova' })}
+          onSubmit={async (dados) => {
+            await criarSubmissao({ ...dados, tipo: 'nova' });
+          }}
         />
       )}
 

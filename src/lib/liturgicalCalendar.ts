@@ -23,8 +23,6 @@ export interface DomingoCalculado {
   corLiturgica: 'roxo' | 'branco' | 'verde' | 'vermelho' | 'rosa';
 }
 
-const MS_DIA = 24 * 60 * 60 * 1000;
-
 /**
  * Soma dias no calendário (não 24h fixas). Somar `dias * 86400000` parece
  * equivalente, mas quebra em fuso com horário de verão: como as datas aqui

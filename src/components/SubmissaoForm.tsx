@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import type { Musica } from '../types/musica';
+import { mensagemDeErro } from '../lib/supabaseUtils';
 
 interface Props {
   modo: 'nova' | 'correcao';
@@ -12,7 +13,7 @@ interface Props {
     chordsContent: string;
     autorNome: string;
     observacao?: string;
-  }) => void;
+  }) => void | Promise<void>;
   onClose: () => void;
 }
 
@@ -24,19 +25,32 @@ export function SubmissaoForm({ modo, musicaBase, onSubmit, onClose }: Props) {
   const [autorNome, setAutorNome] = useState('');
   const [observacao, setObservacao] = useState('');
   const [enviado, setEnviado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState('');
 
-  function handleSubmit(e: React.FormEvent) {
+  // O envio agora vai pro banco (antes era localStorage síncrono), então
+  // "enviado" só pode aparecer depois que a gravação confirma — senão o
+  // usuário lê "sugestão enviada" para algo que se perdeu no caminho.
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !tone.trim() || !chordsContent.trim() || !autorNome.trim()) return;
-    onSubmit({
-      title: title.trim(),
-      artist: artist.trim(),
-      originalTone: tone.trim(),
-      chordsContent,
-      autorNome: autorNome.trim(),
-      observacao: observacao.trim() || undefined,
-    });
-    setEnviado(true);
+    setEnviando(true);
+    setErro('');
+    try {
+      await onSubmit({
+        title: title.trim(),
+        artist: artist.trim(),
+        originalTone: tone.trim(),
+        chordsContent,
+        autorNome: autorNome.trim(),
+        observacao: observacao.trim() || undefined,
+      });
+      setEnviado(true);
+    } catch (err) {
+      setErro(mensagemDeErro(err, 'Não foi possível enviar agora. Tente de novo.'));
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (
@@ -122,11 +136,18 @@ export function SubmissaoForm({ modo, musicaBase, onSubmit, onClose }: Props) {
               />
             </Campo>
 
+            {erro && (
+              <p role="alert" className="text-sm font-medium text-red-600 dark:text-red-400">
+                {erro}
+              </p>
+            )}
+
             <button
               type="submit"
-              className="mt-2 rounded-xl bg-[var(--accent)] py-3 text-sm font-semibold text-[var(--accent-fg)]"
+              disabled={enviando}
+              className="mt-2 rounded-xl bg-[var(--accent)] py-3 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-60"
             >
-              Enviar sugestão
+              {enviando ? 'Enviando…' : 'Enviar sugestão'}
             </button>
           </form>
         )}

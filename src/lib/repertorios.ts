@@ -1,4 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabase';
+import { garantirSessaoAnonima } from './supabaseAuth';
+import { exigirLinha } from './supabaseUtils';
 import { LABEL_MOMENTO } from './labels';
 
 /**
@@ -6,10 +8,11 @@ import { LABEL_MOMENTO } from './labels';
  * `repertorio_ritos`) quando configurado, com fallback pra localStorage
  * caso contrário — mesmo padrão do musicasApi.ts.
  *
- * Sem autenticação ainda: cada dispositivo tem uma `device_key` (UUID
- * gerado uma vez e salvo em localStorage) que funciona como "dono"
- * pseudônimo pra filtrar "meus repertórios". Não é segurança de verdade —
- * ver comentário na migration 0003_repertorios_sem_auth.sql.
+ * O dono de um repertório é o auth.uid() da sessão do Supabase (anônima
+ * por dispositivo, ou a conta Google) — verificável pelas policies porque
+ * vem assinado no JWT. A `device_key` continua gravada só pra reivindicar
+ * repertórios criados antes disso (ver reivindicarRepertoriosDoDevice e
+ * a migration 0014_repertorios_dono_real.sql).
  *
  * Ritos: cada repertório tem sua própria lista ordenada de seções
  * (Entrada, Ato Penitencial, ...) — nasce com as 11 seções padrão da missa,
@@ -62,6 +65,29 @@ export function getDeviceKey(): string {
     localStorage.setItem(DEVICE_KEY_STORAGE, key);
   }
   return key;
+}
+
+/**
+ * Assume a posse dos repertórios criados por este aparelho antes de
+ * existir auth_uid — sem isso eles ficariam invisíveis pro próprio dono
+ * depois da migration 0014. Roda uma vez por sessão.
+ */
+let reivindicacaoFeita: Promise<void> | null = null;
+export function reivindicarRepertoriosDoDevice(): Promise<void> {
+  if (!isSupabaseConfigured) return Promise.resolve();
+  if (!reivindicacaoFeita) {
+    reivindicacaoFeita = (async () => {
+      await garantirSessaoAnonima();
+      const { error } = await supabase.rpc('reivindicar_repertorios_do_device', {
+        p_device_key: getDeviceKey(),
+      });
+      if (error) {
+        console.error('reivindicarRepertoriosDoDevice:', error.message);
+        reivindicacaoFeita = null; // permite tentar de novo
+      }
+    })();
+  }
+  return reivindicacaoFeita;
 }
 
 function gerarIdMock(): string {
@@ -139,10 +165,13 @@ export async function listarRepertorios(): Promise<Repertorio[]> {
     return lerMock().sort((a, b) => b.criadoEm.localeCompare(a.criadoEm));
   }
 
+  await reivindicarRepertoriosDoDevice();
+
+  // Sem filtro por dono aqui de propósito: a policy de select já limita ao
+  // que é meu (ou ao repertório da escala de um ministério que eu integro).
   const { data, error } = await supabase
     .from('repertorios')
     .select(SELECT_REPERTORIO)
-    .eq('device_key', getDeviceKey())
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -152,14 +181,16 @@ export async function listarRepertorios(): Promise<Repertorio[]> {
   return ((data ?? []) as unknown as LinhaRepertorioSupabase[]).map(mapearRepertorio);
 }
 
+/**
+ * Abre um repertório compartilhado por link. Vai por RPC porque quem
+ * recebeu o link não é dono nem membro do ministério: a policy de select
+ * não deixa ele ler a linha, e afrouxá-la pra isso reabriria a listagem de
+ * todos os repertórios (ver 0014_repertorios_dono_real.sql).
+ */
 export async function obterRepertorioPorToken(token: string): Promise<Repertorio | null> {
   if (!isSupabaseConfigured) return null; // compartilhamento por link exige backend real
 
-  const { data, error } = await supabase
-    .from('repertorios')
-    .select(SELECT_REPERTORIO)
-    .eq('share_token', token)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('repertorio_por_token', { p_token: token });
 
   if (error) {
     console.error('obterRepertorioPorToken:', error.message);
@@ -203,9 +234,12 @@ export async function criarRepertorio(nome: string, escalaId: string | null = nu
     return novo;
   }
 
+  const authUid = await garantirSessaoAnonima();
+  if (!authUid) throw new Error('criarRepertorio: sessão indisponível');
+
   const { data, error } = await supabase
     .from('repertorios')
-    .insert({ nome: nomeFinal, device_key: getDeviceKey(), escala_id: escalaId })
+    .insert({ nome: nomeFinal, device_key: getDeviceKey(), auth_uid: authUid, escala_id: escalaId })
     .select('id')
     .single();
 
@@ -275,8 +309,10 @@ export async function renomearRepertorio(id: string, nome: string): Promise<void
     return;
   }
 
-  const { error } = await supabase.from('repertorios').update({ nome: nomeFinal }).eq('id', id);
-  if (error) console.error('renomearRepertorio:', error.message);
+  await exigirLinha(
+    supabase.from('repertorios').update({ nome: nomeFinal }).eq('id', id).select('id'),
+    'renomearRepertorio'
+  );
 }
 
 export async function removerRepertorio(id: string): Promise<void> {
@@ -285,8 +321,10 @@ export async function removerRepertorio(id: string): Promise<void> {
     return;
   }
 
-  const { error } = await supabase.from('repertorios').delete().eq('id', id);
-  if (error) console.error('removerRepertorio:', error.message);
+  await exigirLinha(
+    supabase.from('repertorios').delete().eq('id', id).select('id'),
+    'removerRepertorio'
+  );
 }
 
 /** Cria uma cópia independente de um repertório — mesmos ritos e músicas,
@@ -311,9 +349,12 @@ export async function duplicarRepertorio(id: string): Promise<Repertorio> {
     return novo;
   }
 
+  const authUid = await garantirSessaoAnonima();
+  if (!authUid) throw new Error('duplicarRepertorio: sessão indisponível');
+
   const { data, error } = await supabase
     .from('repertorios')
-    .insert({ nome: nomeCopia, device_key: getDeviceKey() })
+    .insert({ nome: nomeCopia, device_key: getDeviceKey(), auth_uid: authUid })
     .select('id')
     .single();
   if (error) throw new Error(`duplicarRepertorio: ${error.message}`);
@@ -360,16 +401,33 @@ export async function adicionarRito(repertorioId: string, nome: string): Promise
     return;
   }
 
-  const { count } = await supabase
-    .from('repertorio_ritos')
-    .select('*', { count: 'exact', head: true })
-    .eq('repertorio_id', repertorioId);
+  await exigirLinha(
+    supabase
+      .from('repertorio_ritos')
+      .insert({ repertorio_id: repertorioId, nome: nomeFinal, ordem: await proximaOrdem('repertorio_ritos', repertorioId) })
+      .select('id'),
+    'adicionarRito'
+  );
+}
 
-  const { error } = await supabase
-    .from('repertorio_ritos')
-    .insert({ repertorio_id: repertorioId, nome: nomeFinal, ordem: count ?? 0 });
-
-  if (error) console.error('adicionarRito:', error.message);
+/**
+ * Próxima posição livre numa lista ordenada do repertório. Usa o maior
+ * `ordem` existente em vez da contagem de linhas: depois de remover um
+ * item do meio, contar daria um número já ocupado e dois itens
+ * empatariam na ordenação.
+ */
+async function proximaOrdem(
+  tabela: 'repertorio_ritos' | 'repertorio_musicas',
+  repertorioId: string
+): Promise<number> {
+  const { data } = await supabase
+    .from(tabela)
+    .select('ordem')
+    .eq('repertorio_id', repertorioId)
+    .order('ordem', { ascending: false })
+    .limit(1);
+  const maior = (data ?? [])[0]?.ordem;
+  return typeof maior === 'number' ? maior + 1 : 0;
 }
 
 export async function removerRito(repertorioId: string, nome: string): Promise<void> {
@@ -382,13 +440,15 @@ export async function removerRito(repertorioId: string, nome: string): Promise<v
     return;
   }
 
-  const { error } = await supabase
-    .from('repertorio_ritos')
-    .delete()
-    .eq('repertorio_id', repertorioId)
-    .eq('nome', nome);
-
-  if (error) console.error('removerRito:', error.message);
+  await exigirLinha(
+    supabase
+      .from('repertorio_ritos')
+      .delete()
+      .eq('repertorio_id', repertorioId)
+      .eq('nome', nome)
+      .select('id'),
+    'removerRito'
+  );
 }
 
 /** Reordena os ritos de um repertório pra bater com a ordem do array dado. */
@@ -427,22 +487,17 @@ export async function adicionarMusica(repertorioId: string, item: ItemRepertorio
     return;
   }
 
-  const { count } = await supabase
-    .from('repertorio_musicas')
-    .select('*', { count: 'exact', head: true })
-    .eq('repertorio_id', repertorioId);
-
   const { error } = await supabase.from('repertorio_musicas').insert({
     repertorio_id: repertorioId,
     musica_id: item.musicaId,
     momento: item.momento,
     tom_escolhido: item.tone,
-    ordem: count ?? 0,
+    ordem: await proximaOrdem('repertorio_musicas', repertorioId),
   });
 
   // conflito de chave primária (repertorio_id, musica_id) = música já está lá — ignora
   if (error && !error.message.includes('duplicate')) {
-    console.error('adicionarMusica:', error.message);
+    throw new Error(`adicionarMusica: ${error.message}`);
   }
 }
 
@@ -458,13 +513,15 @@ export async function removerMusica(repertorioId: string, musicaId: string): Pro
     return;
   }
 
-  const { error } = await supabase
-    .from('repertorio_musicas')
-    .delete()
-    .eq('repertorio_id', repertorioId)
-    .eq('musica_id', musicaId);
-
-  if (error) console.error('removerMusica:', error.message);
+  await exigirLinha(
+    supabase
+      .from('repertorio_musicas')
+      .delete()
+      .eq('repertorio_id', repertorioId)
+      .eq('musica_id', musicaId)
+      .select('musica_id'),
+    'removerMusica'
+  );
 }
 
 /** Move uma música pra outro rito dentro do mesmo repertório. */
@@ -489,13 +546,15 @@ export async function moverMusicaParaRito(
     return;
   }
 
-  const { error } = await supabase
-    .from('repertorio_musicas')
-    .update({ momento: novoRito })
-    .eq('repertorio_id', repertorioId)
-    .eq('musica_id', musicaId);
-
-  if (error) console.error('moverMusicaParaRito:', error.message);
+  await exigirLinha(
+    supabase
+      .from('repertorio_musicas')
+      .update({ momento: novoRito })
+      .eq('repertorio_id', repertorioId)
+      .eq('musica_id', musicaId)
+      .select('musica_id'),
+    'moverMusicaParaRito'
+  );
 }
 
 /** Nome do rito padrão sugerido pra uma música nova, a partir da tag dela. */

@@ -3,7 +3,7 @@ import { ChevronLeft } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import type { Cantor } from '../types/cantor';
 import { getCantorBySlug, getTop10PorCantor, getTodasAlfabeticoPorCantor } from '../lib/cantoresApi';
-import { useRepertorios } from '../lib/useRepertorios';
+import { useRepertorios } from '../lib/repertoriosContext';
 import { MusicaCard } from './MusicaCard';
 
 type Aba = 'top' | 'todas';

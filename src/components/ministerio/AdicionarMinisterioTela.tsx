@@ -12,14 +12,23 @@ import {
   Send,
   Trash2,
 } from 'lucide-react';
-import { FUNCOES_PADRAO } from '../../lib/ministerioApi';
+import { FUNCOES_PADRAO, LIMITE_MINISTERIOS, type StatusIngresso } from '../../lib/ministerioApi';
 import type { FuncaoMinisterio } from '../../types/ministerio';
 import { FuncaoEditorTela } from './FuncaoEditorTela';
+
+// Cada motivo de recusa vem do banco (ver solicitar_ingresso em
+// 0013_ministerio_rls_por_membro.sql) — o app só traduz.
+const MENSAGEM_INGRESSO: Record<Exclude<StatusIngresso, 'OK'>, string> = {
+  CODIGO_INVALIDO: 'Código inválido. Confira com o administrador do ministério.',
+  JA_MEMBRO: 'Você já faz parte desse ministério.',
+  JA_SOLICITADO: 'Você já pediu para entrar — aguarde a aprovação do administrador.',
+  LIMITE_MINISTERIOS: `Limite de ${LIMITE_MINISTERIOS} ministérios atingido.`,
+};
 
 interface Props {
   onBack: () => void;
   onConcluir: (nomeMinisterio?: string, funcoesCustom?: { nome: string; icone: string }[]) => void | Promise<void>;
-  validarCodigo: (codigo: string) => Promise<boolean>;
+  validarCodigo: (codigo: string) => Promise<StatusIngresso>;
   erroCadastro?: string | null;
 }
 
@@ -51,18 +60,14 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
     setEnviandoCodigo(true);
     setErroCodigo('');
     try {
-      const ok = await validarCodigo(codigo);
-      if (ok) {
+      const status = await validarCodigo(codigo);
+      if (status === 'OK') {
         setSolicitacaoEnviada(true);
       } else {
-        setErroCodigo('Código inválido. Confira com o administrador do ministério.');
+        setErroCodigo(MENSAGEM_INGRESSO[status]);
       }
-    } catch (e) {
-      setErroCodigo(
-        e instanceof Error && e.message === 'JA_MEMBRO'
-          ? 'Você já faz parte desse ministério.'
-          : 'Não foi possível enviar agora. Tente de novo.'
-      );
+    } catch {
+      setErroCodigo('Não foi possível enviar agora. Tente de novo.');
     } finally {
       setEnviandoCodigo(false);
     }

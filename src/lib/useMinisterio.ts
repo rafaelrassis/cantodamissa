@@ -1,25 +1,52 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as api from './ministerioApi';
+import { mensagemDeErro } from './supabaseUtils';
 import type { MinisterioIdentidade, MinisterioResumo } from './ministerioApi';
 import type { SolicitacaoIngresso } from '../types/ministerio';
 
 const CHAVE_MINISTERIO_ATIVO = 'cdm_ministerio_ativo_id';
 
+/** Dados da conta usados ao entrar num ministério (nome e aniversário do perfil). */
+export type PerfilUsuario = {
+  nome?: string | null;
+  dataNascimento?: string | null;
+};
+
 /**
  * Hook real do módulo Ministério (Supabase) — mesma interface antes usada
- * pelo protótipo mockado (pra não
- * quebrar Home.tsx/MinisterioTela.tsx), agora lendo/gravando no Supabase
- * via ministerioApi.ts. Sem auth ainda: "eu" é identificado por
- * device_key (ver getDeviceKey em repertorios.ts).
+ * pelo protótipo mockado (pra não quebrar Home.tsx/MinisterioTela.tsx),
+ * agora lendo/gravando no Supabase via ministerioApi.ts. "Eu" é o
+ * auth.uid() da sessão (ver ministerioApi.ts).
  *
  * `recarregar` refaz a busca completa após qualquer mutação — schema é
  * pequeno o bastante pra isso ser simples e sempre consistente; otimizar
  * pra updates otimistas fica pra quando o módulo estiver validado.
  */
-export function useMinisterio(dataNascimentoUsuario?: string | null) {
+export function useMinisterio(perfil: PerfilUsuario = {}) {
+  const { nome: nomeUsuario, dataNascimento: dataNascimentoUsuario } = perfil;
   const [ministerio, setMinisterio] = useState<MinisterioIdentidade | null>(null);
   const [meusMinisterios, setMeusMinisterios] = useState<MinisterioResumo[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [erroAcao, setErroAcao] = useState<string | null>(null);
+
+  /**
+   * Envolve uma mutação para que a falha vire mensagem na tela em vez de
+   * promise rejeitada no console. Passou a ser necessário quando a camada
+   * de dados deixou de engolir erro de permissão: com RLS restrita, o
+   * "não pode" é um resultado normal (ex.: alguém deixou de ser admin
+   * enquanto a tela estava aberta) e o usuário precisa saber por que nada
+   * mudou.
+   */
+  const executar = useCallback(async (acao: () => Promise<void>) => {
+    setErroAcao(null);
+    try {
+      await acao();
+    } catch (err) {
+      setErroAcao(mensagemDeErro(err));
+    }
+  }, []);
+
+  const limparErroAcao = useCallback(() => setErroAcao(null), []);
 
   /**
    * Refaz a lista de ministérios do device e recarrega o ministério ativo
@@ -79,36 +106,53 @@ export function useMinisterio(dataNascimentoUsuario?: string | null) {
 
   const cadastrar = useCallback(
     async (nomeNovo: string, funcoesCustom?: { nome: string; icone: string }[]) => {
-      const m = await api.criarMinisterio(nomeNovo, dataNascimentoUsuario, funcoesCustom);
+      const m = await api.criarMinisterio(
+        nomeNovo,
+        dataNascimentoUsuario,
+        funcoesCustom,
+        nomeUsuario
+      );
       await recarregar(m.id);
     },
-    [dataNascimentoUsuario, recarregar]
+    [dataNascimentoUsuario, nomeUsuario, recarregar]
   );
 
-  const ingressarComCodigo = useCallback(async (codigo: string) => {
-    // "Você" como nome do solicitante até termos auth de verdade (nome da conta).
-    return api.solicitarIngresso(codigo, 'Novo integrante');
-  }, []);
+  // O nome vem da conta Google. Antes ia fixo como "Novo integrante", o
+  // que deixava o admin aprovando (ou recusando) pedidos sem saber de
+  // quem eram — e o membro entrava com esse nome na equipe.
+  const ingressarComCodigo = useCallback(
+    async (codigo: string) => api.solicitarIngresso(codigo, nomeUsuario?.trim() || 'Novo integrante'),
+    [nomeUsuario]
+  );
 
-  const sair = useCallback(async () => {
-    if (!ministerio) return;
-    await api.sairDoMinisterio(ministerio.id);
-    await recarregar();
-  }, [ministerio, recarregar]);
+  const sair = useCallback(
+    () =>
+      executar(async () => {
+        if (!ministerio) return;
+        await api.sairDoMinisterio(ministerio.id);
+        await recarregar();
+      }),
+    [executar, ministerio, recarregar]
+  );
 
-  const excluir = useCallback(async () => {
-    if (!ministerio) return;
-    await api.excluirMinisterio(ministerio.id);
-    await recarregar();
-  }, [ministerio, recarregar]);
+  const excluir = useCallback(
+    () =>
+      executar(async () => {
+        if (!ministerio) return;
+        await api.excluirMinisterio(ministerio.id);
+        await recarregar();
+      }),
+    [executar, ministerio, recarregar]
+  );
 
   const renomear = useCallback(
-    async (novoNome: string) => {
-      if (!ministerio) return;
-      await api.renomearMinisterio(ministerio.id, novoNome);
-      setMinisterio((prev) => (prev ? { ...prev, nome: novoNome } : prev));
-    },
-    [ministerio]
+    (novoNome: string) =>
+      executar(async () => {
+        if (!ministerio) return;
+        await api.renomearMinisterio(ministerio.id, novoNome);
+        setMinisterio((prev) => (prev ? { ...prev, nome: novoNome } : prev));
+      }),
+    [executar, ministerio]
   );
 
   // Upload real fica pra quando tiver Storage ligado ao ministério — por
@@ -116,79 +160,93 @@ export function useMinisterio(dataNascimentoUsuario?: string | null) {
   const atualizarFoto = useCallback((_emoji: string | null) => {}, []);
 
   const tornarAdmin = useCallback(
-    async (membroId: string) => {
-      await api.definirAdmin(membroId, true);
-      await recarregar();
-    },
-    [recarregar]
+    (membroId: string) =>
+      executar(async () => {
+        await api.definirAdmin(membroId, true);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   const removerAdmin = useCallback(
-    async (membroId: string) => {
-      await api.definirAdmin(membroId, false);
-      await recarregar();
-    },
-    [recarregar]
+    (membroId: string) =>
+      executar(async () => {
+        await api.definirAdmin(membroId, false);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   const removerMembro = useCallback(
-    async (membroId: string) => {
-      await api.removerMembro(membroId);
-      await recarregar();
-    },
-    [recarregar]
+    (membroId: string) =>
+      executar(async () => {
+        await api.removerMembro(membroId);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   const aprovarSolicitacao = useCallback(
-    async (s: SolicitacaoIngresso) => {
-      if (!ministerio) return;
-      await api.aprovarSolicitacao(ministerio.id, s);
-      await recarregar();
-    },
-    [ministerio, recarregar]
+    (s: SolicitacaoIngresso) =>
+      executar(async () => {
+        if (!ministerio) return;
+        await api.aprovarSolicitacao(ministerio.id, s);
+        await recarregar();
+      }),
+    [executar, ministerio, recarregar]
   );
 
   const recusarSolicitacao = useCallback(
-    async (id: string) => {
-      await api.recusarSolicitacao(id);
-      await recarregar();
-    },
-    [recarregar]
+    (id: string) =>
+      executar(async () => {
+        await api.recusarSolicitacao(id);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
-  const regenerarCodigo = useCallback(async () => {
-    if (!ministerio) return;
-    const codigo = await api.regenerarCodigoConvite(ministerio.id);
-    setMinisterio((prev) => (prev ? { ...prev, codigoConvite: codigo } : prev));
-  }, [ministerio]);
+  const regenerarCodigo = useCallback(
+    () =>
+      executar(async () => {
+        if (!ministerio) return;
+        const codigo = await api.regenerarCodigoConvite(ministerio.id);
+        setMinisterio((prev) => (prev ? { ...prev, codigoConvite: codigo } : prev));
+      }),
+    [executar, ministerio]
+  );
 
   const criarFuncao = useCallback(
-    async (nome: string, icone: string) => {
-      if (!ministerio) return;
-      await api.criarFuncao(ministerio.id, nome, icone);
-      await recarregar();
-    },
-    [ministerio, recarregar]
+    (nome: string, icone: string) =>
+      executar(async () => {
+        if (!ministerio) return;
+        await api.criarFuncao(ministerio.id, nome, icone);
+        await recarregar();
+      }),
+    [executar, ministerio, recarregar]
   );
 
   const editarFuncao = useCallback(
-    async (funcaoId: string, nome: string, icone: string) => {
-      await api.editarFuncao(funcaoId, nome, icone);
-      await recarregar();
-    },
-    [recarregar]
+    (funcaoId: string, nome: string, icone: string) =>
+      executar(async () => {
+        await api.editarFuncao(funcaoId, nome, icone);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   const removerFuncao = useCallback(
-    async (funcaoId: string) => {
-      await api.removerFuncao(funcaoId);
-      await recarregar();
-    },
-    [recarregar]
+    (funcaoId: string) =>
+      executar(async () => {
+        await api.removerFuncao(funcaoId);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   return {
     carregando,
+    erroAcao,
+    limparErroAcao,
     pertence,
     meusMinisterios,
     trocarMinisterio,

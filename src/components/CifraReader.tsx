@@ -13,9 +13,9 @@ import { useKeepAwake } from '../lib/useKeepAwake';
 import { loadReaderState, saveReaderState } from '../lib/readerState';
 import { useShowChordDiagrams } from '../lib/useShowChordDiagrams';
 import { obterRepertorio, type Repertorio } from '../lib/repertorios';
-import { getMusicaById } from '../lib/musicasApi';
+import { getMusicaById, registrarVisualizacao } from '../lib/musicasApi';
 import { getCantorSlugById } from '../lib/cantoresApi';
-import { useRepertorios } from '../lib/useRepertorios';
+import { useRepertorios } from '../lib/repertoriosContext';
 import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import { SubmissaoForm } from './SubmissaoForm';
@@ -82,6 +82,10 @@ export function CifraReader({
       title: musica.title,
       artist: musica.artist,
     });
+    // Abrir a cifra é o que conta como "acesso" nos rankings (Top 50,
+    // Músicas em alta, Artistas mais ouvidos) — até aqui nada no app
+    // incrementava esse contador.
+    void registrarVisualizacao(musica.id);
   }, [musica.id, musica.slug, musica.title, musica.artist, registrarAbertura]);
 
   const [cantorSlug, setCantorSlug] = useState<string | null>(null);
@@ -471,9 +475,9 @@ export function CifraReader({
           modo="correcao"
           musicaBase={musica}
           onClose={() => setFormularioCorrecaoAberto(false)}
-          onSubmit={(dados) =>
-            criarSubmissao({ ...dados, tipo: 'correcao', musicaOriginalId: musica.id })
-          }
+          onSubmit={async (dados) => {
+            await criarSubmissao({ ...dados, tipo: 'correcao', musicaOriginalId: musica.id });
+          }}
         />
       )}
 

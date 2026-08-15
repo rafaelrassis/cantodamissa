@@ -16,7 +16,7 @@ import { AtualizacaoDisponivelBanner } from './components/AtualizacaoDisponivelB
 import { AlertaTopo } from './components/AlertaTopo';
 import { BottomNavBar } from './components/BottomNavBar';
 import { useTheme } from './lib/useTheme';
-import { useRepertorios } from './lib/useRepertorios';
+import { useRepertorios } from './lib/repertoriosContext';
 import { useAdminAuth } from './lib/useAdminAuth';
 import { useUserAuth } from './lib/useUserAuth';
 import { useMinisterio } from './lib/useMinisterio';
@@ -87,7 +87,7 @@ function App() {
   // Levantado até aqui (em vez de ficar dentro de MinisterioTela) pra
   // sobreviver à troca de tela e alimentar o alerta global abaixo.
   // dataNascimento (da conta) sobrescreve o aniversário salvo de "você".
-  const ministerio = useMinisterio(dataNascimento);
+  const ministerio = useMinisterio({ nome: userName, dataNascimento });
 
   function abrirMinisterio() {
     if (isLoggedIn) {
@@ -164,6 +164,23 @@ function App() {
   function comAlerta(conteudo: React.ReactNode, opts?: { semNav?: boolean }) {
     return (
       <>
+        {/* Falha de uma ação do Ministério (ex.: gravação barrada por
+            falta de permissão). Fica aqui em cima porque as ações partem
+            de várias telas do módulo e o hook é único (ver useMinisterio). */}
+        {ministerio.erroAcao && (
+          <AlertaTopo
+            tipo="erro"
+            mensagem={ministerio.erroAcao}
+            onFechar={ministerio.limparErroAcao}
+          />
+        )}
+        {repertoriosApi.erroAcao && (
+          <AlertaTopo
+            tipo="erro"
+            mensagem={repertoriosApi.erroAcao}
+            onFechar={repertoriosApi.limparErroAcao}
+          />
+        )}
         {mostrarAlertaGlobal && (
           <AlertaTopo
             mensagem={`${ministerio.solicitacoes.length} solicitação${

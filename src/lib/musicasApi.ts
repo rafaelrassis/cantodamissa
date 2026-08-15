@@ -99,6 +99,30 @@ export async function getMusicaById(id: string): Promise<Musica | null> {
   return data ? mapearLinha(data as unknown as LinhaMusicaSupabase) : null;
 }
 
+/**
+ * Aplica tempo/momento no servidor usando embed com `!inner`: sem isso o
+ * filtro rodava depois do `.limit()`, ou seja, sobre as N mais vistas do
+ * acervo inteiro. Na prática, clicar num momento com poucas músicas entre
+ * as mais vistas (Santo, Cordeiro) devolvia lista vazia mesmo havendo
+ * músicas cadastradas pra ele.
+ *
+ * O `!inner` filtra a linha principal, mas o embed filtrado só devolve as
+ * linhas que casaram — daí o `SELECT_COM_RELACOES` continuar presente
+ * para trazer as relações completas de cada música.
+ */
+function queryMusicasFiltrada(filtro: FiltroMusicas) {
+  // Os embeds com `!inner` entram só como filtro (o alias evita colidir
+  // com as relações que já vêm em SELECT_COM_RELACOES).
+  const partes = [SELECT_COM_RELACOES];
+  if (filtro.tempo) partes.push('filtro_tempo:musica_tempo_liturgico!inner(tempo)');
+  if (filtro.momento) partes.push('filtro_momento:musica_momento!inner(momento)');
+
+  let query = supabase.from('musicas').select(partes.join(', '));
+  if (filtro.tempo) query = query.eq('filtro_tempo.tempo', filtro.tempo);
+  if (filtro.momento) query = query.eq('filtro_momento.momento', filtro.momento);
+  return query;
+}
+
 export async function getTop50(
   filtro: FiltroMusicas = {},
   limite: number = 50
@@ -109,9 +133,7 @@ export async function getTop50(
       .slice(0, limite);
   }
 
-  const { data, error } = await supabase
-    .from('musicas')
-    .select(SELECT_COM_RELACOES)
+  const { data, error } = await queryMusicasFiltrada(filtro)
     .order('views_count', { ascending: false })
     .limit(limite);
 
@@ -119,16 +141,19 @@ export async function getTop50(
     console.error('getTop50:', error.message);
     return [];
   }
-  const linhas = (data ?? []) as unknown as LinhaMusicaSupabase[];
-  let musicas = linhas.map(mapearLinha);
+  return ((data ?? []) as unknown as LinhaMusicaSupabase[]).map(mapearLinha);
+}
 
-  // filtros aplicados no cliente: .eq em relação aninhada do PostgREST
-  // filtraria a relação, não a linha principal — mais simples e correto
-  // filtrar depois de já ter os itens e as relações completas
-  if (filtro.tempo) musicas = musicas.filter((m) => m.tempoLiturgico.includes(filtro.tempo!));
-  if (filtro.momento) musicas = musicas.filter((m) => m.momento.includes(filtro.momento!));
-
-  return musicas;
+/**
+ * Soma +1 no contador de acessos da música. Vai por RPC porque `musicas`
+ * só aceita escrita de admin (ver 0012_admin_real_catalogo.sql) — e antes
+ * disto nada no app incrementava a coluna, então "Top 50", "Músicas em
+ * alta" e "Artistas mais ouvidos" ordenavam por um número parado no seed.
+ */
+export async function registrarVisualizacao(musicaId: string): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  const { error } = await supabase.rpc('registrar_visualizacao', { p_musica_id: musicaId });
+  if (error) console.error('registrarVisualizacao:', error.message);
 }
 
 export async function searchMusicas(
@@ -150,18 +175,17 @@ export async function searchMusicas(
 
   // full-text (título/artista/letra) via a coluna search_vector gerada na
   // migration; fallback pra ilike se a busca textual falhar
-  const { data, error } = await supabase
-    .from('musicas')
-    .select(SELECT_COM_RELACOES)
+  const { data, error } = await queryMusicasFiltrada(filtro)
     .textSearch('search_vector', termo, { type: 'websearch', config: 'portuguese' })
     .order('views_count', { ascending: false });
 
   if (error) {
     console.error('searchMusicas (textSearch):', error.message);
-    const { data: dataIlike, error: errorIlike } = await supabase
-      .from('musicas')
-      .select(SELECT_COM_RELACOES)
-      .ilike('title', `%${termo}%`)
+    // `%` e `,` têm significado na sintaxe de filtro do PostgREST, então o
+    // termo precisa ser escapado antes de virar padrão de ilike.
+    const termoIlike = termo.replace(/[%_,()]/g, (c) => `\\${c}`);
+    const { data: dataIlike, error: errorIlike } = await queryMusicasFiltrada(filtro)
+      .ilike('title', `%${termoIlike}%`)
       .order('views_count', { ascending: false });
     if (errorIlike) {
       console.error('searchMusicas (ilike):', errorIlike.message);
@@ -170,10 +194,7 @@ export async function searchMusicas(
     return ((dataIlike ?? []) as unknown as LinhaMusicaSupabase[]).map(mapearLinha);
   }
 
-  let musicas = ((data ?? []) as unknown as LinhaMusicaSupabase[]).map(mapearLinha);
-  if (filtro.tempo) musicas = musicas.filter((m) => m.tempoLiturgico.includes(filtro.tempo!));
-  if (filtro.momento) musicas = musicas.filter((m) => m.momento.includes(filtro.momento!));
-  return musicas;
+  return ((data ?? []) as unknown as LinhaMusicaSupabase[]).map(mapearLinha);
 }
 
 export interface ArtistaEmAlta {

@@ -1,15 +1,35 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as api from './repertorios';
+import { mensagemDeErro } from './supabaseUtils';
 import type { ItemRepertorio, Repertorio } from './repertorios';
 
 /**
  * Estado reativo dos repertórios do usuário. A camada `repertorios.ts` já
  * decide sozinha se fala com Supabase ou com o fallback local — aqui só
  * envolvemos em estado React e recarregamos após cada mutação.
+ *
+ * Não use direto: o app inteiro compartilha uma instância via
+ * RepertoriosProvider (ver repertoriosContext.tsx). Com um hook por tela,
+ * cada uma buscava a lista inteira no mount e a mutação feita numa não
+ * aparecia na outra — adicionar música pelo leitor não atualizava a
+ * sidebar da Home até o próximo remount.
  */
-export function useRepertorios() {
+export function useRepertoriosEstado() {
   const [repertorios, setRepertorios] = useState<Repertorio[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [erroAcao, setErroAcao] = useState<string | null>(null);
+
+  /** Mesma ideia de useMinisterio.executar: falha vira mensagem na tela. */
+  const executar = useCallback(async (acao: () => Promise<void>) => {
+    setErroAcao(null);
+    try {
+      await acao();
+    } catch (err) {
+      setErroAcao(mensagemDeErro(err));
+    }
+  }, []);
+
+  const limparErroAcao = useCallback(() => setErroAcao(null), []);
 
   const recarregar = useCallback(async () => {
     const lista = await api.listarRepertorios();
@@ -54,19 +74,21 @@ export function useRepertorios() {
   );
 
   const renomear = useCallback(
-    async (id: string, nome: string) => {
-      await api.renomearRepertorio(id, nome);
-      await recarregar();
-    },
-    [recarregar]
+    (id: string, nome: string) =>
+      executar(async () => {
+        await api.renomearRepertorio(id, nome);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   const remover = useCallback(
-    async (id: string) => {
-      await api.removerRepertorio(id);
-      await recarregar();
-    },
-    [recarregar]
+    (id: string) =>
+      executar(async () => {
+        await api.removerRepertorio(id);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   const duplicar = useCallback(
@@ -79,56 +101,64 @@ export function useRepertorios() {
   );
 
   const adicionarMusica = useCallback(
-    async (repertorioId: string, item: ItemRepertorio) => {
-      await api.adicionarMusica(repertorioId, item);
-      await recarregar();
-    },
-    [recarregar]
+    (repertorioId: string, item: ItemRepertorio) =>
+      executar(async () => {
+        await api.adicionarMusica(repertorioId, item);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   const removerMusica = useCallback(
-    async (repertorioId: string, musicaId: string) => {
-      await api.removerMusica(repertorioId, musicaId);
-      await recarregar();
-    },
-    [recarregar]
+    (repertorioId: string, musicaId: string) =>
+      executar(async () => {
+        await api.removerMusica(repertorioId, musicaId);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   const moverMusicaParaRito = useCallback(
-    async (repertorioId: string, musicaId: string, novoRito: string) => {
-      await api.moverMusicaParaRito(repertorioId, musicaId, novoRito);
-      await recarregar();
-    },
-    [recarregar]
+    (repertorioId: string, musicaId: string, novoRito: string) =>
+      executar(async () => {
+        await api.moverMusicaParaRito(repertorioId, musicaId, novoRito);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   const adicionarRito = useCallback(
-    async (repertorioId: string, nome: string) => {
-      await api.adicionarRito(repertorioId, nome);
-      await recarregar();
-    },
-    [recarregar]
+    (repertorioId: string, nome: string) =>
+      executar(async () => {
+        await api.adicionarRito(repertorioId, nome);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   const removerRito = useCallback(
-    async (repertorioId: string, nome: string) => {
-      await api.removerRito(repertorioId, nome);
-      await recarregar();
-    },
-    [recarregar]
+    (repertorioId: string, nome: string) =>
+      executar(async () => {
+        await api.removerRito(repertorioId, nome);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   const reordenarRitos = useCallback(
-    async (repertorioId: string, nomesOrdenados: string[]) => {
-      await api.reordenarRitos(repertorioId, nomesOrdenados);
-      await recarregar();
-    },
-    [recarregar]
+    (repertorioId: string, nomesOrdenados: string[]) =>
+      executar(async () => {
+        await api.reordenarRitos(repertorioId, nomesOrdenados);
+        await recarregar();
+      }),
+    [executar, recarregar]
   );
 
   return {
     repertorios,
     carregando,
+    erroAcao,
+    limparErroAcao,
     criar,
     renomear,
     remover,
@@ -144,4 +174,4 @@ export function useRepertorios() {
   };
 }
 
-export type RepertoriosApi = ReturnType<typeof useRepertorios>;
+export type RepertoriosApi = ReturnType<typeof useRepertoriosEstado>;
