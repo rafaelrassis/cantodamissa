@@ -103,15 +103,19 @@ drop policy if exists "ministerios_insert_livre" on public.ministerios;
 drop policy if exists "ministerios_admin_altera" on public.ministerios;
 drop policy if exists "ministerios_admin_exclui" on public.ministerios;
 
+drop policy if exists "ministerios_select_membro" on public.ministerios;
 create policy "ministerios_select_membro" on public.ministerios
   for select using (public.eh_membro(id));
 -- Criar ministério é livre, mas a linha nasce órfã: só vira "meu" quando
 -- o membro fundador é inserido (ver policy membros_insert_fundador). O
 -- app faz os dois passos dentro de public.criar_ministerio().
+drop policy if exists "ministerios_insert_livre" on public.ministerios;
 create policy "ministerios_insert_livre" on public.ministerios
   for insert with check (true);
+drop policy if exists "ministerios_admin_altera" on public.ministerios;
 create policy "ministerios_admin_altera" on public.ministerios
   for update using (public.eh_admin(id)) with check (public.eh_admin(id));
+drop policy if exists "ministerios_admin_exclui" on public.ministerios;
 create policy "ministerios_admin_exclui" on public.ministerios
   for delete using (public.eh_admin(id));
 
@@ -127,6 +131,7 @@ drop policy if exists "membros_sai_sozinho" on public.ministerio_membros;
 
 -- Leitura: a equipe se enxerga; e a própria linha sempre (necessário pro
 -- app descobrir a que ministérios a conta pertence).
+drop policy if exists "membros_select_equipe" on public.ministerio_membros;
 create policy "membros_select_equipe" on public.ministerio_membros
   for select using (
     (auth_uid is not null and auth_uid = auth.uid())
@@ -135,6 +140,7 @@ create policy "membros_select_equipe" on public.ministerio_membros
 
 -- Entrar sozinho só como fundador do ministério recém-criado. Todo o
 -- resto (aprovar solicitação) passa por public.aprovar_solicitacao().
+drop policy if exists "membros_insert_fundador" on public.ministerio_membros;
 create policy "membros_insert_fundador" on public.ministerio_membros
   for insert with check (
     auth_uid is not null
@@ -142,16 +148,20 @@ create policy "membros_insert_fundador" on public.ministerio_membros
     and public.ministerio_esta_vazio(ministerio_id)
   );
 
+drop policy if exists "membros_admin_altera" on public.ministerio_membros;
 create policy "membros_admin_altera" on public.ministerio_membros
   for update using (public.eh_admin(ministerio_id)) with check (public.eh_admin(ministerio_id));
 -- O próprio membro edita a própria linha; o trigger acima garante que
 -- `admin`, `ministerio_id` e `auth_uid` continuam fora do alcance dele.
+drop policy if exists "membros_edita_a_propria_linha" on public.ministerio_membros;
 create policy "membros_edita_a_propria_linha" on public.ministerio_membros
   for update using (auth_uid is not null and auth_uid = auth.uid())
   with check (auth_uid is not null and auth_uid = auth.uid());
 
+drop policy if exists "membros_admin_remove" on public.ministerio_membros;
 create policy "membros_admin_remove" on public.ministerio_membros
   for delete using (public.eh_admin(ministerio_id));
+drop policy if exists "membros_sai_sozinho" on public.ministerio_membros;
 create policy "membros_sai_sozinho" on public.ministerio_membros
   for delete using (auth_uid is not null and auth_uid = auth.uid());
 
@@ -162,6 +172,7 @@ drop policy if exists "solicitacoes_select_publico" on public.solicitacoes_ingre
 drop policy if exists "solicitacoes_insert_livre" on public.solicitacoes_ingresso;
 drop policy if exists "solicitacoes_admin_resolve" on public.solicitacoes_ingresso;
 
+drop policy if exists "solicitacoes_select_admin_ou_autor" on public.solicitacoes_ingresso;
 create policy "solicitacoes_select_admin_ou_autor" on public.solicitacoes_ingresso
   for select using (
     public.eh_admin(ministerio_id)
@@ -169,6 +180,7 @@ create policy "solicitacoes_select_admin_ou_autor" on public.solicitacoes_ingres
   );
 -- Insert só via public.solicitar_ingresso(): sem select público em
 -- `ministerios`, o cliente nem consegue mais resolver código -> id sozinho.
+drop policy if exists "solicitacoes_admin_resolve" on public.solicitacoes_ingresso;
 create policy "solicitacoes_admin_resolve" on public.solicitacoes_ingresso
   for delete using (
     public.eh_admin(ministerio_id)
@@ -179,42 +191,53 @@ create policy "solicitacoes_admin_resolve" on public.solicitacoes_ingresso
 -- Demais tabelas do ministério: leitura de membro, escrita de admin
 -- ----------------------------------------------------------
 drop policy if exists "funcoes_select_publico" on public.funcoes;
+drop policy if exists "funcoes_select_membro" on public.funcoes;
 create policy "funcoes_select_membro" on public.funcoes for select using (public.eh_membro(ministerio_id));
 
 drop policy if exists "membro_funcoes_select_publico" on public.membro_funcoes;
+drop policy if exists "membro_funcoes_select_membro" on public.membro_funcoes;
 create policy "membro_funcoes_select_membro" on public.membro_funcoes for select
   using (public.eh_membro((select ministerio_id from public.funcoes where id = membro_funcoes.funcao_id)));
 
 drop policy if exists "avisos_select_publico" on public.avisos;
+drop policy if exists "avisos_select_membro" on public.avisos;
 create policy "avisos_select_membro" on public.avisos for select using (public.eh_membro(ministerio_id));
 
 drop policy if exists "equipes_select_publico" on public.equipes;
+drop policy if exists "equipes_select_membro" on public.equipes;
 create policy "equipes_select_membro" on public.equipes for select using (public.eh_membro(ministerio_id));
 
 drop policy if exists "equipe_membros_select_publico" on public.equipe_membros;
+drop policy if exists "equipe_membros_select_membro" on public.equipe_membros;
 create policy "equipe_membros_select_membro" on public.equipe_membros for select
   using (public.eh_membro((select ministerio_id from public.equipes where id = equipe_membros.equipe_id)));
 
 drop policy if exists "modelos_roteiro_select_publico" on public.modelos_roteiro;
+drop policy if exists "modelos_roteiro_select_membro" on public.modelos_roteiro;
 create policy "modelos_roteiro_select_membro" on public.modelos_roteiro for select
   using (public.eh_membro(ministerio_id));
 
 drop policy if exists "modelo_roteiro_itens_select_publico" on public.modelo_roteiro_itens;
+drop policy if exists "modelo_roteiro_itens_select_membro" on public.modelo_roteiro_itens;
 create policy "modelo_roteiro_itens_select_membro" on public.modelo_roteiro_itens for select
   using (public.eh_membro((select ministerio_id from public.modelos_roteiro where id = modelo_roteiro_itens.modelo_id)));
 
 drop policy if exists "escalas_select_publico" on public.escalas;
+drop policy if exists "escalas_select_membro" on public.escalas;
 create policy "escalas_select_membro" on public.escalas for select using (public.eh_membro(ministerio_id));
 
 drop policy if exists "roteiro_itens_select_publico" on public.roteiro_itens;
+drop policy if exists "roteiro_itens_select_membro" on public.roteiro_itens;
 create policy "roteiro_itens_select_membro" on public.roteiro_itens for select
   using (public.eh_membro((select ministerio_id from public.escalas where id = roteiro_itens.escala_id)));
 
 drop policy if exists "participantes_select_publico" on public.escala_participantes;
+drop policy if exists "participantes_select_membro" on public.escala_participantes;
 create policy "participantes_select_membro" on public.escala_participantes for select
   using (public.eh_membro((select ministerio_id from public.escalas where id = escala_participantes.escala_id)));
 
 drop policy if exists "indisponibilidades_select_publico" on public.indisponibilidades;
+drop policy if exists "indisponibilidades_select_membro" on public.indisponibilidades;
 create policy "indisponibilidades_select_membro" on public.indisponibilidades for select
   using (public.eh_membro(ministerio_id));
 

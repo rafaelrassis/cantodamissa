@@ -16,10 +16,22 @@
 alter table public.repertorios add column if not exists auth_uid uuid;
 create index if not exists idx_repertorios_auth_uid on public.repertorios (auth_uid);
 
-alter table public.repertorios
-  alter column escala_id type uuid
-  using (case when escala_id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-              then escala_id::uuid end);
+-- Condicional pra que reaplicar a migration não quebre: numa coluna que
+-- já é uuid, o `using` com operador de regex nem faria sentido.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+     where table_schema = 'public' and table_name = 'repertorios'
+       and column_name = 'escala_id' and data_type <> 'uuid'
+  ) then
+    alter table public.repertorios
+      alter column escala_id type uuid
+      using (case when escala_id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+                  then escala_id::uuid end);
+  end if;
+end
+$$;
 
 -- Descarta vínculos apontando pra escalas inexistentes antes de criar a FK
 -- (o módulo mock podia deixar órfãos).
@@ -80,31 +92,39 @@ drop policy if exists "repertorios_insert_livre" on public.repertorios;
 drop policy if exists "repertorios_altera_conforme_dono" on public.repertorios;
 drop policy if exists "repertorios_exclui_conforme_dono" on public.repertorios;
 
+drop policy if exists "repertorios_select_dono_ou_ministerio" on public.repertorios;
 create policy "repertorios_select_dono_ou_ministerio" on public.repertorios
   for select using (
     (auth_uid is not null and auth_uid = auth.uid())
     or (escala_id is not null
         and public.eh_membro((select e.ministerio_id from public.escalas e where e.id = repertorios.escala_id)))
   );
+drop policy if exists "repertorios_insert_proprio" on public.repertorios;
 create policy "repertorios_insert_proprio" on public.repertorios
   for insert with check (auth_uid is not null and auth_uid = auth.uid());
+drop policy if exists "repertorios_update" on public.repertorios;
 create policy "repertorios_update" on public.repertorios
   for update using (public.pode_editar_repertorio(id)) with check (public.pode_editar_repertorio(id));
+drop policy if exists "repertorios_delete" on public.repertorios;
 create policy "repertorios_delete" on public.repertorios
   for delete using (public.pode_editar_repertorio(id));
 
 drop policy if exists "repertorio_musicas_select_publico" on public.repertorio_musicas;
 drop policy if exists "repertorio_musicas_escreve_conforme_dono" on public.repertorio_musicas;
+drop policy if exists "repertorio_musicas_select" on public.repertorio_musicas;
 create policy "repertorio_musicas_select" on public.repertorio_musicas
   for select using (public.pode_ver_repertorio(repertorio_id));
+drop policy if exists "repertorio_musicas_escreve" on public.repertorio_musicas;
 create policy "repertorio_musicas_escreve" on public.repertorio_musicas
   for all using (public.pode_editar_repertorio(repertorio_id))
   with check (public.pode_editar_repertorio(repertorio_id));
 
 drop policy if exists "repertorio_ritos_select_publico" on public.repertorio_ritos;
 drop policy if exists "repertorio_ritos_escreve_conforme_dono" on public.repertorio_ritos;
+drop policy if exists "repertorio_ritos_select" on public.repertorio_ritos;
 create policy "repertorio_ritos_select" on public.repertorio_ritos
   for select using (public.pode_ver_repertorio(repertorio_id));
+drop policy if exists "repertorio_ritos_escreve" on public.repertorio_ritos;
 create policy "repertorio_ritos_escreve" on public.repertorio_ritos
   for all using (public.pode_editar_repertorio(repertorio_id))
   with check (public.pode_editar_repertorio(repertorio_id));
