@@ -101,7 +101,13 @@ export function transposeContent(
   useFlats = false
 ): string {
   if (semitones === 0) return chordsContent;
-  return chordsContent.replace(CHORD_REGEX, (_, chord) => {
+  return chordsContent.replace(CHORD_REGEX, (original, chord) => {
+    // marcador de seção entre colchetes não é acorde e não se transpõe —
+    // sem esse guard, qualquer marcador começando com nota vira outra
+    // palavra ("[Final]" -> "[Ginal]", "[Base]" -> "[C#ase]"), porque
+    // CHORD_PARTS_REGEX casa "F" + sufixo "inal". Mesma checagem que
+    // extractChordsUsed já fazia.
+    if (!pareceAcorde(chord)) return original;
     return `[${transposeChord(chord, semitones, useFlats)}]`;
   });
 }

@@ -25,13 +25,27 @@ export interface DomingoCalculado {
 
 const MS_DIA = 24 * 60 * 60 * 1000;
 
+/**
+ * Soma dias no calendário (não 24h fixas). Somar `dias * 86400000` parece
+ * equivalente, mas quebra em fuso com horário de verão: como as datas aqui
+ * nascem à meia-noite local, atravessar a virada devolve 23:00 do dia
+ * anterior (ou 01:00 do seguinte) e `getDay()` passa a apontar o dia
+ * errado, contaminando todo o resto do cálculo. `setDate` deixa o próprio
+ * Date resolver o offset e mantém a meia-noite local.
+ */
 function addDias(data: Date, dias: number): Date {
-  return new Date(data.getTime() + dias * MS_DIA);
+  const d = new Date(data.getFullYear(), data.getMonth(), data.getDate() + dias);
+  return d;
 }
 
 function proximoDomingo(data: Date): Date {
   const dia = data.getDay(); // 0 = domingo
   return dia === 0 ? data : addDias(data, 7 - dia);
+}
+
+/** Primeiro domingo estritamente depois da data (nunca a própria data). */
+function domingoSeguinte(data: Date): Date {
+  return proximoDomingo(addDias(data, 1));
 }
 
 function domingoAnteriorOuIgual(data: Date): Date {
@@ -96,8 +110,14 @@ export function gerarDomingosDoAnoLiturgico(anoCivil: number): DomingoCalculado[
 
   // Epifania: domingo entre 2 e 8 de janeiro
   const epifania = proximoDomingo(new Date(anoCivil, 0, 2));
-  // Batismo do Senhor: domingo seguinte à Epifania
-  const batismoSenhor = addDias(epifania, 7);
+  // Batismo do Senhor: domingo seguinte à Epifania — MAS quando a
+  // Epifania cai em 7 ou 8 de janeiro, o Batismo é na segunda-feira
+  // imediatamente seguinte (Normas Universais do Ano Litúrgico, n. 38).
+  // Nesses anos ele não é domingo e por isso não entra na lista abaixo;
+  // ignorar a exceção deslocava em uma semana a numeração de todos os
+  // domingos do Tempo Comum até a Quaresma.
+  const epifaniaTransferida = epifania.getDate() >= 7;
+  const batismoSenhor = epifaniaTransferida ? addDias(epifania, 1) : addDias(epifania, 7);
 
   // Cristo Rei = domingo imediatamente anterior ao 1º Domingo do Advento atual
   const cristoRei = addDias(domAdvento1Atual, -7);
@@ -116,19 +136,39 @@ export function gerarDomingosDoAnoLiturgico(anoCivil: number): DomingoCalculado[
     });
   }
 
-  // ---------- 2. Natal (Sagrada Família + eventualmente Epifania cai aqui) ----------
-  const domSagradaFamilia = natalAnterior.getDay() === 0
-    ? addDias(natalAnterior, 7) // se Natal é domingo, Sagrada Família é 30/dez
-    : proximoDomingo(natalAnterior);
-
-  domingos.push({
-    data: domSagradaFamilia,
-    nome: 'Sagrada Família de Jesus, Maria e José',
-    tempo: 'Natal',
-    numeroSemana: null,
-    ciclo,
-    corLiturgica: 'branco',
-  });
+  // ---------- 2. Natal (oitava + Epifania + Batismo) ----------
+  // A Sagrada Família é o domingo dentro da oitava do Natal. Quando o
+  // próprio Natal cai em domingo não existe esse domingo: a festa vai
+  // pra sexta 30/dez (fora do escopo desta lista, que só devolve
+  // domingos) e os domingos da oitava passam a ser o próprio Natal e,
+  // uma semana depois, Santa Maria Mãe de Deus em 1º/jan.
+  if (natalAnterior.getDay() === 0) {
+    domingos.push({
+      data: natalAnterior,
+      nome: 'Natal do Senhor',
+      tempo: 'Natal',
+      numeroSemana: null,
+      ciclo,
+      corLiturgica: 'branco',
+    });
+    domingos.push({
+      data: new Date(anoCivil, 0, 1),
+      nome: 'Santa Maria, Mãe de Deus',
+      tempo: 'Natal',
+      numeroSemana: null,
+      ciclo,
+      corLiturgica: 'branco',
+    });
+  } else {
+    domingos.push({
+      data: proximoDomingo(natalAnterior),
+      nome: 'Sagrada Família de Jesus, Maria e José',
+      tempo: 'Natal',
+      numeroSemana: null,
+      ciclo,
+      corLiturgica: 'branco',
+    });
+  }
 
   domingos.push({
     data: epifania,
@@ -139,17 +179,21 @@ export function gerarDomingosDoAnoLiturgico(anoCivil: number): DomingoCalculado[
     corLiturgica: 'branco',
   });
 
-  domingos.push({
-    data: batismoSenhor,
-    nome: 'Batismo do Senhor',
-    tempo: 'Natal',
-    numeroSemana: null,
-    ciclo,
-    corLiturgica: 'branco',
-  });
+  // Só entra quando é domingo — nos anos de Epifania transferida pra 7 ou
+  // 8/jan o Batismo cai na segunda-feira seguinte (ver acima).
+  if (batismoSenhor.getDay() === 0) {
+    domingos.push({
+      data: batismoSenhor,
+      nome: 'Batismo do Senhor',
+      tempo: 'Natal',
+      numeroSemana: null,
+      ciclo,
+      corLiturgica: 'branco',
+    });
+  }
 
   // ---------- 3. Tempo Comum I (Batismo do Senhor -> véspera da Quarta de Cinzas) ----------
-  let cursor = addDias(batismoSenhor, 7);
+  let cursor = domingoSeguinte(batismoSenhor);
   let semanaComum = 2; // 1ª semana é a que contém a segunda-feira após o Batismo
   while (cursor < quartaCinzasAtual) {
     domingos.push({
@@ -221,13 +265,19 @@ export function gerarDomingosDoAnoLiturgico(anoCivil: number): DomingoCalculado[
   const totalComumII = datasComumII.length;
   datasComumII.forEach((data, indice) => {
     const numero = 34 - totalComumII + indice;
+    // O domingo seguinte a Pentecostes é sempre a Solenidade da
+    // Santíssima Trindade: ocupa a semana do Tempo Comum (por isso a
+    // numeração dos demais não muda), mas tem celebração e cor próprias.
+    const ehTrindade = indice === 0;
     domingos.push({
       data,
-      nome: `${numero}º Domingo do Tempo Comum`,
+      nome: ehTrindade
+        ? 'Santíssima Trindade'
+        : `${numero}º Domingo do Tempo Comum`,
       tempo: 'TempoComum',
       numeroSemana: numero,
       ciclo,
-      corLiturgica: 'verde',
+      corLiturgica: ehTrindade ? 'branco' : 'verde',
     });
   });
 

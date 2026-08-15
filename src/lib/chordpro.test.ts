@@ -88,6 +88,23 @@ describe('transposeContent', () => {
     const content = '[G]texto';
     expect(transposeContent(content, 0)).toBe(content);
   });
+
+  it('não transpõe marcador de seção que começa com nota', () => {
+    // "[Final]" casava como raiz "F" + sufixo "inal" e virava "[Ginal]";
+    // o mesmo acontecia com "[Base]" -> "[C#ase]" e "[Coda]" -> "[Doda]".
+    const content = '[Intro] [G]\n[Final] [D]\n[Base] [C]\n[Coda] [A]\n[Refrão] [Em]';
+    expect(transposeContent(content, 2)).toBe(
+      '[Intro] [A]\n[Final] [E]\n[Base] [D]\n[Coda] [B]\n[Refrão] [F#m]'
+    );
+  });
+
+  it('preserva marcadores em conteúdo importado do Cifra Club', () => {
+    const content = '[Primeira Parte]\n[G]Santo, [C]Santo, [D]Santo\n[Solo] [G] [C]';
+    const transposto = transposeContent(content, -2);
+    expect(transposto).toContain('[Primeira Parte]');
+    expect(transposto).toContain('[Solo]');
+    expect(transposto).toContain('[F]Santo, [A#]Santo, [C]Santo');
+  });
 });
 
 describe('semitonesBetween', () => {
