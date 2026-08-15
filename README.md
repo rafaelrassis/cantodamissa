@@ -42,9 +42,10 @@ role e ignora RLS):
 insert into public.admins (email) values ('voce@gmail.com');
 ```
 
-Sem isso, ninguém consegue mais escrever no catálogo — inclusive você.
-`VITE_ADMIN_EMAILS` continua existindo, mas só decide se o botão "Área Admin"
-aparece; não é controle de acesso.
+Sem isso, ninguém consegue mais escrever no catálogo — inclusive você. A
+mesma tabela decide se o botão "Área Admin" aparece na interface, então não
+há como as duas coisas discordarem (era o caso quando a lista vivia em
+`VITE_ADMIN_EMAILS`, uma variável do cliente).
 
 ### Testes de RLS
 
@@ -65,6 +66,15 @@ suíte a cada push (`.github/workflows/ci.yml`).
 ```bash
 npm run android:sync   # build + cap sync
 npm run android:open   # abre no Android Studio
+```
+
+Ícones e splash screens são gerados a partir de `resources/` com o
+`@capacitor/assets`, que não fica instalado no projeto (a versão publicada
+arrasta um `@capacitor/cli` antigo com vulnerabilidades conhecidas, e a
+ferramenta só roda de vez em quando):
+
+```bash
+npx @capacitor/assets generate --android
 ```
 
 O login Google usa PKCE e volta pro app por deep link
