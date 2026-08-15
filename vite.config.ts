@@ -29,9 +29,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // App shell (JS/CSS/HTML/ícones do build) — precache clássico,
-        // funciona offline assim que visitado uma vez.
-        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // App shell (JS/CSS/HTML/ícones/fontes do build) — precache
+        // clássico, funciona offline assim que visitado uma vez.
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff,woff2}'],
         // Nunca cachear as chamadas de auth (login teria comportamento
         // estranho servido do cache) — todo o resto de /rest/v1 (dados) e
         // fontes fica coberto pelas regras abaixo.
@@ -56,15 +56,9 @@ export default defineConfig({
             urlPattern: ({ url }) => url.hostname.endsWith('.supabase.co') && url.pathname.startsWith('/auth/v1/'),
             handler: 'NetworkOnly',
           },
-          {
-            urlPattern: ({ url }) => url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com',
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts',
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
+          // As fontes agora saem do próprio build (ver src/index.css) e já
+          // entram no precache pelo globPatterns acima — não há mais
+          // requisição pro Google Fonts pra cachear em runtime.
         ],
       },
     }),

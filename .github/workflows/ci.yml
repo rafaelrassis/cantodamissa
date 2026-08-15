@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  app:
+    name: Lint, tipos, testes e build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      # `npm run build` já roda `tsc -b`, que agora cobre src/, vite.config
+      # e a pasta api/ (ver tsconfig.api.json).
+      - run: npm run build
+
+  rls:
+    name: Policies do Supabase
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      # Aplica as migrations num banco limpo e exercita as policies como um
+      # cliente com a anon key faria — inclusive as tentativas de abuso.
+      - name: Rodar testes de RLS
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+        run: ./supabase/test/rodar.sh

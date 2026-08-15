@@ -1,15 +1,13 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Home } from './components/Home';
 import { CifraReader } from './components/CifraReader';
 import { CalendarioLiturgico } from './components/CalendarioLiturgico';
-import { AdminPanel } from './components/AdminPanel';
 import { TopMusicasTela } from './components/TopMusicasTela';
 import { TopArtistasTela } from './components/TopArtistasTela';
 import { RepertorioDetalheTela } from './components/RepertorioDetalheTela';
 import { CantorTela } from './components/CantorTela';
 import { ArtistaTela } from './components/ArtistaTela';
 import { BuscaTela } from './components/BuscaTela';
-import { MinisterioTela } from './components/ministerio/MinisterioTela';
 import { UserLoginModal } from './components/UserLoginModal';
 import { CompletarPerfilModal } from './components/CompletarPerfilModal';
 import { AtualizacaoDisponivelBanner } from './components/AtualizacaoDisponivelBanner';
@@ -22,6 +20,20 @@ import { useUserAuth } from './lib/useUserAuth';
 import { useMinisterio } from './lib/useMinisterio';
 import { useServiceWorkerAtualizacao } from './lib/useServiceWorkerAtualizacao';
 import type { Musica, TempoLiturgico } from './types/musica';
+
+// A Área Admin carrega só quando é aberta: ela traz junto o formulário de
+// música, o importador em lote e o `fflate` (leitura de .zip) — peso que
+// não faz sentido baixar no primeiro acesso de quem só quer ver uma cifra.
+const AdminPanel = lazy(() =>
+  import('./components/AdminPanel').then((m) => ({ default: m.AdminPanel }))
+);
+
+// Idem pro módulo Ministério (escalas, equipes, avisos, roteiro): só quem
+// participa de um ministério abre essas telas, e elas são a maior parte
+// das telas do app.
+const MinisterioTela = lazy(() =>
+  import('./components/ministerio/MinisterioTela').then((m) => ({ default: m.MinisterioTela }))
+);
 
 const MIN_FONT = 15;
 const MAX_FONT = 34;
@@ -246,13 +258,15 @@ function App() {
       );
     }
     return comAlerta(
-      <AdminPanel
-        onBack={() => setTela('home')}
-        onLogout={() => {
-          logoutUsuario();
-          setTela('home');
-        }}
-      />
+      <Suspense fallback={<TelaCarregando />}>
+        <AdminPanel
+          onBack={() => setTela('home')}
+          onLogout={() => {
+            logoutUsuario();
+            setTela('home');
+          }}
+        />
+      </Suspense>
     );
   }
 
@@ -280,12 +294,14 @@ function App() {
 
   if (tela === 'ministerio' && isLoggedIn) {
     return comAlerta(
-      <MinisterioTela
-        onBack={() => setTela('home')}
-        onAbrirMusica={abrirMusica}
-        ministerio={ministerio}
-        escalaInicialId={escalaAlvoId}
-      />
+      <Suspense fallback={<TelaCarregando />}>
+        <MinisterioTela
+          onBack={() => setTela('home')}
+          onAbrirMusica={abrirMusica}
+          ministerio={ministerio}
+          escalaInicialId={escalaAlvoId}
+        />
+      </Suspense>
     );
   }
 
@@ -369,6 +385,14 @@ function App() {
         />
       )}
     </>
+  );
+}
+
+function TelaCarregando() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[var(--bg)] text-sm text-[var(--muted)]">
+      Carregando…
+    </div>
   );
 }
 

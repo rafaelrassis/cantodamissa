@@ -16,6 +16,7 @@ import {
   Copy,
 } from 'lucide-react';
 import { criarMusica, listarTodasMusicas, normalizar } from '../lib/musicasApi';
+import { fetchApi } from '../lib/apiClient';
 
 interface Props {
   onFechar: () => void;
@@ -105,7 +106,7 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
     if (!item.file || item.file.type !== 'application/pdf') return;
     atualizarItem(item.id, { status: 'extraindo' });
     try {
-      const resp = await fetch('/api/cifra-pdf-extract', {
+      const resp = await fetchApi('/api/cifra-pdf-extract', {
         method: 'POST',
         headers: { 'content-type': 'application/pdf' },
         body: item.file,
@@ -175,7 +176,7 @@ export function BulkUploadCifraModal({ onFechar }: Props) {
     if (!item.url) return;
     atualizarItem(item.id, { status: 'extraindo' });
     try {
-      const resp = await fetch('/api/cifraclub-import', {
+      const resp = await fetchApi('/api/cifraclub-import', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ url: item.url }),

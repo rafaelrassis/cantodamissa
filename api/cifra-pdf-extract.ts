@@ -1,13 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { extrairCifraDoPdf } from '../src/lib/pdfCifraExtractor.js';
+import { exigirAdmin } from './_auth.js';
 
-// Body é o PDF bruto (binário) — mesmo motivo de api/blob-upload.ts: o
-// bodyParser padrão só entende json/urlencoded/text.
+// Body é o PDF bruto (binário): o bodyParser padrão só entende
+// json/urlencoded/text.
 export const config = {
   api: { bodyParser: false },
 };
 
-const TAMANHO_MAX_BYTES = 15 * 1024 * 1024; // 15MB — mesmo limite de blob-upload.ts
+const TAMANHO_MAX_BYTES = 15 * 1024 * 1024; // 15MB
 
 /**
  * Recebe um PDF no corpo da requisição e devolve a cifra em ChordPro
@@ -15,14 +16,16 @@ const TAMANHO_MAX_BYTES = 15 * 1024 * 1024; // 15MB — mesmo limite de blob-upl
  * Só funciona pra PDFs com camada de texto real — scans/fotos voltam com
  * chordsContent vazio, precisam de digitação manual.
  *
- * Sem verificação de admin de verdade aqui — mesma lacuna de segurança de
- * api/blob-upload.ts (ver comentário lá).
+ * Restrito a admin (ver _auth.ts): rodar pdf.js em arquivo de
+ * desconhecido é trabalho pesado à custa da função serverless.
  */
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   if (request.method !== 'POST') {
     response.status(405).json({ error: 'Método não permitido' });
     return;
   }
+
+  if (!(await exigirAdmin(request, response))) return;
 
   const contentTypeHeader = request.headers['content-type'];
   const contentType = Array.isArray(contentTypeHeader) ? contentTypeHeader[0] : contentTypeHeader ?? '';
@@ -31,16 +34,22 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return;
   }
 
+  // O corte de tamanho acontece durante a leitura, não depois: acumular o
+  // corpo inteiro pra só então medir significava que um upload de vários
+  // GB estourava a memória da função antes de qualquer 413.
   const chunks: Buffer[] = [];
+  let recebidos = 0;
   for await (const chunk of request) {
-    chunks.push(chunk as Buffer);
+    const parte = chunk as Buffer;
+    recebidos += parte.byteLength;
+    if (recebidos > TAMANHO_MAX_BYTES) {
+      request.destroy();
+      response.status(413).json({ error: 'Arquivo maior que 15MB' });
+      return;
+    }
+    chunks.push(parte);
   }
   const body = Buffer.concat(chunks);
-
-  if (body.byteLength > TAMANHO_MAX_BYTES) {
-    response.status(413).json({ error: 'Arquivo maior que 15MB' });
-    return;
-  }
 
   try {
     const resultado = await extrairCifraDoPdf(new Uint8Array(body));

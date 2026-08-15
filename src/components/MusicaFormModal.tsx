@@ -5,6 +5,7 @@ import type { DadosMusica } from '../lib/musicasApi';
 import type { Cantor } from '../types/cantor';
 import { listarCantores } from '../lib/cantoresApi';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
+import { fetchApi } from '../lib/apiClient';
 
 interface Props {
   musicaExistente: Musica | null;
@@ -83,7 +84,7 @@ export function MusicaFormModal({ musicaExistente, onSalvar, onFechar }: Props) 
     if (!linkCifraClub.trim()) return;
     setImportando(true);
     try {
-      const resp = await fetch('/api/cifraclub-import', {
+      const resp = await fetchApi('/api/cifraclub-import', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ url: linkCifraClub.trim() }),

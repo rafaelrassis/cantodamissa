@@ -17,15 +17,14 @@
     "@capacitor/app": "^8.1.1",
     "@capacitor/browser": "^8.0.4",
     "@capacitor/core": "^8.5.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "@supabase/supabase-js": "^2.112.1",
     "cheerio": "^1.2.0",
-    "dexie": "^4.4.4",
-    "dexie-react-hooks": "^4.4.0",
     "fflate": "^0.8.3",
     "lucide-react": "^1.28.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.2",
     "unpdf": "^1.8.0"
   },
   "devDependencies": {

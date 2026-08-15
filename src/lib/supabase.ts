@@ -15,4 +15,15 @@ if (!isSupabaseConfigured) {
 // Cliente é sempre criado (com string vazia se não configurado) pra evitar
 // checagem de null espalhada pelo app; `isSupabaseConfigured` é o guard real
 // usado em musicasApi.ts antes de qualquer query.
-export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder');
+//
+// flowType 'pkce': no fluxo implícito o provider devolve o access_token no
+// fragmento da URL de retorno, e no Android essa URL é um deep link de
+// esquema próprio (app.cantodamissa.mobile://) que qualquer outro app
+// instalado pode declarar também — quem chegasse primeiro ficaria com o
+// token. Com PKCE volta só um código de uso único, que sem o verifier
+// guardado neste app não vale nada.
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder',
+  { auth: { flowType: 'pkce' } }
+);

@@ -55,8 +55,20 @@ export function useAuth() {
       const promessaListener = CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
         if (!url.startsWith(REDIRECT_NATIVO)) return;
         await Browser.close().catch(() => {});
-        const hash = url.split('#')[1] ?? '';
-        const params = new URLSearchParams(hash);
+
+        // PKCE (ver supabase.ts): a volta traz `?code=`, que só vira
+        // sessão em conjunto com o code_verifier guardado neste app.
+        const query = new URLSearchParams(url.split('?')[1]?.split('#')[0] ?? '');
+        const code = query.get('code');
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) console.error('Falha ao concluir login Google (nativo):', error);
+          return;
+        }
+
+        // Fallback pro formato implícito, caso o projeto do Supabase ainda
+        // esteja configurado assim.
+        const params = new URLSearchParams(url.split('#')[1] ?? '');
         const access_token = params.get('access_token');
         const refresh_token = params.get('refresh_token');
         if (access_token && refresh_token) {

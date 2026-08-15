@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import * as cheerio from 'cheerio';
 import { parseCifraClubTexto } from '../src/lib/cifraClubParser.js';
 import { extractLyrics } from '../src/lib/chordpro.js';
+import { exigirAdmin } from './_auth.js';
 
 /**
  * Busca uma página do Cifra Club no servidor (evita CORS do navegador) e
@@ -23,6 +24,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
     response.status(405).json({ error: 'Método não permitido' });
     return;
   }
+
+  // Restrito a admin (ver _auth.ts): sem isso o endpoint é um proxy
+  // aberto, que busca páginas de terceiros com a identidade do nosso
+  // domínio pra quem pedir.
+  if (!(await exigirAdmin(request, response))) return;
 
   const url = String(request.body?.url ?? '');
 

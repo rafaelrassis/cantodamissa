@@ -1,7 +1,17 @@
 @import "tailwindcss";
 
+/* Fontes empacotadas com o app em vez de buscadas no Google Fonts: o app
+   é usado offline (PWA e Android) e no meio da missa, onde a rede pode
+   não existir — com CDN, a tipografia caía pra fonte do sistema e a cifra
+   remontava na frente do usuário. Também evita expor o IP de quem abre o
+   app a um terceiro. */
+@import "@fontsource-variable/inter";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/700.css";
+
 @theme {
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   --color-brand-green: #186420;
