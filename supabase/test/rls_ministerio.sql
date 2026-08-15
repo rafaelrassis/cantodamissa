@@ -314,3 +314,83 @@ $$, 'membro saindo do ministério por conta própria');
 
 set role postgres;
 reset request.jwt.claim.sub;
+
+-- ==========================================================
+-- 5. Sequestro de linha via device_key na aprovação
+-- ==========================================================
+-- A aprovação casa a solicitação com a linha de membro pela device_key.
+-- Se um membro comum conseguir ler a device_key do admin e mandar uma
+-- solicitação com ela, a aprovação (feita de boa-fé pelo admin) repassaria
+-- a linha do admin pro auth_uid de quem pediu.
+set role postgres;
+insert into auth.users (id, email, is_anonymous)
+values ('44444444-4444-4444-4444-444444444444', 'espiao@exemplo.com', false)
+on conflict do nothing;
+insert into public.ministerio_membros (ministerio_id, device_key, nome, admin, auth_uid)
+values ('aaaaaaaa-0000-0000-0000-000000000001', 'device-espiao', 'Espião', false,
+        '44444444-4444-4444-4444-444444444444');
+
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+
+-- 1) A device_key alheia não deve nem ser legível.
+do $$
+declare v_chave text;
+begin
+  select device_key into v_chave from public.ministerio_membros
+   where id = 'bbbbbbbb-0000-0000-0000-000000000001';
+  raise exception 'FALHOU (brecha aberta): membro leu a device_key do admin (%)', v_chave;
+exception
+  when insufficient_privilege then
+    raise notice 'ok (coluna protegida): device_key alheia não é legível';
+  when others then
+    if sqlerrm like 'FALHOU%' then raise; end if;
+    raise notice 'ok: device_key alheia não é legível [%]', sqlerrm;
+end
+$$;
+
+-- 2) E mesmo conhecendo a device_key, a aprovação não pode repassar a
+--    linha existente pra quem solicitou.
+do $$
+declare v_sol uuid; v_dono uuid;
+begin
+  perform public.solicitar_ingresso('CDM-TEST', 'Espião', 'device-ana');
+  select id into v_sol from public.solicitacoes_ingresso
+   where auth_uid = '44444444-4444-4444-4444-444444444444' limit 1;
+
+  if v_sol is not null then
+    set local role postgres;
+    set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+    set local role authenticated;
+    begin
+      perform public.aprovar_solicitacao(v_sol);
+    exception when others then
+      null; -- recusar a aprovação também resolve
+    end;
+  end if;
+
+  select auth_uid into v_dono from public.ministerio_membros
+   where id = 'bbbbbbbb-0000-0000-0000-000000000001';
+  if v_dono is distinct from '11111111-1111-1111-1111-111111111111' then
+    raise exception 'FALHOU (brecha aberta): a linha do admin trocou de dono (agora %)', v_dono;
+  end if;
+  raise notice 'ok: aprovação não repassa a linha de um membro existente';
+end
+$$;
+
+-- 3) Ministério que ficou sem membros (todos saíram) mas ainda tem
+--    escalas e avisos não pode ser adotado por quem passar por ali.
+set role postgres;
+insert into public.ministerios (id, nome, codigo_convite, criado_por_device_key)
+values ('aaaaaaaa-0000-0000-0000-000000000009', 'Abandonado', 'CDM-VAZI', 'device-sumiu');
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+
+select teste.espera_bloqueio($$
+  insert into public.ministerio_membros (ministerio_id, device_key, nome, admin, auth_uid)
+  values ('aaaaaaaa-0000-0000-0000-000000000009', 'device-espiao', 'Espião', true,
+          '44444444-4444-4444-4444-444444444444')
+$$, 'entrar como admin num ministério sem membros');
+
+set role postgres;
+reset request.jwt.claim.sub;

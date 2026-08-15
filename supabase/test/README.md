@@ -33,8 +33,7 @@ PGHOST=localhost PGPORT=5433 ./supabase/test/rodar.sh
 
 | Arquivo | O quê |
 |---|---|
-| `00_supabase_stub.sql` | Stub do ambiente Supabase: schema `auth`, roles `anon`/`authenticated`, `auth.uid()`, `auth.jwt()`. Só existe pro teste — em produção quem fornece isso é o Supabase. |
-| `99_grants.sql` | Reproduz os grants padrão do Supabase no schema `public` (é por causa deles que tabela sem RLS = tabela aberta). |
+| `00_supabase_stub.sql` | Stub do ambiente Supabase: schema `auth`, roles `anon`/`authenticated`, `auth.uid()`, `auth.jwt()` e os grants padrão do schema `public` (é por causa deles que tabela sem RLS = tabela aberta). Só existe pro teste — em produção quem fornece isso é o Supabase. |
 | `aplicar.sh` | Recria o banco e aplica stub + todas as migrations em ordem. |
 | `rls_ministerio.sql` | Ministério: escalonamento de privilégio, leitura por membro, RPCs de fundar/ingressar/aprovar. |
 | `rls_catalogo.sql` | Músicas, cantores, submissões, contador de acessos e repertórios. |

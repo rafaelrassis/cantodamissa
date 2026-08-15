@@ -11,5 +11,4 @@ PSQL=(psql -v ON_ERROR_STOP=1 -q -h "${PGHOST:-/var/lib/postgresql/sock}" -p "${
 for m in supabase/migrations/*.sql; do
   "${PSQL[@]}" -d "$DB" -f "$m"
 done
-"${PSQL[@]}" -d "$DB" -f supabase/test/99_grants.sql
 echo "$DB"
