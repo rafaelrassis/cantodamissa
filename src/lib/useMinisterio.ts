@@ -75,20 +75,27 @@ export function useMinisterio(perfil: PerfilUsuario = {}) {
 
   useEffect(() => {
     setCarregando(true);
-    recarregar().finally(() => setCarregando(false));
-  }, [recarregar]);
+    recarregar()
+      .catch((err) => reportar(err, 'Não foi possível carregar o ministério.'))
+      .finally(() => setCarregando(false));
+  }, [recarregar, reportar]);
 
   /** Troca qual ministério (dentre os que o device já integra) está ativo. */
-  const trocarMinisterio = useCallback(async (ministerioId: string) => {
-    setCarregando(true);
-    try {
-      localStorage.setItem(CHAVE_MINISTERIO_ATIVO, ministerioId);
-      const m = await api.buscarMinisterioPorId(ministerioId);
-      setMinisterio(m);
-    } finally {
-      setCarregando(false);
-    }
-  }, []);
+  const trocarMinisterio = useCallback(
+    async (ministerioId: string) => {
+      setCarregando(true);
+      try {
+        localStorage.setItem(CHAVE_MINISTERIO_ATIVO, ministerioId);
+        const m = await api.buscarMinisterioPorId(ministerioId);
+        setMinisterio(m);
+      } catch (err) {
+        reportar(err, 'Não foi possível abrir esse ministério.');
+      } finally {
+        setCarregando(false);
+      }
+    },
+    [reportar]
+  );
 
   const podeAdicionarMinisterio = meusMinisterios.length < api.LIMITE_MINISTERIOS;
 

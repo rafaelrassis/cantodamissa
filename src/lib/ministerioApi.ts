@@ -11,7 +11,7 @@
 // security definer, que validam a regra dentro do banco — ver
 // supabase/migrations/0013_ministerio_rls_por_membro.sql.
 
-import { supabase } from './supabase';
+import { supabase, isSupabaseConfigured } from './supabase';
 import { getDeviceKey } from './repertorios';
 import { garantirSessaoAnonima } from './supabaseAuth';
 import { exigirLinha, exigirLinhas } from './supabaseUtils';
@@ -62,6 +62,7 @@ export type StatusIngresso = 'OK' | 'CODIGO_INVALIDO' | 'JA_MEMBRO' | 'JA_SOLICI
  */
 let vinculoLegadoFeito: Promise<void> | null = null;
 function vincularMembroLegado(): Promise<void> {
+  if (!isSupabaseConfigured) return Promise.resolve();
   if (!vinculoLegadoFeito) {
     vinculoLegadoFeito = (async () => {
       await garantirSessaoAnonima();
@@ -95,6 +96,10 @@ export async function buscarMeuMinisterio(): Promise<MinisterioIdentidade | null
  * meu — a própria lista precisa ser resolvida do lado do banco.
  */
 export async function listarMeusMinisterios(): Promise<MinisterioResumo[]> {
+  // Sem Supabase configurado o módulo Ministério não tem onde existir — o
+  // app roda com as músicas mock e o resto some da tela, em vez de
+  // estourar erro de rede contra a URL placeholder (ver supabase.ts).
+  if (!isSupabaseConfigured) return [];
   await vincularMembroLegado();
   const { data, error } = await supabase.rpc('meus_ministerios');
   if (error) throw error;
