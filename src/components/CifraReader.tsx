@@ -324,12 +324,12 @@ export function CifraReader({
             </button>
             <div className="h-6 w-px bg-[var(--border)]" />
             <ToolbarToggle
-              active={modoLetra}
+              active={false}
               onClick={alternarModoExibicao}
               ariaLabel="Alternar entre cifra e letra"
             >
-              {modoLetra ? <FileText size={14} /> : <Music size={14} />}
-              {modoLetra ? 'só letra' : 'cifra completa'}
+              {modoLetra ? <Music size={14} /> : <FileText size={14} />}
+              {modoLetra ? 'ver cifra completa' : 'ver letra'}
             </ToolbarToggle>
             {!modoLetra && (
               <ToolbarToggle

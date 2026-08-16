@@ -33,7 +33,7 @@ export function CifraBottomSheet(props: Props) {
       className={`fixed inset-x-0 z-20 rounded-t-[22px] border-t border-[var(--border)] bg-[var(--surface)] p-5 pb-7 shadow-[0_-18px_40px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden ${
         props.open ? 'translate-y-0' : 'translate-y-[130%]'
       }`}
-      style={{ bottom: 86 }}
+      style={{ bottom: 75 }}
     >
       <div className="mx-auto mb-4 h-1 w-11 rounded-full bg-[var(--border)]" />
 
@@ -81,9 +81,9 @@ export function CifraBottomSheet(props: Props) {
       )}
 
       <div className="mb-4 flex gap-2">
-        <SheetToggle active={props.modoLetra} onClick={props.onToggleModoLetra}>
-          {props.modoLetra ? <FileText size={16} /> : <Music size={16} />}
-          {props.modoLetra ? 'só letra' : 'cifra completa'}
+        <SheetToggle active={false} onClick={props.onToggleModoLetra}>
+          {props.modoLetra ? <Music size={16} /> : <FileText size={16} />}
+          {props.modoLetra ? 'ver cifra completa' : 'ver letra'}
         </SheetToggle>
         <SheetToggle active={props.theme === 'dark'} onClick={props.onToggleTheme}>
           {props.theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
