@@ -92,6 +92,12 @@ export function CifraReader({
   const [tomSeletorAberto, setTomSeletorAberto] = useState(false);
   const { submissoes, criar: criarSubmissao } = useSubmissoes();
   const { repertorios, adicionarMusica } = useRepertorios();
+  // Só repertórios vinculados a uma escala do ministério contam pro botão
+  // "Adicionar ao repertório" — repertórios pessoais (escalaId null) não.
+  const repertoriosDeEscala = useMemo(
+    () => repertorios.filter((r) => r.escalaId !== null),
+    [repertorios]
+  );
   const { registrarAbertura } = useHistoricoMusicas();
 
   useEffect(() => {
@@ -353,11 +359,13 @@ export function CifraReader({
               </ToolbarToggle>
             )}
             <div className="flex-1" />
-            <AddToRepertorioMenu
-              musica={musica}
-              repertorios={repertorios}
-              onAdd={adicionarAoRepertorio}
-            />
+            {repertoriosDeEscala.length > 0 && (
+              <AddToRepertorioMenu
+                musica={musica}
+                repertorios={repertoriosDeEscala}
+                onAdd={adicionarAoRepertorio}
+              />
+            )}
             <span className="text-xs font-medium text-[var(--muted)]">
               {musica.viewsCount.toLocaleString('pt-BR')} acessos
             </span>
@@ -498,7 +506,7 @@ export function CifraReader({
         awakeSupported={keepAwake.supported}
         onToggleAwake={keepAwake.toggle}
         musica={musica}
-        repertorios={repertorios}
+        repertorios={repertoriosDeEscala}
         onAddToRepertorio={adicionarAoRepertorio}
         onCompartilhar={compartilhar}
         modoLetra={modoLetra}

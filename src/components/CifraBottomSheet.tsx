@@ -99,14 +99,16 @@ export function CifraBottomSheet(props: Props) {
         </div>
       )}
 
-      <div className="mb-4 flex items-center justify-between rounded-xl border border-[var(--border)] px-3 py-2">
-        <span className="text-sm font-medium text-[var(--text)]">Adicionar ao repertório</span>
-        <AddToRepertorioMenu
-          musica={props.musica}
-          repertorios={props.repertorios}
-          onAdd={props.onAddToRepertorio}
-        />
-      </div>
+      {props.repertorios.length > 0 && (
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-[var(--border)] px-3 py-2">
+          <span className="text-sm font-medium text-[var(--text)]">Adicionar ao repertório</span>
+          <AddToRepertorioMenu
+            musica={props.musica}
+            repertorios={props.repertorios}
+            onAdd={props.onAddToRepertorio}
+          />
+        </div>
+      )}
 
       <button
         onClick={props.onCompartilhar}
