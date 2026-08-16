@@ -1,4 +1,4 @@
-import { Minus, Moon, Plus, Share2, Sun, Sunrise } from 'lucide-react';
+import { FileText, Minus, Moon, Music, Plus, Share2, Sun, Sunrise } from 'lucide-react';
 import type { Theme } from '../lib/useTheme';
 import type { Repertorio } from '../lib/repertorios';
 import type { Musica } from '../types/musica';
@@ -22,6 +22,9 @@ interface Props {
   repertorios: Repertorio[];
   onAddToRepertorio: (repertorioId: string, rito: string) => void;
   onCompartilhar: () => void;
+  /** true = mostrando só letra. Alterna e some com capo/diagramas. */
+  modoLetra: boolean;
+  onToggleModoLetra: () => void;
 }
 
 export function CifraBottomSheet(props: Props) {
@@ -50,38 +53,51 @@ export function CifraBottomSheet(props: Props) {
         <span>rápido</span>
       </div>
 
-      <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--muted)]">
-        Capotraste
-      </p>
-      <div className="mb-4 flex h-12 items-center gap-2">
-        <button
-          onClick={props.onDecCapo}
-          aria-label="Diminuir capo"
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
-        >
-          <Minus size={18} />
-        </button>
-        <div className="flex h-12 flex-1 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] font-mono text-sm text-[var(--text)]">
-          {props.capoLabel}
-        </div>
-        <button
-          onClick={props.onIncCapo}
-          aria-label="Aumentar capo"
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
-        >
-          <Plus size={18} />
-        </button>
-      </div>
+      {!props.modoLetra && (
+        <>
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--muted)]">
+            Capotraste
+          </p>
+          <div className="mb-4 flex h-12 items-center gap-2">
+            <button
+              onClick={props.onDecCapo}
+              aria-label="Diminuir capo"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
+            >
+              <Minus size={18} />
+            </button>
+            <div className="flex h-12 flex-1 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] font-mono text-sm text-[var(--text)]">
+              {props.capoLabel}
+            </div>
+            <button
+              onClick={props.onIncCapo}
+              aria-label="Aumentar capo"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
+            >
+              <Plus size={18} />
+            </button>
+          </div>
+        </>
+      )}
 
       <div className="mb-4 flex gap-2">
-        <SheetToggle active={props.diagrams} onClick={props.onToggleDiagrams}>
-          {props.diagrams ? 'acordes visíveis' : 'acordes ocultos'}
+        <SheetToggle active={props.modoLetra} onClick={props.onToggleModoLetra}>
+          {props.modoLetra ? <FileText size={16} /> : <Music size={16} />}
+          {props.modoLetra ? 'só letra' : 'cifra completa'}
         </SheetToggle>
         <SheetToggle active={props.theme === 'dark'} onClick={props.onToggleTheme}>
           {props.theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
           {props.theme === 'dark' ? 'modo escuro' : 'modo claro'}
         </SheetToggle>
       </div>
+
+      {!props.modoLetra && (
+        <div className="mb-4 flex gap-2">
+          <SheetToggle active={props.diagrams} onClick={props.onToggleDiagrams}>
+            {props.diagrams ? 'acordes visíveis' : 'acordes ocultos'}
+          </SheetToggle>
+        </div>
+      )}
 
       <div className="mb-4 flex items-center justify-between rounded-xl border border-[var(--border)] px-3 py-2">
         <span className="text-sm font-medium text-[var(--text)]">Adicionar ao repertório</span>

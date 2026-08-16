@@ -22,49 +22,55 @@ interface Props {
   currentMusicaId: string;
   repertorio: Repertorio | null;
   onSelectRepertorioItem: (musicaId: string) => void;
+  /** No modo letra some tudo que só faz sentido pra cifra (tom, capo). */
+  modoLetra?: boolean;
 }
 
 export function CifraToolsSidebar(props: Props) {
   return (
     <aside className="hidden w-[272px] shrink-0 flex-col gap-[22px] overflow-y-auto border-r border-[var(--border)] bg-[var(--surface)] p-5 md:flex">
-      <ToolSection label="Tom">
-        <div className="flex items-center gap-2">
-          <SquareButton onClick={props.onDecTone} aria-label="Diminuir tom">
-            <Minus size={18} />
-          </SquareButton>
-          <div className="flex h-11 flex-1 flex-col items-center justify-center rounded-[11px] bg-[var(--accent-soft)]">
-            <span className="font-mono text-base font-bold text-[var(--accent)]">
-              {props.currentTone}
-            </span>
-            <span className="text-[11px] font-medium text-[var(--muted)]">
-              {props.semitonesLabel}
-            </span>
-          </div>
-          <SquareButton onClick={props.onIncTone} aria-label="Aumentar tom">
-            <Plus size={18} />
-          </SquareButton>
-        </div>
-        <div className="mt-2 flex gap-2">
-          <SecondaryButton onClick={props.onToggleFlats}>
-            {props.flats ? '♭ bemol' : '♯ sustenido'}
-          </SecondaryButton>
-          <SecondaryButton onClick={props.onResetTone}>tom original</SecondaryButton>
-        </div>
-      </ToolSection>
+      {!props.modoLetra && (
+        <>
+          <ToolSection label="Tom">
+            <div className="flex items-center gap-2">
+              <SquareButton onClick={props.onDecTone} aria-label="Diminuir tom">
+                <Minus size={18} />
+              </SquareButton>
+              <div className="flex h-11 flex-1 flex-col items-center justify-center rounded-[11px] bg-[var(--accent-soft)]">
+                <span className="font-mono text-base font-bold text-[var(--accent)]">
+                  {props.currentTone}
+                </span>
+                <span className="text-[11px] font-medium text-[var(--muted)]">
+                  {props.semitonesLabel}
+                </span>
+              </div>
+              <SquareButton onClick={props.onIncTone} aria-label="Aumentar tom">
+                <Plus size={18} />
+              </SquareButton>
+            </div>
+            <div className="mt-2 flex gap-2">
+              <SecondaryButton onClick={props.onToggleFlats}>
+                {props.flats ? '♭ bemol' : '♯ sustenido'}
+              </SecondaryButton>
+              <SecondaryButton onClick={props.onResetTone}>tom original</SecondaryButton>
+            </div>
+          </ToolSection>
 
-      <ToolSection label="Capotraste">
-        <div className="flex h-10 items-center gap-2">
-          <SquareButton small onClick={props.onDecCapo} aria-label="Diminuir capo">
-            <Minus size={16} />
-          </SquareButton>
-          <div className="flex h-10 flex-1 items-center justify-center rounded-[11px] border border-[var(--border)] bg-[var(--bg)] font-mono text-sm text-[var(--text)]">
-            {props.capoLabel}
-          </div>
-          <SquareButton small onClick={props.onIncCapo} aria-label="Aumentar capo">
-            <Plus size={16} />
-          </SquareButton>
-        </div>
-      </ToolSection>
+          <ToolSection label="Capotraste">
+            <div className="flex h-10 items-center gap-2">
+              <SquareButton small onClick={props.onDecCapo} aria-label="Diminuir capo">
+                <Minus size={16} />
+              </SquareButton>
+              <div className="flex h-10 flex-1 items-center justify-center rounded-[11px] border border-[var(--border)] bg-[var(--bg)] font-mono text-sm text-[var(--text)]">
+                {props.capoLabel}
+              </div>
+              <SquareButton small onClick={props.onIncCapo} aria-label="Aumentar capo">
+                <Plus size={16} />
+              </SquareButton>
+            </div>
+          </ToolSection>
+        </>
+      )}
 
       <ToolSection label="Rolagem automática">
         <button

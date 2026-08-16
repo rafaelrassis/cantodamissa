@@ -11,6 +11,8 @@ interface Props {
   onIncFont: () => void;
   sheetOpen: boolean;
   onToggleSheet: () => void;
+  /** No modo letra some o controle de tom (não faz sentido sem cifra). */
+  modoLetra?: boolean;
 }
 
 /**
@@ -34,34 +36,38 @@ export function CifraBottomBar(props: Props) {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-1 border-t border-[var(--border)] bg-[var(--surface)] px-3 pb-[22px] pt-2 md:hidden">
-      <div className="flex items-center gap-1">
-        <button
-          onClick={props.onDecTone}
-          aria-label="Diminuir tom"
-          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
-        >
-          <Minus size={16} />
-        </button>
-        <button
-          onClick={props.onOpenTomSeletor}
-          aria-label="Abrir seletor de tom"
-          className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--accent-soft)]"
-        >
-          <span className="font-mono text-sm font-bold leading-none text-[var(--accent)]">
-            {props.currentTone}
-          </span>
-          <span className="text-[8px] font-semibold uppercase tracking-wide text-[var(--accent)]">
-            Tom
-          </span>
-        </button>
-        <button
-          onClick={props.onIncTone}
-          aria-label="Aumentar tom"
-          className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
-        >
-          <Plus size={16} />
-        </button>
-      </div>
+      {props.modoLetra ? (
+        <div className="w-[92px] shrink-0" />
+      ) : (
+        <div className="flex items-center gap-1">
+          <button
+            onClick={props.onDecTone}
+            aria-label="Diminuir tom"
+            className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
+          >
+            <Minus size={16} />
+          </button>
+          <button
+            onClick={props.onOpenTomSeletor}
+            aria-label="Abrir seletor de tom"
+            className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--accent-soft)]"
+          >
+            <span className="font-mono text-sm font-bold leading-none text-[var(--accent)]">
+              {props.currentTone}
+            </span>
+            <span className="text-[8px] font-semibold uppercase tracking-wide text-[var(--accent)]">
+              Tom
+            </span>
+          </button>
+          <button
+            onClick={props.onIncTone}
+            aria-label="Aumentar tom"
+            className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)]"
+          >
+            <Plus size={16} />
+          </button>
+        </div>
+      )}
 
       <BarraBotao onClick={props.onTogglePlay} label="Rolagem" ariaLabel="Iniciar rolagem automática" destaque>
         <Play size={17} />

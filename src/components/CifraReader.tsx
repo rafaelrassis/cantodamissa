@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, Flag, Moon, Pause, Play, Sun, Users, Video, X } from 'lucide-react';
+import { ChevronLeft, FileText, Flag, Moon, Music, Pause, Play, Sun, Users, Video, X } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import {
   extractChordsUsed,
@@ -12,6 +12,7 @@ import { useAutoScroll } from '../lib/useAutoScroll';
 import { useKeepAwake } from '../lib/useKeepAwake';
 import { loadReaderState, saveReaderState } from '../lib/readerState';
 import { useShowChordDiagrams } from '../lib/useShowChordDiagrams';
+import { loadModoExibicao, saveModoExibicao } from '../lib/modoExibicao';
 import { obterRepertorio, type Repertorio } from '../lib/repertorios';
 import { getMusicaById, registrarVisualizacao } from '../lib/musicasApi';
 import { getCantorSlugById } from '../lib/cantoresApi';
@@ -65,6 +66,24 @@ export function CifraReader({
   const [capo, setCapo] = useState(musica.capo);
   const [useFlats, setUseFlats] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [modoExibicao, setModoExibicao] = useState<'cifra' | 'letra'>(() =>
+    loadModoExibicao(musica.id)
+  );
+  const modoLetra = modoExibicao === 'letra';
+
+  // recarrega a preferência salva ao trocar de música (ex: navegando pelo
+  // repertório na sidebar) — cada música guarda seu próprio modo
+  useEffect(() => {
+    setModoExibicao(loadModoExibicao(musica.id));
+  }, [musica.id]);
+
+  function alternarModoExibicao() {
+    setModoExibicao((atual) => {
+      const novo = atual === 'letra' ? 'cifra' : 'letra';
+      saveModoExibicao(musica.id, novo);
+      return novo;
+    });
+  }
   const { show: showDiagrams, toggle: setShowDiagrams } = useShowChordDiagrams();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [repertorio, setRepertorio] = useState<Repertorio | null>(null);
@@ -260,7 +279,7 @@ export function CifraReader({
           </div>
         </div>
         <div className="flex shrink-0 gap-2">
-          <HeaderCard label="capo" value={capo === 0 ? '—' : String(capo)} />
+          {!modoLetra && <HeaderCard label="capo" value={capo === 0 ? '—' : String(capo)} />}
         </div>
       </header>
 
@@ -286,6 +305,7 @@ export function CifraReader({
           currentMusicaId={musica.id}
           repertorio={repertorio}
           onSelectRepertorioItem={trocarParaMusicaDoRepertorio}
+          modoLetra={modoLetra}
         />
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -304,12 +324,22 @@ export function CifraReader({
             </button>
             <div className="h-6 w-px bg-[var(--border)]" />
             <ToolbarToggle
-              active={showDiagrams}
-              onClick={setShowDiagrams}
-              ariaLabel="Alternar diagramas de acorde"
+              active={modoLetra}
+              onClick={alternarModoExibicao}
+              ariaLabel="Alternar entre cifra e letra"
             >
-              {showDiagrams ? 'acordes visíveis' : 'acordes ocultos'}
+              {modoLetra ? <FileText size={14} /> : <Music size={14} />}
+              {modoLetra ? 'só letra' : 'cifra completa'}
             </ToolbarToggle>
+            {!modoLetra && (
+              <ToolbarToggle
+                active={showDiagrams}
+                onClick={setShowDiagrams}
+                ariaLabel="Alternar diagramas de acorde"
+              >
+                {showDiagrams ? 'acordes visíveis' : 'acordes ocultos'}
+              </ToolbarToggle>
+            )}
             <ToolbarToggle active={theme === 'dark'} onClick={onToggleTheme} ariaLabel="Alternar tema">
               {theme === 'dark' ? <Moon size={14} /> : <Sun size={14} />}
             </ToolbarToggle>
@@ -345,7 +375,9 @@ export function CifraReader({
             </div>
           )}
 
-          {showDiagrams && <ChordDiagramStrip chords={chordsUsed} onHide={setShowDiagrams} />}
+          {showDiagrams && !modoLetra && (
+            <ChordDiagramStrip chords={chordsUsed} onHide={setShowDiagrams} />
+          )}
 
           <div
             ref={scrollRef}
@@ -383,7 +415,7 @@ export function CifraReader({
               </header>
 
               {lines.map((line, i) => (
-                <ChordLine key={i} line={line} />
+                <ChordLine key={i} line={line} modoLetra={modoLetra} />
               ))}
 
               <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-[var(--border)] pb-4 pt-6 font-sans">
@@ -409,7 +441,7 @@ export function CifraReader({
           </div>
         </div>
 
-        {showDiagrams && <ChordDictionary chords={chordsUsed} />}
+        {showDiagrams && !modoLetra && <ChordDictionary chords={chordsUsed} />}
       </div>
 
       {colaboradoresAbertos && (
@@ -449,6 +481,7 @@ export function CifraReader({
         onIncFont={onIncFont}
         sheetOpen={sheetOpen}
         onToggleSheet={() => setSheetOpen((s) => !s)}
+        modoLetra={modoLetra}
       />
       <CifraBottomSheet
         open={sheetOpen}
@@ -468,6 +501,8 @@ export function CifraReader({
         repertorios={repertorios}
         onAddToRepertorio={adicionarAoRepertorio}
         onCompartilhar={compartilhar}
+        modoLetra={modoLetra}
+        onToggleModoLetra={alternarModoExibicao}
       />
 
       {formularioCorrecaoAberto && (

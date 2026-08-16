@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CloudDownload, ChevronLeft, Download, GripVertical, Plus, Share2, Trash2, X } from 'lucide-react';
+import { CloudDownload, ChevronLeft, Download, FileText, GripVertical, Music, Plus, Share2, Trash2, X } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import type { Repertorio } from '../lib/repertorios';
 import { RITO_SEM_SECAO } from '../lib/repertorios';
 import { getMusicaById } from '../lib/musicasApi';
+import { saveModoExibicao, type ModoExibicao } from '../lib/modoExibicao';
 
 interface Props {
   repertorio: Repertorio;
@@ -49,6 +50,9 @@ export function RepertorioDetalheTela({
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [statusOffline, setStatusOffline] = useState<'ocioso' | 'baixando' | 'pronto' | 'erro'>('ocioso');
+  // aba Cifra/Letra: cada música guarda seu próprio modo (lib/modoExibicao),
+  // essa aba só define com qual modo a música é aberta a partir daqui
+  const [abaModo, setAbaModo] = useState<ModoExibicao>('cifra');
 
   async function excluir() {
     if (!confirmandoExclusao) {
@@ -99,6 +103,7 @@ export function RepertorioDetalheTela({
   const opcoesDeRito = gruposParaExibir;
 
   async function abrirMusica(item: { musicaId: string; tone: string }) {
+    saveModoExibicao(item.musicaId, abaModo);
     const musica = await getMusicaById(item.musicaId);
     if (musica) onSelectMusica(musica, item.tone);
   }
@@ -252,6 +257,15 @@ export function RepertorioDetalheTela({
         )}
       </header>
 
+      <div className="mx-auto flex max-w-2xl gap-2 px-4 pt-4 md:px-10">
+        <AbaModo active={abaModo === 'cifra'} onClick={() => setAbaModo('cifra')}>
+          <Music size={14} /> Cifra
+        </AbaModo>
+        <AbaModo active={abaModo === 'letra'} onClick={() => setAbaModo('letra')}>
+          <FileText size={14} /> Letra
+        </AbaModo>
+      </div>
+
       <div className="mx-auto max-w-2xl px-4 py-4 md:px-10">
         {gruposParaExibir.map((nomeRito) => {
           const itens = itensPorRito.get(nomeRito) ?? [];
@@ -389,4 +403,27 @@ function trocarPosicao<T>(lista: T[], de: number, para: number): T[] {
   const [item] = copia.splice(de, 1);
   copia.splice(para, 0, item);
   return copia;
+}
+
+function AbaModo({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl text-sm font-semibold ${
+        active
+          ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+          : 'border border-[var(--border)] bg-[var(--bg)] text-[var(--muted)]'
+      }`}
+    >
+      {children}
+    </button>
+  );
 }
