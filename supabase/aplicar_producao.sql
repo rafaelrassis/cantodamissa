@@ -1,7 +1,7 @@
 -- ==========================================================
--- Canto da Missa — pacote de segurança (migrations 0012 a 0016)
+-- Canto da Missa — pacote de segurança (migrations 0012 a 0017)
 -- ==========================================================
--- Arquivo gerado a partir de supabase/migrations/0012..0016 para ser
+-- Arquivo gerado a partir de supabase/migrations/0012..0017 para ser
 -- colado de uma vez no SQL Editor do Supabase. É idêntico aos arquivos
 -- individuais, na mesma ordem; se preferir, aplique um por um.
 --
@@ -13,11 +13,16 @@
 -- create or replace ou bloco condicional. Vai dentro de uma transação,
 -- então ou passa inteiro ou não muda nada.
 --
--- A única parte que mexe em dado existente é a conversão de
--- repertorios.escala_id para uuid (0014): vínculos que apontam pra
--- escalas inexistentes (ids do protótipo antigo, tipo "e169...") viram
--- nulos, e o repertório passa a ser avulso em vez de ligado a uma escala
--- que não existe.
+-- Duas partes mexem em dado existente:
+--
+--   * a conversão de repertorios.escala_id para uuid (0014): vínculos que
+--     apontam pra escalas inexistentes (ids do protótipo antigo, tipo
+--     "e169...") viram nulos, e o repertório passa a ser avulso em vez de
+--     ligado a uma escala que não existe;
+--
+--   * o backfill de repertórios de escala (0017): toda escala que ainda
+--     não tem repertório ganha um, vazio, com os 11 ritos padrão. Só
+--     insere o que falta — rodar de novo não duplica nada.
 -- ==========================================================
 
 begin;
@@ -1118,6 +1123,49 @@ begin
     returning m.id;
 end;
 $$;
+
+
+-- ==========================================================
+-- supabase/migrations/0017_repertorio_escala_cascade.sql
+-- ==========================================================
+-- ==========================================================
+-- 1 escala = 1 repertório, sem órfão possível
+-- ==========================================================
+-- 0014 já criou a FK repertorios.escala_id -> escalas(id), mas como
+-- `on delete set null`: apagar a escala não apagava o repertório, só
+-- desvinculava — o repertório ficava pra sempre na tabela sem dono de
+-- fato (escala_id null, mas não é um repertório pessoal, é lixo).
+--
+-- Troca pra `on delete cascade`: repertório de evento nasce e morre
+-- junto com a escala. Repertórios pessoais (escala_id null desde a
+-- criação) não são afetados.
+--
+-- Também faz o backfill: a partir de agora criarEscala() sempre cria o
+-- repertório junto (deixa de ser sob demanda), então toda escala que já
+-- existe sem repertório ganha um aqui.
+
+alter table public.repertorios
+  drop constraint if exists repertorios_escala_id_fkey;
+alter table public.repertorios
+  add constraint repertorios_escala_id_fkey
+  foreign key (escala_id) references public.escalas(id) on delete cascade;
+
+insert into public.repertorios (nome, escala_id, auth_uid)
+select e.titulo, e.id, null
+  from public.escalas e
+ where not exists (select 1 from public.repertorios r where r.escala_id = e.id);
+
+insert into public.repertorio_ritos (repertorio_id, nome, ordem)
+select r.id, rito.nome, rito.ordem
+  from public.repertorios r
+  cross join (values
+    ('Entrada', 0), ('Ato Penitencial', 1), ('Glória', 2),
+    ('Salmo Responsorial', 3), ('Aclamação ao Evangelho', 4),
+    ('Ofertório', 5), ('Santo', 6), ('Cordeiro', 7),
+    ('Comunhão', 8), ('Pós-Comunhão', 9), ('Envio', 10)
+  ) as rito(nome, ordem)
+ where r.escala_id is not null
+   and not exists (select 1 from public.repertorio_ritos rr where rr.repertorio_id = r.id);
 
 
 commit;

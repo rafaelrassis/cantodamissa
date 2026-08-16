@@ -9,6 +9,7 @@
 // itensRoteiroComMusicas em ministerioUtils.ts), não persistem aqui.
 
 import { supabase } from './supabase';
+import { criarRepertorio } from './repertorios';
 import type { Escala, ItemRoteiro, ParticipanteEscala } from '../types/ministerio';
 
 type EscalaRow = {
@@ -130,6 +131,16 @@ export async function criarEscala(ministerioId: string, escala: Escala): Promise
 
   await gravarParticipantes(nova.id, escala.participantes);
   await gravarRoteiro(nova.id, escala.roteiro);
+
+  // 1 escala = 1 repertório sempre (ver migration 0017). Repertório do
+  // evento nasce vazio (11 ritos padrão) junto com a escala — deixa de
+  // ser criado sob demanda. Best-effort: se falhar, a escala já existe e
+  // garantirRepertorioDaEscala() cobre o caso na próxima abertura da tela.
+  try {
+    await criarRepertorio(nova.titulo, nova.id);
+  } catch (err) {
+    console.error('criarEscala: falha ao criar repertório do evento:', err);
+  }
 
   return { ...escala, id: nova.id };
 }
