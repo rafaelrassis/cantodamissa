@@ -13,14 +13,21 @@ const REDIRECT_NATIVO = 'app.cantodamissa.mobile://login-callback';
 
 /**
  * Sessão real de usuário via Supabase Auth (Google OAuth) — login único do
- * app. Requer o provider "Google" habilitado no dashboard do Supabase
- * (Authentication > Providers > Google, com Client ID/Secret do Google
- * Cloud Console) e a URL do app cadastrada em "Redirect URLs".
+ * app. Requer, do lado da configuração:
+ *
+ * - uma credencial OAuth do tipo "Web application" no Google Cloud
+ *   Console, com `https://<projeto>.supabase.co/auth/v1/callback` entre
+ *   os Authorized redirect URIs (é o Supabase que fala com o Google, não
+ *   o app — por isso não existe credencial "Android" aqui);
+ * - Client ID e Secret colados em Authentication > Providers > Google no
+ *   dashboard do Supabase;
+ * - em Authentication > URL Configuration, os destinos de volta:
+ *   o domínio de produção, o localhost do dev e REDIRECT_NATIVO.
  *
  * Dois fluxos diferentes conforme a plataforma:
  *
  * - Web: `signInWithOAuth` navega a própria aba pra fora do app e volta
- *   com a sessão na URL, que o supabase-js já detecta sozinho
+ *   com o código na URL, que o supabase-js troca por sessão sozinho
  *   (detectSessionInUrl). Por isso não dá pra encadear passos síncronos
  *   depois de chamar `signInWithGoogle` — qualquer coisa que precise
  *   acontecer "depois do login" tem que reagir à sessão aparecendo (ver
@@ -29,9 +36,9 @@ const REDIRECT_NATIVO = 'app.cantodamissa.mobile://login-callback';
  * - Nativo (Android via Capacitor): não existe "voltar pra mesma aba" —
  *   abre o navegador do sistema (Browser.open, mais seguro que WebView
  *   pra login) com `skipBrowserRedirect` pra pegar só a URL do provider
- *   sem navegar embutido, e escuta o deep link de volta
- *   (REDIRECT_NATIVO) via `appUrlOpen` pra extrair os tokens da URL e
- *   abrir a sessão manualmente com `setSession`.
+ *   sem navegar embutido, e escuta o deep link de volta (REDIRECT_NATIVO)
+ *   via `appUrlOpen`. De lá sai o `code` do PKCE, trocado por sessão em
+ *   `exchangeCodeForSession` (ver supabase.ts para por que PKCE).
  */
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
