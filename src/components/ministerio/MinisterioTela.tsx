@@ -191,6 +191,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
         reordenarRitos={repertoriosApi.reordenarRitos}
         onExcluirRepertorio={repertoriosApi.remover}
         podeEditar={ministerio.souAdmin}
+        ocultarExcluir
       />
     );
   }

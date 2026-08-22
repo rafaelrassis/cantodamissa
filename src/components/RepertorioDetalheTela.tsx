@@ -1,5 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CloudDownload, ChevronLeft, Download, FileText, GripVertical, Music, Plus, Share2, Trash2, X } from 'lucide-react';
+import {
+  CloudDownload,
+  ChevronLeft,
+  Copy,
+  Download,
+  FileText,
+  GripVertical,
+  HelpCircle,
+  MessageCircle,
+  Move,
+  Music,
+  Plus,
+  Share2,
+  Trash2,
+  X,
+} from 'lucide-react';
 import type { Musica } from '../types/musica';
 import type { Repertorio } from '../lib/repertorios';
 import { RITO_SEM_SECAO } from '../lib/repertorios';
@@ -50,6 +65,8 @@ export function RepertorioDetalheTela({
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [statusOffline, setStatusOffline] = useState<'ocioso' | 'baixando' | 'pronto' | 'erro'>('ocioso');
+  const [menuCompartilharAberto, setMenuCompartilharAberto] = useState(false);
+  const [ajudaAberta, setAjudaAberta] = useState(false);
   // aba Cifra/Letra: cada música guarda seu próprio modo (lib/modoExibicao),
   // essa aba só define com qual modo a música é aberta a partir daqui
   const [abaModo, setAbaModo] = useState<ModoExibicao>('cifra');
@@ -63,16 +80,30 @@ export function RepertorioDetalheTela({
     onBack();
   }
 
+  function linkCompartilhavel() {
+    if (!repertorio.shareToken) return null;
+    return `${window.location.origin}${window.location.pathname}?rep=${repertorio.shareToken}`;
+  }
+
   async function copiarLink() {
-    if (!repertorio.shareToken) return;
-    const url = `${window.location.origin}${window.location.pathname}?rep=${repertorio.shareToken}`;
+    const url = linkCompartilhavel();
+    if (!url) return;
     try {
       await navigator.clipboard.writeText(url);
     } catch {
       window.prompt('Copie o link:', url);
     }
+    setMenuCompartilharAberto(false);
     setLinkCopiado(true);
     setTimeout(() => setLinkCopiado(false), 2000);
+  }
+
+  function compartilharWhatsapp() {
+    const url = linkCompartilhavel();
+    if (!url) return;
+    const texto = `${repertorio.nome} · Canto da Missa\n${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+    setMenuCompartilharAberto(false);
   }
 
   // ressincroniza a ordem local quando o repertório recarrega (ex: depois
@@ -202,14 +233,47 @@ export function RepertorioDetalheTela({
             </p>
           </div>
           <div className="flex shrink-0 gap-2">
+            <button
+              onClick={() => setAjudaAberta(true)}
+              aria-label="Ajuda sobre o repertório"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/16"
+            >
+              <HelpCircle size={16} />
+            </button>
             {repertorio.shareToken && (
-              <button
-                onClick={copiarLink}
-                aria-label="Compartilhar"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/16"
-              >
-                <Share2 size={16} />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setMenuCompartilharAberto((v) => !v)}
+                  aria-label="Compartilhar"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/16"
+                >
+                  <Share2 size={16} />
+                </button>
+                {menuCompartilharAberto && (
+                  <>
+                    <button
+                      aria-hidden
+                      tabIndex={-1}
+                      onClick={() => setMenuCompartilharAberto(false)}
+                      className="fixed inset-0 z-10 cursor-default"
+                    />
+                    <div className="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-[var(--shadow)]">
+                      <button
+                        onClick={compartilharWhatsapp}
+                        className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium hover:bg-[var(--accent-soft)]"
+                      >
+                        <MessageCircle size={15} /> Enviar pelo WhatsApp
+                      </button>
+                      <button
+                        onClick={copiarLink}
+                        className="flex w-full items-center gap-2 border-t border-[var(--border)] px-3 py-2.5 text-left text-sm font-medium hover:bg-[var(--accent-soft)]"
+                      >
+                        <Copy size={15} /> Copiar link
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             )}
             <button
               onClick={baixarRepertorio}
@@ -250,6 +314,48 @@ export function RepertorioDetalheTela({
           </div>
         </div>
         {linkCopiado && <p className="mt-1 text-xs opacity-90">Link copiado!</p>}
+        {ajudaAberta && (
+          <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/50 md:items-center">
+            <button
+              aria-hidden
+              tabIndex={-1}
+              onClick={() => setAjudaAberta(false)}
+              className="fixed inset-0 cursor-default"
+            />
+            <div className="relative z-10 w-full max-w-md rounded-t-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow)] md:rounded-2xl">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-base font-bold">Sobre o repertório</h2>
+                <button onClick={() => setAjudaAberta(false)} aria-label="Fechar">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="space-y-3 text-sm text-[var(--text)]">
+                <p>
+                  O repertório reúne as músicas escolhidas pra uma missa, organizadas pelos
+                  momentos da celebração (ritos) — Entrada, Ato Penitencial, Glória, e assim por
+                  diante.
+                </p>
+                <p>
+                  Ele fica vinculado à escala do ministério: quando a escala é excluída, o
+                  repertório vai junto. Por isso não existe um botão de excluir por aqui — pra
+                  apagar, exclua a escala com um admin do ministério.
+                </p>
+                <p className="flex items-start gap-2">
+                  <Move size={16} className="mt-0.5 shrink-0 text-[var(--accent)]" />
+                  <span>
+                    Dentro de uma música (cifra ou letra), arraste a tela pra esquerda ou direita
+                    pra ir pra próxima ou voltar pra anterior — sem precisar sair e escolher na
+                    lista de novo.
+                  </span>
+                </p>
+                <p>
+                  Toque em uma música pra abrir a cifra no tom já escolhido pra essa missa. Use as
+                  abas Cifra/Letra pra definir com qual modo cada música abre.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         {confirmandoExclusao && (
           <p className="mt-1 text-xs font-semibold opacity-90">
             Toca de novo pra confirmar — essa ação não pode ser desfeita.
