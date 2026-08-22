@@ -564,3 +564,83 @@ $$, 'admin renomeando equipe');
 
 set role postgres;
 reset request.jwt.claim.sub;
+
+-- ==========================================================
+-- 8. Templates de repertório (repertorio_templates + ritos/músicas)
+-- ==========================================================
+-- Mesma regra das demais tabelas do módulo: membro lê, só admin escreve.
+-- Bruno virou admin na seção 3 (linha ~201) — usa o Espião (seção 5) como
+-- membro comum daqui, mesmo padrão da seção 7.
+set role postgres;
+insert into public.musicas (id, slug, title, artist, original_tone, chords_content) values
+  ('99990000-0000-0000-0000-000000000009', 'aleluia-teste', 'Aleluia (teste)', 'Anônimo', 'C', '[C]Aleluia'),
+  ('99990000-0000-0000-0000-00000000000a', 'santo-teste', 'Santo (teste)', 'Anônimo', 'D', '[D]Santo');
+
+insert into public.repertorio_templates (id, ministerio_id, nome)
+values ('11119999-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Missa dominical');
+insert into public.repertorio_template_ritos (id, template_id, nome, ordem)
+values ('22229999-0000-0000-0000-000000000001', '11119999-0000-0000-0000-000000000001', 'Entrada', 0);
+insert into public.repertorio_template_musicas (template_id, musica_id, momento, ordem)
+values ('11119999-0000-0000-0000-000000000001', '99990000-0000-0000-0000-000000000009', 'Entrada', 0);
+
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444'; -- Espião, membro comum
+
+select teste.espera_linhas($$
+  select 1 from public.repertorio_templates where ministerio_id = 'aaaaaaaa-0000-0000-0000-000000000001'
+$$, 1, 'membro lendo os templates do ministério');
+
+select teste.espera_linhas($$
+  select 1 from public.repertorio_template_musicas where template_id = '11119999-0000-0000-0000-000000000001'
+$$, 1, 'membro lendo as músicas do template');
+
+select teste.espera_bloqueio($$
+  insert into public.repertorio_templates (ministerio_id, nome)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'Template pirata')
+$$, 'membro comum criando template');
+
+select teste.espera_bloqueio($$
+  insert into public.repertorio_template_ritos (template_id, nome, ordem)
+  values ('11119999-0000-0000-0000-000000000001', 'Rito pirata', 1)
+$$, 'membro comum adicionando rito ao template');
+
+select teste.espera_bloqueio($$
+  insert into public.repertorio_template_musicas (template_id, musica_id, ordem)
+  values ('11119999-0000-0000-0000-000000000001', '99990000-0000-0000-0000-00000000000a', 1)
+$$, 'membro comum adicionando música ao template');
+
+select teste.espera_bloqueio($$
+  delete from public.repertorio_templates where id = '11119999-0000-0000-0000-000000000001'
+$$, 'membro comum excluindo template');
+
+-- Admin escreve em tudo isso.
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111'; -- Ana, admin
+
+select teste.espera_ok($$
+  insert into public.repertorio_template_ritos (template_id, nome, ordem)
+  values ('11119999-0000-0000-0000-000000000001', 'Ofertório', 1)
+$$, 'admin adicionando rito ao template');
+
+select teste.espera_ok($$
+  update public.repertorio_templates set nome = 'Missa dominical (renomeado)'
+   where id = '11119999-0000-0000-0000-000000000001'
+$$, 'admin renomeando template');
+
+do $$
+declare v_qtd integer;
+begin
+  delete from public.repertorio_templates where id = '11119999-0000-0000-0000-000000000001';
+  select count(*) into v_qtd from public.repertorio_template_ritos where template_id = '11119999-0000-0000-0000-000000000001';
+  if v_qtd <> 0 then
+    raise exception 'FALHOU: excluir o template deveria arrastar os ritos junto (cascade)';
+  end if;
+  select count(*) into v_qtd from public.repertorio_template_musicas where template_id = '11119999-0000-0000-0000-000000000001';
+  if v_qtd <> 0 then
+    raise exception 'FALHOU: excluir o template deveria arrastar as músicas junto (cascade)';
+  end if;
+  raise notice 'ok: excluir template arrasta ritos e músicas (cascade)';
+end
+$$;
+
+set role postgres;
+reset request.jwt.claim.sub;

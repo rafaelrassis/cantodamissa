@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { LayoutTemplate, Plus } from 'lucide-react';
 import { formatarDataCurta } from '../../lib/ministerioUtils';
 import { useCanalErro } from '../../lib/erroContext';
 import type { Repertorio } from '../../lib/repertorios';
 import type { Escala } from '../../types/ministerio';
+import type { RepertorioTemplate } from '../../lib/repertorioTemplatesApi';
+import { AplicarTemplateSheet } from './AplicarTemplateSheet';
 
 interface Props {
   repertorios: Repertorio[];
@@ -12,6 +14,9 @@ interface Props {
   onAbrirRepertorio: (id: string) => void;
   onIrParaEscalas: () => void;
   souAdmin: boolean;
+  templates: RepertorioTemplate[];
+  onAplicarTemplate: (templateId: string, repertorioId: string) => Promise<void>;
+  onAbrirTemplates: () => void;
 }
 
 /**
@@ -30,10 +35,14 @@ export function MinisterioRepertoriosTela({
   onAbrirRepertorio,
   onIrParaEscalas,
   souAdmin,
+  templates,
+  onAplicarTemplate,
+  onAbrirTemplates,
 }: Props) {
   const [escolhendoEvento, setEscolhendoEvento] = useState(false);
   const [criandoParaId, setCriandoParaId] = useState<string | null>(null);
   const [verTudoEventos, setVerTudoEventos] = useState(false);
+  const [repertorioParaTemplate, setRepertorioParaTemplate] = useState<Repertorio | null>(null);
   const { reportar } = useCanalErro();
 
   const comRepertorio = escalas
@@ -52,7 +61,11 @@ export function MinisterioRepertoriosTela({
     try {
       const rep = await garantirRepertorioDaEscala(escala.id, escala.titulo);
       setEscolhendoEvento(false);
-      onAbrirRepertorio(rep.id);
+      if (rep.itens.length === 0 && templates.length > 0) {
+        setRepertorioParaTemplate(rep);
+      } else {
+        onAbrirRepertorio(rep.id);
+      }
     } catch (err) {
       reportar(err, 'Não foi possível criar o repertório desse evento.');
     } finally {
@@ -62,6 +75,18 @@ export function MinisterioRepertoriosTela({
 
   return (
     <div className="flex flex-col gap-3 p-4">
+      {souAdmin && (
+        <button
+          onClick={onAbrirTemplates}
+          className="flex items-center justify-between rounded-xl border border-[var(--border)] p-3 text-left hover:bg-[var(--surface)]"
+        >
+          <span className="flex items-center gap-2 text-sm font-medium text-[var(--text)]">
+            <LayoutTemplate size={16} className="text-[var(--accent)]" /> Templates de repertório
+          </span>
+          <span className="text-xs text-[var(--muted)]">{templates.length} salvo{templates.length === 1 ? '' : 's'}</span>
+        </button>
+      )}
+
       {comRepertorio.length === 0 && (
         <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
           Nenhum repertório ainda. Todo repertório aqui é vinculado a um evento — crie um abaixo.
@@ -150,6 +175,27 @@ export function MinisterioRepertoriosTela({
       <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
         Monte o repertório da missa por rito e compartilhe com o ministério.
       </div>
+
+      {repertorioParaTemplate && (
+        <AplicarTemplateSheet
+          templates={templates}
+          onEscolher={async (templateId) => {
+            const rep = repertorioParaTemplate;
+            setRepertorioParaTemplate(null);
+            try {
+              await onAplicarTemplate(templateId, rep.id);
+            } catch (err) {
+              reportar(err, 'Não foi possível aplicar o template.');
+            }
+            onAbrirRepertorio(rep.id);
+          }}
+          onPular={() => {
+            const rep = repertorioParaTemplate;
+            setRepertorioParaTemplate(null);
+            onAbrirRepertorio(rep.id);
+          }}
+        />
+      )}
     </div>
   );
 }

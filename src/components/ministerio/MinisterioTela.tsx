@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, Home, ListMusic, Megaphone, Settings, Users } from 'lucide-react';
+import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, Home, ListMusic, Megaphone, Plus, Settings, Users } from 'lucide-react';
 import { useRepertorios } from '../../lib/repertoriosContext';
 import { useCanalErro } from '../../lib/erroContext';
 import { useEscalas } from '../../lib/useEscalas';
@@ -20,8 +20,11 @@ import { PanoramaTela } from './PanoramaTela';
 import { AdicionarMinisterioTela } from './AdicionarMinisterioTela';
 import { ConfiguracoesMinisterioTela } from './ConfiguracoesMinisterioTela';
 import { MinisterioRepertoriosTela } from './MinisterioRepertoriosTela';
+import { MinisterioTemplatesRepertorioTela } from './MinisterioTemplatesRepertorioTela';
+import { AdicionarMusicaTemplateSheet } from './AdicionarMusicaTemplateSheet';
 import { RepertorioDetalheTela } from '../RepertorioDetalheTela';
 import { SeletorMinisterioSheet } from './SeletorMinisterioSheet';
+import { useRepertorioTemplates } from '../../lib/useRepertorioTemplates';
 
 interface Props {
   onBack: () => void;
@@ -33,7 +36,7 @@ interface Props {
   escalaInicialId?: string | null;
 }
 
-type SubTela = 'inicio' | 'escalas' | 'equipe' | 'avisos' | 'panorama' | 'repertorio';
+type SubTela = 'inicio' | 'escalas' | 'equipe' | 'avisos' | 'panorama' | 'repertorio' | 'templatesRepertorio';
 
 const ABAS: { id: SubTela; label: string; icon: React.ReactNode }[] = [
   { id: 'inicio', label: 'Início', icon: <Home size={16} /> },
@@ -77,6 +80,9 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
 
   const repertoriosApi = useRepertorios();
   const [repertorioAbertoId, setRepertorioAbertoId] = useState<string | null>(null);
+  const templatesApi = useRepertorioTemplates(ministerio.id);
+  const [templateAbertoId, setTemplateAbertoId] = useState<string | null>(null);
+  const [adicionandoMusicaTemplate, setAdicionandoMusicaTemplate] = useState(false);
   const { reportar: reportarErro } = useCanalErro();
 
   /**
@@ -121,6 +127,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
 
   const escalaAberta = escalasApi.escalas.find((e) => e.id === escalaAbertaId) ?? null;
   const repertorioAberto = repertoriosApi.repertorios.find((r) => r.id === repertorioAbertoId) ?? null;
+  const templateAberto = templatesApi.templates.find((t) => t.id === templateAbertoId) ?? null;
 
   if (formularioEscala) {
     const editando = formularioEscala !== 'nova' ? formularioEscala : undefined;
@@ -175,6 +182,56 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
         onEditar={() => setFormularioEscala(escalaAberta)}
         onExcluir={(id) => comErro(escalasApi.excluir(id), 'Não foi possível excluir a escala.')}
       />
+    );
+  }
+
+  if (templateAberto) {
+    return (
+      <div className="relative">
+        <RepertorioDetalheTela
+          repertorio={{
+            id: templateAberto.id,
+            nome: templateAberto.nome,
+            criadoEm: templateAberto.criadoEm,
+            shareToken: null,
+            escalaId: null,
+            ritos: templateAberto.ritos,
+            itens: templateAberto.itens,
+          }}
+          onBack={() => setTemplateAbertoId(null)}
+          onSelectMusica={(m, tom) => onAbrirMusica(m, null, tom)}
+          removerMusica={(_id, musicaId) => templatesApi.removerMusica(templateAberto.id, musicaId)}
+          moverMusicaParaRito={(_id, musicaId, novoRito) =>
+            templatesApi.moverMusicaParaRito(templateAberto.id, musicaId, novoRito)
+          }
+          adicionarRito={(_id, nome) => templatesApi.adicionarRito(templateAberto.id, nome)}
+          removerRito={(_id, nome) => templatesApi.removerRito(templateAberto.id, nome)}
+          reordenarRitos={(_id, nomesOrdenados) => templatesApi.reordenarRitos(templateAberto.id, nomesOrdenados)}
+          onExcluirRepertorio={async () => {
+            await templatesApi.remover(templateAberto.id);
+            setTemplateAbertoId(null);
+          }}
+          podeEditar={ministerio.souAdmin}
+        />
+        {ministerio.souAdmin && (
+          <button
+            onClick={() => setAdicionandoMusicaTemplate(true)}
+            aria-label="Adicionar música ao template"
+            className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)] shadow-lg"
+          >
+            <Plus size={20} />
+          </button>
+        )}
+        {adicionandoMusicaTemplate && (
+          <AdicionarMusicaTemplateSheet
+            onFechar={() => setAdicionandoMusicaTemplate(false)}
+            onAdicionar={(item) => {
+              templatesApi.adicionarMusica(templateAberto.id, item);
+              setAdicionandoMusicaTemplate(false);
+            }}
+          />
+        )}
+      </div>
     );
   }
 
@@ -310,6 +367,31 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
             garantirRepertorioDaEscala={repertoriosApi.garantirRepertorioDaEscala}
             onAbrirRepertorio={setRepertorioAbertoId}
             onIrParaEscalas={() => setSubTela('escalas')}
+            souAdmin={ministerio.souAdmin}
+            templates={templatesApi.templates}
+            onAplicarTemplate={async (templateId, repertorioId) => {
+              const template = templatesApi.templates.find((t) => t.id === templateId);
+              if (!template) return;
+              const alvo = repertoriosApi.repertorios.find((r) => r.id === repertorioId);
+              const ritosFaltando = template.ritos.filter((r) => !(alvo?.ritos ?? []).includes(r));
+              for (const rito of ritosFaltando) {
+                await repertoriosApi.adicionarRito(repertorioId, rito);
+              }
+              for (const item of template.itens) {
+                await repertoriosApi.adicionarMusica(repertorioId, item);
+              }
+            }}
+            onAbrirTemplates={() => setSubTela('templatesRepertorio')}
+          />
+        )}
+
+        {subTela === 'templatesRepertorio' && (
+          <MinisterioTemplatesRepertorioTela
+            templates={templatesApi.templates}
+            onCriar={templatesApi.criar}
+            onRemover={templatesApi.remover}
+            onAbrirTemplate={setTemplateAbertoId}
+            onBack={() => setSubTela('repertorio')}
             souAdmin={ministerio.souAdmin}
           />
         )}
