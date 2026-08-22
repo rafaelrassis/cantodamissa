@@ -13,7 +13,7 @@ import { useKeepAwake } from '../lib/useKeepAwake';
 import { loadReaderState, saveReaderState } from '../lib/readerState';
 import { useShowChordDiagrams } from '../lib/useShowChordDiagrams';
 import { loadModoExibicao, saveModoExibicao } from '../lib/modoExibicao';
-import { obterRepertorio, type Repertorio } from '../lib/repertorios';
+import { obterRepertorio, RITO_SEM_SECAO, type Repertorio } from '../lib/repertorios';
 import { getMusicaById, registrarVisualizacao } from '../lib/musicasApi';
 import { getCantorSlugById } from '../lib/cantoresApi';
 import { useRepertorios } from '../lib/repertoriosContext';
@@ -159,6 +159,51 @@ export function CifraReader({
     if (!onSelectMusica) return;
     const nova = await getMusicaById(musicaId);
     if (nova) onSelectMusica(nova);
+  }
+
+  // Ordem "achatada" das músicas do repertório — mesma lógica de
+  // agrupar por rito de RepertorioDetalheTela — pra saber qual é a
+  // próxima/anterior ao arrastar a tela pro lado.
+  const itensOrdenados = useMemo(() => {
+    if (!repertorio) return [];
+    const porRito = new Map<string, typeof repertorio.itens>();
+    for (const nome of repertorio.ritos) porRito.set(nome, []);
+    const orfaos: typeof repertorio.itens = [];
+    for (const item of repertorio.itens) {
+      if (item.momento && porRito.has(item.momento)) porRito.get(item.momento)!.push(item);
+      else orfaos.push(item);
+    }
+    const ordemGrupos = [...repertorio.ritos, ...(orfaos.length ? [RITO_SEM_SECAO] : [])];
+    if (orfaos.length) porRito.set(RITO_SEM_SECAO, orfaos);
+    return ordemGrupos.flatMap((nome) => porRito.get(nome) ?? []);
+  }, [repertorio]);
+
+  const indiceAtual = itensOrdenados.findIndex((item) => item.musicaId === musica.id);
+  const musicaAnterior = indiceAtual > 0 ? itensOrdenados[indiceAtual - 1] : null;
+  const proximaMusica =
+    indiceAtual >= 0 && indiceAtual < itensOrdenados.length - 1
+      ? itensOrdenados[indiceAtual + 1]
+      : null;
+
+  // ---------- arrastar pra trocar de música (swipe horizontal) ----------
+  const touchInicio = useRef<{ x: number; y: number } | null>(null);
+  const SWIPE_MIN_PX = 60;
+
+  function onTouchStartCifra(e: React.TouchEvent) {
+    const t = e.touches[0];
+    touchInicio.current = { x: t.clientX, y: t.clientY };
+  }
+
+  function onTouchEndCifra(e: React.TouchEvent) {
+    const inicio = touchInicio.current;
+    touchInicio.current = null;
+    if (!inicio) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - inicio.x;
+    const dy = t.clientY - inicio.y;
+    if (Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+    const alvo = dx < 0 ? proximaMusica : musicaAnterior;
+    if (alvo) trocarParaMusicaDoRepertorio(alvo.musicaId);
   }
 
   // carrega estado salvo (tom/capo/grafia) desta música ao trocar de canção
@@ -389,6 +434,8 @@ export function CifraReader({
 
           <div
             ref={scrollRef}
+            onTouchStart={itensOrdenados.length > 1 ? onTouchStartCifra : undefined}
+            onTouchEnd={itensOrdenados.length > 1 ? onTouchEndCifra : undefined}
             className="cifra-content min-h-0 flex-1 overflow-y-auto px-5 pb-24 pt-8 font-mono md:px-10"
             style={
               {
