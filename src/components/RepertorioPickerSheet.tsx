@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Check, ChevronLeft, ListMusic, Plus, X } from 'lucide-react';
+import { Check, ChevronLeft, LayoutTemplate, ListMusic, Plus, X } from 'lucide-react';
 import { ritoSugeridoParaMomento, type Repertorio } from '../lib/repertorios';
+import { useRepertorioTemplatesGlobais } from '../lib/repertorioTemplatesContext';
 import type { Musica } from '../types/musica';
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
   onFechar: () => void;
 }
 
-type Etapa = 'lista' | 'ritos';
+type Etapa = 'lista' | 'ritos' | 'templates';
 
 /**
  * Bottom sheet de "Salvar" no repertório — layout inspirado no CifraClub
@@ -29,8 +30,20 @@ export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFech
   const [etapa, setEtapa] = useState<Etapa>('lista');
   const [repertorioEscolhido, setRepertorioEscolhido] = useState<Repertorio | null>(null);
   const ritoSugerido = ritoSugeridoParaMomento(musica.momento[0] ?? null);
+  const templatesApi = useRepertorioTemplatesGlobais();
 
   const repertoriosDoMinisterio = repertorios.filter((r) => r.escalaId !== null);
+
+  function adicionarAoTemplate(templateId: string) {
+    templatesApi.adicionarMusica(templateId, {
+      musicaId: musica.id,
+      title: musica.title,
+      artist: musica.artist,
+      tone: musica.originalTone,
+      momento: ritoSugerido,
+    });
+    onFechar();
+  }
 
   const ritosDisponiveis = repertorioEscolhido
     ? repertorioEscolhido.ritos.filter(
@@ -63,14 +76,14 @@ export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFech
           </button>
         </div>
 
-        {etapa === 'lista' &&
-          (repertoriosDoMinisterio.length === 0 ? (
-            <p className="px-2 py-2 text-sm text-[var(--muted)]">
-              Nenhum repertório disponível. É necessário criar um repertório no menu Ministério.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-1">
-              {repertoriosDoMinisterio.map((r) => (
+        {etapa === 'lista' && (
+          <div className="flex flex-col gap-1">
+            {repertoriosDoMinisterio.length === 0 ? (
+              <p className="px-2 py-2 text-sm text-[var(--muted)]">
+                Nenhum repertório disponível. É necessário criar um repertório no menu Ministério.
+              </p>
+            ) : (
+              repertoriosDoMinisterio.map((r) => (
                 <button
                   key={r.id}
                   onClick={() => {
@@ -92,9 +105,57 @@ export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFech
                     <Plus size={15} />
                   </span>
                 </button>
+              ))
+            )}
+
+            {templatesApi.templates.length > 0 && (
+              <button
+                onClick={() => setEtapa('templates')}
+                className="flex items-center gap-3 rounded-xl px-2 py-2.5 text-left hover:bg-[var(--surface)]"
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                  <LayoutTemplate size={18} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold">Templates</span>
+                  <span className="block text-xs text-[var(--muted)]">
+                    {templatesApi.templates.length} disponíve{templatesApi.templates.length === 1 ? 'l' : 'is'}
+                  </span>
+                </span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {etapa === 'templates' && (
+          <div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+              Adicionar a um template
+            </p>
+            <div className="flex flex-col gap-1">
+              {templatesApi.templates.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => adicionarAoTemplate(t.id)}
+                  className="flex items-center gap-3 rounded-xl px-2 py-2.5 text-left hover:bg-[var(--surface)]"
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <LayoutTemplate size={18} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">{t.nome}</span>
+                    <span className="block text-xs text-[var(--muted)]">
+                      {t.itens.length} música{t.itens.length === 1 ? '' : 's'}
+                    </span>
+                  </span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)]">
+                    <Plus size={15} />
+                  </span>
+                </button>
               ))}
             </div>
-          ))}
+          </div>
+        )}
 
         {etapa === 'ritos' && repertorioEscolhido && (
           <div>

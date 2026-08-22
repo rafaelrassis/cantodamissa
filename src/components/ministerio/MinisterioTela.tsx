@@ -24,7 +24,7 @@ import { MinisterioTemplatesRepertorioTela } from './MinisterioTemplatesRepertor
 import { AdicionarMusicaTemplateSheet } from './AdicionarMusicaTemplateSheet';
 import { RepertorioDetalheTela } from '../RepertorioDetalheTela';
 import { SeletorMinisterioSheet } from './SeletorMinisterioSheet';
-import { useRepertorioTemplates } from '../../lib/useRepertorioTemplates';
+import { useRepertorioTemplatesGlobais } from '../../lib/repertorioTemplatesContext';
 
 interface Props {
   onBack: () => void;
@@ -80,7 +80,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
 
   const repertoriosApi = useRepertorios();
   const [repertorioAbertoId, setRepertorioAbertoId] = useState<string | null>(null);
-  const templatesApi = useRepertorioTemplates(ministerio.id);
+  const templatesApi = useRepertorioTemplatesGlobais();
   const [templateAbertoId, setTemplateAbertoId] = useState<string | null>(null);
   const [adicionandoMusicaTemplate, setAdicionandoMusicaTemplate] = useState(false);
   const { reportar: reportarErro } = useCanalErro();

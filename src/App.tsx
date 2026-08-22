@@ -18,6 +18,7 @@ import { useRepertorios } from './lib/repertoriosContext';
 import { useAdminAuth } from './lib/useAdminAuth';
 import { useUserAuth } from './lib/useUserAuth';
 import { useMinisterio } from './lib/useMinisterio';
+import { RepertorioTemplatesProvider } from './lib/RepertorioTemplatesProvider';
 import { useServiceWorkerAtualizacao } from './lib/useServiceWorkerAtualizacao';
 import { useCanalErro } from './lib/erroContext';
 import type { Musica, TempoLiturgico } from './types/musica';
@@ -177,7 +178,7 @@ function App() {
 
   function comAlerta(conteudo: React.ReactNode, opts?: { semNav?: boolean }) {
     return (
-      <>
+      <RepertorioTemplatesProvider ministerioId={ministerio.pertence ? ministerio.id : null}>
         {/* Falha de qualquer ação do app (ex.: gravação barrada por falta
             de permissão), reportada pelo canal único — ver erroContext.ts. */}
         {erro && <AlertaTopo tipo="erro" mensagem={erro} onFechar={limparErro} />}
@@ -203,7 +204,7 @@ function App() {
             />
           </>
         )}
-      </>
+      </RepertorioTemplatesProvider>
     );
   }
 
