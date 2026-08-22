@@ -179,6 +179,7 @@ export function CifraReader({
   }, [repertorio]);
 
   const indiceAtual = itensOrdenados.findIndex((item) => item.musicaId === musica.id);
+  const ritoAtual = indiceAtual >= 0 ? itensOrdenados[indiceAtual].momento : null;
   const musicaAnterior = indiceAtual > 0 ? itensOrdenados[indiceAtual - 1] : null;
   const proximaMusica =
     indiceAtual >= 0 && indiceAtual < itensOrdenados.length - 1
@@ -450,7 +451,9 @@ export function CifraReader({
                   some conforme o usuário rola pra baixo (não fica fixo/preso). */}
               <header className="-mx-5 -mt-8 mb-6 bg-[var(--accent)] px-4 pb-3 pt-4 font-sans text-[var(--accent-fg)] md:hidden">
                 <button onClick={onClose} className="mb-1 text-xs opacity-80">
-                  {repertorio ? `← Repertório · ${repertorio.nome}` : '← Voltar'}
+                  {repertorio
+                    ? `← Repertório · ${repertorio.nome}${ritoAtual ? ` · ${ritoAtual}` : ''}`
+                    : '← Voltar'}
                 </button>
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
