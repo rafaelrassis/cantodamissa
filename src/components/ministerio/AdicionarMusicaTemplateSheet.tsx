@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { searchMusicas } from '../../lib/musicasApi';
-import { ritoSugeridoParaMomento, type ItemRepertorio } from '../../lib/repertorios';
+import { RITOS_PADRAO, ritoSugeridoParaMomento, type ItemRepertorio } from '../../lib/repertorios';
 import type { Musica } from '../../types/musica';
+
+const RITO_AUTOMATICO = 'Automático (sugestão da música)';
 
 interface Props {
   onAdicionar: (item: ItemRepertorio) => void;
@@ -11,12 +13,14 @@ interface Props {
 
 /** Busca + adiciona música direto num template (o template não tem cifra
  * reader próprio — diferente do repertório de evento, que ganha músicas
- * pelo botão "Salvar" na leitura da cifra). Tom e rito nascem do padrão
- * da música; dá pra ajustar depois no template como num repertório normal. */
+ * pelo botão "Salvar" na leitura da cifra). Tom nasce do padrão da música;
+ * rito pode ser escolhido manualmente (chip) ou deixado automático, e dá
+ * pra ajustar depois no template como num repertório normal. */
 export function AdicionarMusicaTemplateSheet({ onAdicionar, onFechar }: Props) {
   const [termo, setTermo] = useState('');
   const [resultados, setResultados] = useState<Musica[]>([]);
   const [buscando, setBuscando] = useState(false);
+  const [ritoSelecionado, setRitoSelecionado] = useState<string>(RITO_AUTOMATICO);
 
   useEffect(() => {
     let ativo = true;
@@ -58,6 +62,25 @@ export function AdicionarMusicaTemplateSheet({ onAdicionar, onFechar }: Props) {
           />
         </div>
 
+        <div className="mb-3">
+          <label className="mb-1.5 block text-xs font-medium text-[var(--muted)]">Rito</label>
+          <div className="flex flex-wrap gap-1.5">
+            {[RITO_AUTOMATICO, ...RITOS_PADRAO].map((r) => (
+              <button
+                key={r}
+                onClick={() => setRitoSelecionado(r)}
+                className={`rounded-full border px-2.5 py-1 text-xs font-medium ${
+                  ritoSelecionado === r
+                    ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
+                    : 'border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface)]'
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="flex-1 overflow-y-auto">
           {buscando && <p className="px-2 py-2 text-sm text-[var(--muted)]">Buscando…</p>}
           {!buscando && resultados.length === 0 && (
@@ -73,7 +96,10 @@ export function AdicionarMusicaTemplateSheet({ onAdicionar, onFechar }: Props) {
                     title: m.title,
                     artist: m.artist,
                     tone: m.originalTone,
-                    momento: ritoSugeridoParaMomento(m.momento[0] ?? null),
+                    momento:
+                      ritoSelecionado === RITO_AUTOMATICO
+                        ? ritoSugeridoParaMomento(m.momento[0] ?? null)
+                        : ritoSelecionado,
                   })
                 }
                 className="flex items-center justify-between rounded-xl px-2 py-2.5 text-left hover:bg-[var(--surface)]"
