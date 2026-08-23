@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check, ChevronLeft, LayoutTemplate, ListMusic, Plus, X } from 'lucide-react';
 import { ritoSugeridoParaMomento, type Repertorio } from '../lib/repertorios';
 import { useRepertorioTemplatesGlobais } from '../lib/repertorioTemplatesContext';
+import type { RepertorioTemplate } from '../lib/repertorioTemplatesApi';
 import type { Musica } from '../types/musica';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 type Etapa = 'lista' | 'ritos' | 'templates';
+type Alvo = { tipo: 'repertorio'; dado: Repertorio } | { tipo: 'template'; dado: RepertorioTemplate };
 
 /**
  * Bottom sheet de "Salvar" no repertório — layout inspirado no CifraClub
@@ -28,27 +30,24 @@ type Etapa = 'lista' | 'ritos' | 'templates';
  */
 export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFechar }: Props) {
   const [etapa, setEtapa] = useState<Etapa>('lista');
-  const [repertorioEscolhido, setRepertorioEscolhido] = useState<Repertorio | null>(null);
+  const [alvo, setAlvo] = useState<Alvo | null>(null);
   const ritoSugerido = ritoSugeridoParaMomento(musica.momento[0] ?? null);
   const templatesApi = useRepertorioTemplatesGlobais();
 
   const repertoriosDoMinisterio = repertorios.filter((r) => r.escalaId !== null);
 
-  function adicionarAoTemplate(templateId: string) {
+  function adicionarAoTemplate(templateId: string, rito: string) {
     templatesApi.adicionarMusica(templateId, {
       musicaId: musica.id,
       title: musica.title,
       artist: musica.artist,
       tone: musica.originalTone,
-      momento: ritoSugerido,
+      momento: rito,
     });
-    onFechar();
   }
 
-  const ritosDisponiveis = repertorioEscolhido
-    ? repertorioEscolhido.ritos.filter(
-        (r) => !repertorioEscolhido.itens.some((i) => i.momento === r)
-      )
+  const ritosDisponiveis = alvo
+    ? alvo.dado.ritos.filter((r) => !alvo.dado.itens.some((i) => i.momento === r))
     : [];
 
   return (
@@ -87,7 +86,7 @@ export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFech
                 <button
                   key={r.id}
                   onClick={() => {
-                    setRepertorioEscolhido(r);
+                    setAlvo({ tipo: 'repertorio', dado: r });
                     setEtapa('ritos');
                   }}
                   className="flex items-center gap-3 rounded-xl px-2 py-2.5 text-left hover:bg-[var(--surface)]"
@@ -136,7 +135,10 @@ export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFech
               {templatesApi.templates.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => adicionarAoTemplate(t.id)}
+                  onClick={() => {
+                    setAlvo({ tipo: 'template', dado: t });
+                    setEtapa('ritos');
+                  }}
                   className="flex items-center gap-3 rounded-xl px-2 py-2.5 text-left hover:bg-[var(--surface)]"
                 >
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
@@ -157,20 +159,26 @@ export function RepertorioPickerSheet({ musica, repertorios, onAdicionar, onFech
           </div>
         )}
 
-        {etapa === 'ritos' && repertorioEscolhido && (
+        {etapa === 'ritos' && alvo && (
           <div>
             <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-              Rito em {repertorioEscolhido.nome}
+              Rito em {alvo.dado.nome}
             </p>
             {ritosDisponiveis.length === 0 ? (
-              <p className="px-2 py-2 text-sm text-[var(--muted)]">Todos os ritos deste repertório já têm música.</p>
+              <p className="px-2 py-2 text-sm text-[var(--muted)]">
+                Todos os ritos {alvo.tipo === 'repertorio' ? 'deste repertório' : 'deste template'} já têm música.
+              </p>
             ) : (
               <div className="flex flex-col gap-1">
                 {ritosDisponiveis.map((rito) => (
                   <button
                     key={rito}
                     onClick={() => {
-                      onAdicionar(repertorioEscolhido.id, rito);
+                      if (alvo.tipo === 'repertorio') {
+                        onAdicionar(alvo.dado.id, rito);
+                      } else {
+                        adicionarAoTemplate(alvo.dado.id, rito);
+                      }
                       onFechar();
                     }}
                     className="flex items-center justify-between rounded-xl px-2 py-2.5 text-left text-sm hover:bg-[var(--surface)]"
