@@ -249,6 +249,9 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
         onExcluirRepertorio={repertoriosApi.remover}
         podeEditar={ministerio.souAdmin}
         ocultarExcluir
+        souAdmin={ministerio.souAdmin}
+        templatesDisponiveis={templatesApi.templates}
+        onAplicarTemplate={(templateId) => templatesApi.aplicarAoRepertorio(templateId, repertorioAberto.id)}
       />
     );
   }

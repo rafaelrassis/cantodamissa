@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  CloudDownload,
   ChevronLeft,
   Copy,
-  Download,
   FileText,
   GripVertical,
   HelpCircle,
+  LayoutTemplate,
   MessageCircle,
   Move,
   Music,
@@ -20,6 +19,7 @@ import type { Repertorio } from '../lib/repertorios';
 import { RITO_SEM_SECAO } from '../lib/repertorios';
 import { getMusicaById } from '../lib/musicasApi';
 import { saveModoExibicao, type ModoExibicao } from '../lib/modoExibicao';
+import type { RepertorioTemplate } from '../lib/repertorioTemplatesApi';
 
 interface Props {
   repertorio: Repertorio;
@@ -39,6 +39,11 @@ interface Props {
    * música. Usado quando um membro não-admin abre o repertório pela aba
    * Ministério. Default true (demais usos do app seguem editáveis). */
   podeEditar?: boolean;
+  /** Botão "Aplicar template" (admin) — só faz sentido em repertório de
+   * evento, nunca dentro de um template em si. Omitido = botão escondido. */
+  templatesDisponiveis?: RepertorioTemplate[];
+  onAplicarTemplate?: (templateId: string) => Promise<void>;
+  souAdmin?: boolean;
 }
 
 /**
@@ -59,14 +64,18 @@ export function RepertorioDetalheTela({
   onExcluirRepertorio,
   ocultarExcluir,
   podeEditar = true,
+  templatesDisponiveis,
+  onAplicarTemplate,
+  souAdmin,
 }: Props) {
   const [novoRito, setNovoRito] = useState('');
   const [ordem, setOrdem] = useState<string[]>(repertorio.ritos);
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
-  const [statusOffline, setStatusOffline] = useState<'ocioso' | 'baixando' | 'pronto' | 'erro'>('ocioso');
   const [menuCompartilharAberto, setMenuCompartilharAberto] = useState(false);
   const [ajudaAberta, setAjudaAberta] = useState(false);
+  const [escolhendoTemplate, setEscolhendoTemplate] = useState(false);
+  const [aplicandoTemplate, setAplicandoTemplate] = useState(false);
   // aba Cifra/Letra: cada música guarda seu próprio modo (lib/modoExibicao),
   // essa aba só define com qual modo a música é aberta a partir daqui
   const [abaModo, setAbaModo] = useState<ModoExibicao>('cifra');
@@ -139,47 +148,14 @@ export function RepertorioDetalheTela({
     if (musica) onSelectMusica(musica, item.tone);
   }
 
-  function baixarRepertorio() {
-    const linhas: string[] = [repertorio.nome, ''];
-    for (const nome of gruposParaExibir) {
-      const itens = itensPorRito.get(nome) ?? [];
-      if (itens.length === 0) continue;
-      linhas.push(`## ${nome}`);
-      for (const item of itens) {
-        linhas.push(`- ${item.title}${item.artist ? ` — ${item.artist}` : ''} (tom: ${item.tone})`);
-      }
-      linhas.push('');
-    }
-    const blob = new Blob([linhas.join('\n')], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${repertorio.nome.replace(/[^\w-]+/g, '_')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  /**
-   * "Baixar pra usar offline" de verdade: força buscar (e cachear via
-   * service worker — ver runtimeCaching em vite.config.ts) a cifra
-   * completa de cada música do repertório. Sem isso, só a lista (nome,
-   * cantor, tom) fica salva — a letra/cifra em si só é buscada quando o
-   * ministro abre a música pra tocar, o que falha sem sinal se nunca foi
-   * aberta antes. Pensado pro caso de uso real: abrir essa tela em casa
-   * (com wifi) antes de ir pra missa.
-   */
-  async function disponibilizarOffline() {
-    setStatusOffline('baixando');
+  async function aplicarTemplate(templateId: string) {
+    if (!onAplicarTemplate) return;
+    setAplicandoTemplate(true);
     try {
-      await Promise.all(repertorio.itens.map((item) => getMusicaById(item.musicaId)));
-      setStatusOffline('pronto');
-      setTimeout(() => setStatusOffline('ocioso'), 3000);
-    } catch (err) {
-      console.error('disponibilizar offline:', err);
-      setStatusOffline('erro');
-      setTimeout(() => setStatusOffline('ocioso'), 3000);
+      await onAplicarTemplate(templateId);
+    } finally {
+      setAplicandoTemplate(false);
+      setEscolhendoTemplate(false);
     }
   }
 
@@ -275,30 +251,16 @@ export function RepertorioDetalheTela({
                 )}
               </div>
             )}
-            <button
-              onClick={baixarRepertorio}
-              aria-label="Baixar repertório"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/16"
-            >
-              <Download size={16} />
-            </button>
-            <button
-              onClick={disponibilizarOffline}
-              disabled={statusOffline === 'baixando'}
-              aria-label="Disponibilizar offline"
-              title={
-                statusOffline === 'pronto'
-                  ? 'Disponível offline'
-                  : statusOffline === 'erro'
-                    ? 'Falha ao baixar — tente com sinal'
-                    : 'Baixar pra usar sem internet'
-              }
-              className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                statusOffline === 'pronto' ? 'bg-emerald-500' : statusOffline === 'erro' ? 'bg-red-500' : 'bg-white/16'
-              }`}
-            >
-              <CloudDownload size={16} className={statusOffline === 'baixando' ? 'animate-pulse' : ''} />
-            </button>
+            {souAdmin && templatesDisponiveis && templatesDisponiveis.length > 0 && (
+              <button
+                onClick={() => setEscolhendoTemplate(true)}
+                aria-label="Aplicar template"
+                title="Aplicar template"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/16"
+              >
+                <LayoutTemplate size={16} />
+              </button>
+            )}
             {podeEditar && !ocultarExcluir && (
               <button
                 onClick={excluir}
@@ -352,6 +314,42 @@ export function RepertorioDetalheTela({
                   Toque em uma música pra abrir a cifra no tom já escolhido pra essa missa. Use as
                   abas Cifra/Letra pra definir com qual modo cada música abre.
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {escolhendoTemplate && templatesDisponiveis && (
+          <div onClick={() => !aplicandoTemplate && setEscolhendoTemplate(false)} className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 font-sans md:items-center">
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="max-h-[80vh] w-full max-w-sm overflow-y-auto rounded-t-2xl bg-[var(--bg)] p-6 text-[var(--text)] md:rounded-2xl"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold">Aplicar template</h2>
+                <button onClick={() => setEscolhendoTemplate(false)} aria-label="Fechar" className="text-[var(--muted)]">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="flex flex-col gap-1">
+                {templatesDisponiveis.map((t) => (
+                  <button
+                    key={t.id}
+                    disabled={aplicandoTemplate}
+                    onClick={() => aplicarTemplate(t.id)}
+                    className="flex items-center gap-3 rounded-xl px-2 py-2.5 text-left hover:bg-[var(--surface)] disabled:opacity-50"
+                  >
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                      <LayoutTemplate size={18} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">{t.nome}</span>
+                      <span className="block text-xs text-[var(--muted)]">
+                        {t.itens.length} música{t.itens.length === 1 ? '' : 's'}
+                      </span>
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
           </div>
