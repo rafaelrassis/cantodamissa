@@ -197,12 +197,13 @@ export async function moverMusicaParaRito(templateId: string, musicaId: string, 
 }
 
 /**
- * Copia ritos + músicas do template pro repertório de um evento —
+ * Substitui ritos + músicas do repertório de um evento pelos do template —
  * oferecido ao criar o repertório de uma Escala nova (ver
- * AplicarTemplateSheet). Só acrescenta: ritos do template que o
- * repertório ainda não tem entram no fim da lista dele, e cada música do
- * template vira um item novo (mesma regra de "duplicata ignora" de
- * repertoriosApi.adicionarMusica cobre o caso de aplicar duas vezes).
+ * AplicarTemplateSheet) e ao aplicar manualmente num já existente (ver
+ * RepertorioDetalheTela). "Aplicar" é uma cópia de verdade: apaga as
+ * músicas e os ritos que o repertório já tinha antes de trazer os do
+ * template, senão o repertório vira uma mistura dos dois e a ordem dos
+ * ritos não bate com a do template.
  */
 export async function aplicarAoRepertorio(templateId: string, repertorioId: string): Promise<void> {
   const template = await obterTemplate(templateId);
@@ -211,10 +212,18 @@ export async function aplicarAoRepertorio(templateId: string, repertorioId: stri
   const repertorioAtual = await repertoriosApi.obterRepertorio(repertorioId);
   if (!repertorioAtual) throw new Error('aplicarAoRepertorio: repertório não encontrado');
 
-  const ritosFaltando = template.ritos.filter((r) => !repertorioAtual.ritos.includes(r));
-  for (const rito of ritosFaltando) {
+  await Promise.all(
+    repertorioAtual.itens.map((item) => repertoriosApi.removerMusica(repertorioId, item.musicaId))
+  );
+
+  const ritosParaRemover = repertorioAtual.ritos.filter((r) => !template.ritos.includes(r));
+  await Promise.all(ritosParaRemover.map((r) => repertoriosApi.removerRito(repertorioId, r)));
+
+  const ritosParaAdicionar = template.ritos.filter((r) => !repertorioAtual.ritos.includes(r));
+  for (const rito of ritosParaAdicionar) {
     await repertoriosApi.adicionarRito(repertorioId, rito);
   }
+  await repertoriosApi.reordenarRitos(repertorioId, template.ritos);
 
   for (const item of template.itens) {
     await repertoriosApi.adicionarMusica(repertorioId, item);
