@@ -157,6 +157,7 @@ export function useRepertoriosEstado() {
   return {
     repertorios,
     carregando,
+    recarregar,
     criar,
     renomear,
     remover,

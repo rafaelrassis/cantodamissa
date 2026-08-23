@@ -251,7 +251,10 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
         ocultarExcluir
         souAdmin={ministerio.souAdmin}
         templatesDisponiveis={templatesApi.templates}
-        onAplicarTemplate={(templateId) => templatesApi.aplicarAoRepertorio(templateId, repertorioAberto.id)}
+        onAplicarTemplate={async (templateId) => {
+          await templatesApi.aplicarAoRepertorio(templateId, repertorioAberto.id);
+          await repertoriosApi.recarregar();
+        }}
       />
     );
   }
