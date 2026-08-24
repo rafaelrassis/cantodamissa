@@ -44,6 +44,10 @@ interface Props {
   templatesDisponiveis?: RepertorioTemplate[];
   onAplicarTemplate?: (templateId: string) => Promise<void>;
   souAdmin?: boolean;
+  /** Aba (Cifra/Letra) com que a tela abre. Acesso público da assembleia
+   * (via igreja) abre em 'letra' por padrão — cifra continua disponível
+   * no toggle. Default 'cifra' pros demais usos do app. */
+  abaInicial?: ModoExibicao;
 }
 
 /**
@@ -67,6 +71,7 @@ export function RepertorioDetalheTela({
   templatesDisponiveis,
   onAplicarTemplate,
   souAdmin,
+  abaInicial = 'cifra',
 }: Props) {
   const [novoRito, setNovoRito] = useState('');
   const [ordem, setOrdem] = useState<string[]>(repertorio.ritos);
@@ -78,7 +83,7 @@ export function RepertorioDetalheTela({
   const [aplicandoTemplate, setAplicandoTemplate] = useState(false);
   // aba Cifra/Letra: cada música guarda seu próprio modo (lib/modoExibicao),
   // essa aba só define com qual modo a música é aberta a partir daqui
-  const [abaModo, setAbaModo] = useState<ModoExibicao>('cifra');
+  const [abaModo, setAbaModo] = useState<ModoExibicao>(abaInicial);
 
   async function excluir() {
     if (!confirmandoExclusao) {

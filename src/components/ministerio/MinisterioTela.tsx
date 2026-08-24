@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, Home, ListMusic, Megaphone, Plus, Settings, Users } from 'lucide-react';
 import { useRepertorios } from '../../lib/repertoriosContext';
 import { useCanalErro } from '../../lib/erroContext';
@@ -25,6 +25,7 @@ import { AdicionarMusicaTemplateSheet } from './AdicionarMusicaTemplateSheet';
 import { RepertorioDetalheTela } from '../RepertorioDetalheTela';
 import { SeletorMinisterioSheet } from './SeletorMinisterioSheet';
 import { useRepertorioTemplatesGlobais } from '../../lib/repertorioTemplatesContext';
+import { obterIgrejaDoMinisterio, type Igreja } from '../../lib/igrejas';
 
 interface Props {
   onBack: () => void;
@@ -74,6 +75,15 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
   const [escalaAbertaId, setEscalaAbertaId] = useState<string | null>(escalaInicialId ?? null);
   const [formularioEscala, setFormularioEscala] = useState<'nova' | Escala | null>(null);
   const [configuracoesAbertas, setConfiguracoesAbertas] = useState(false);
+  const [igreja, setIgreja] = useState<Igreja | null>(null);
+
+  useEffect(() => {
+    if (!ministerio.id) {
+      setIgreja(null);
+      return;
+    }
+    obterIgrejaDoMinisterio(ministerio.id).then(setIgreja);
+  }, [ministerio.id]);
   const [seletorMinisterioAberto, setSeletorMinisterioAberto] = useState(false);
   const [adicionandoMinisterio, setAdicionandoMinisterio] = useState(false);
   const [erroCadastroMinisterio, setErroCadastroMinisterio] = useState<string | null>(null);
@@ -259,7 +269,7 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
     );
   }
 
-  if (configuracoesAbertas) {
+  if (configuracoesAbertas && ministerio.id) {
     return (
       <ConfiguracoesMinisterioTela
         nome={ministerio.nome}
@@ -267,6 +277,9 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
         souAdmin={ministerio.souAdmin}
         qtdAdmins={ministerio.qtdAdmins}
         codigoConvite={ministerio.codigoConvite}
+        ministerioId={ministerio.id}
+        igreja={igreja}
+        onIgrejaAlterada={setIgreja}
         onBack={() => setConfiguracoesAbertas(false)}
         onRenomear={ministerio.renomear}
         onAtualizarFoto={ministerio.atualizarFoto}

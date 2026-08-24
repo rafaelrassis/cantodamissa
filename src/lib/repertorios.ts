@@ -113,7 +113,7 @@ function salvarMock(lista: Repertorio[]): void {
 
 // ---------- Mapeamento Supabase -> domínio ----------
 
-interface LinhaRepertorioSupabase {
+export interface LinhaRepertorioSupabase {
   id: string;
   nome: string;
   created_at: string;
@@ -134,7 +134,7 @@ const SELECT_REPERTORIO =
   'repertorio_ritos(nome, ordem), ' +
   'repertorio_musicas(musica_id, momento, tom_escolhido, ordem, musicas(title, artist, original_tone))';
 
-function mapearRepertorio(row: LinhaRepertorioSupabase): Repertorio {
+export function mapearRepertorio(row: LinhaRepertorioSupabase): Repertorio {
   const itens = [...row.repertorio_musicas]
     .sort((a, b) => a.ordem - b.ordem)
     .map((r) => ({

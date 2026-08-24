@@ -5,6 +5,9 @@ import { CalendarioLiturgico } from './components/CalendarioLiturgico';
 import { TopMusicasTela } from './components/TopMusicasTela';
 import { TopArtistasTela } from './components/TopArtistasTela';
 import { RepertorioDetalheTela } from './components/RepertorioDetalheTela';
+import { IgrejaPublicaTela } from './components/IgrejaPublicaTela';
+import { obterRepertorioPublico } from './lib/igrejas';
+import type { Repertorio } from './lib/repertorios';
 import { CantorTela } from './components/CantorTela';
 import { ArtistaTela } from './components/ArtistaTela';
 import { BuscaTela } from './components/BuscaTela';
@@ -51,7 +54,8 @@ type Tela =
   | 'cantor'
   | 'artista'
   | 'busca'
-  | 'ministerio';
+  | 'ministerio'
+  | 'igreja-publica';
 
 function App() {
   const [tela, setTela] = useState<Tela>('home');
@@ -64,6 +68,11 @@ function App() {
   // Atalho "Ver escala" a partir do bloco "Meus próximos repertórios" na
   // Início — abre o módulo Ministério já direto na EscalaDetalheTela.
   const [escalaAlvoId, setEscalaAlvoId] = useState<string | null>(null);
+  // Acesso público da assembleia via igreja (busca por nome/código ou
+  // link direto `?igreja=CODIGO`) — repertório aberto em modo letra,
+  // sem login, sem edição. Ver lib/igrejas.ts.
+  const [igrejaCodigoInicial, setIgrejaCodigoInicial] = useState<string | null>(null);
+  const [repertorioPublico, setRepertorioPublico] = useState<Repertorio | null>(null);
   const { theme, toggleTheme, corPersonalizada, definirCorPersonalizada } = useTheme();
   const [fontSize, setFontSize] = useState(DEFAULT_FONT);
   const {
@@ -156,6 +165,21 @@ function App() {
     const slug = new URLSearchParams(window.location.search).get('cantor');
     if (slug) abrirCantor(slug);
   }, []);
+
+  // Link direto pra igreja via URL (ex: cartaz com QR code na entrada da
+  // paróquia): `?igreja=CODIGO` abre já a lista de repertórios abertos.
+  useEffect(() => {
+    const codigo = new URLSearchParams(window.location.search).get('igreja');
+    if (codigo) {
+      setIgrejaCodigoInicial(codigo);
+      setTela('igreja-publica');
+    }
+  }, []);
+
+  async function abrirRepertorioPublico(id: string) {
+    const rep = await obterRepertorioPublico(id);
+    setRepertorioPublico(rep);
+  }
 
   // Alerta global: admin do ministério com solicitação de ingresso
   // pendente, visível em qualquer tela — exceto dentro do leitor de
@@ -303,6 +327,37 @@ function App() {
   if (tela === 'artista' && artistaNome) {
     return comAlerta(
       <ArtistaTela artista={artistaNome} onBack={() => setTela('home')} onSelectMusica={(m) => abrirMusica(m)} />
+    );
+  }
+
+  if (tela === 'igreja-publica' && repertorioPublico) {
+    return (
+      <RepertorioDetalheTela
+        repertorio={repertorioPublico}
+        onBack={() => setRepertorioPublico(null)}
+        onSelectMusica={(m, tom) => abrirMusica(m, null, tom)}
+        removerMusica={() => {}}
+        moverMusicaParaRito={() => {}}
+        adicionarRito={() => {}}
+        removerRito={() => {}}
+        reordenarRitos={() => {}}
+        onExcluirRepertorio={async () => {}}
+        podeEditar={false}
+        abaInicial="letra"
+      />
+    );
+  }
+
+  if (tela === 'igreja-publica') {
+    return (
+      <IgrejaPublicaTela
+        codigoInicial={igrejaCodigoInicial}
+        onBack={() => {
+          setIgrejaCodigoInicial(null);
+          setTela('home');
+        }}
+        onAbrirRepertorio={abrirRepertorioPublico}
+      />
     );
   }
 

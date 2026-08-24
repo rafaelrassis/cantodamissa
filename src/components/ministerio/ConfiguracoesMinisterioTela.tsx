@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { AlertTriangle, ChevronLeft, Copy, LogOut, Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { AlertTriangle, ChevronLeft, Church, Copy, LogOut, Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { buscarIgrejas, criarIgreja, definirIgrejaDoMinisterio, type Igreja } from '../../lib/igrejas';
 
 interface Props {
   nome: string;
@@ -7,6 +8,9 @@ interface Props {
   souAdmin: boolean;
   qtdAdmins: number;
   codigoConvite: string;
+  ministerioId: string;
+  igreja: Igreja | null;
+  onIgrejaAlterada: (igreja: Igreja | null) => void;
   onBack: () => void;
   onRenomear: (nome: string) => void;
   onAtualizarFoto: (emoji: string | null) => void;
@@ -27,6 +31,9 @@ export function ConfiguracoesMinisterioTela({
   souAdmin,
   qtdAdmins,
   codigoConvite,
+  ministerioId,
+  igreja,
+  onIgrejaAlterada,
   onBack,
   onRenomear,
   onAtualizarFoto,
@@ -41,6 +48,72 @@ export function ConfiguracoesMinisterioTela({
   const [copiado, setCopiado] = useState(false);
   const [confirmandoSaida, setConfirmandoSaida] = useState(false);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+
+  // Igreja vinculada: busca por nome/código pra linkar, ou cadastro rápido
+  // se ainda não existir. Ver lib/igrejas.ts (RPCs públicas + RLS admin).
+  const [editandoIgreja, setEditandoIgreja] = useState(false);
+  const [termoIgreja, setTermoIgreja] = useState('');
+  const [resultadosIgreja, setResultadosIgreja] = useState<Igreja[]>([]);
+  const [criandoIgreja, setCriandoIgreja] = useState(false);
+  const [novoCodigo, setNovoCodigo] = useState('');
+  const [novaCidade, setNovaCidade] = useState('');
+  const [salvandoIgreja, setSalvandoIgreja] = useState(false);
+  const [erroIgreja, setErroIgreja] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (termoIgreja.trim().length < 2) {
+      setResultadosIgreja([]);
+      return;
+    }
+    const id = setTimeout(() => buscarIgrejas(termoIgreja).then(setResultadosIgreja), 250);
+    return () => clearTimeout(id);
+  }, [termoIgreja]);
+
+  async function vincular(igrejaEscolhida: Igreja) {
+    setSalvandoIgreja(true);
+    setErroIgreja(null);
+    try {
+      await definirIgrejaDoMinisterio(ministerioId, igrejaEscolhida.id);
+      onIgrejaAlterada(igrejaEscolhida);
+      setEditandoIgreja(false);
+      setTermoIgreja('');
+      setResultadosIgreja([]);
+    } catch (e) {
+      setErroIgreja(e instanceof Error ? e.message : 'Falha ao vincular igreja.');
+    } finally {
+      setSalvandoIgreja(false);
+    }
+  }
+
+  async function criarEVincular() {
+    if (!termoIgreja.trim() || !novoCodigo.trim()) return;
+    setSalvandoIgreja(true);
+    setErroIgreja(null);
+    try {
+      const nova = await criarIgreja(termoIgreja, novoCodigo, novaCidade);
+      await definirIgrejaDoMinisterio(ministerioId, nova.id);
+      onIgrejaAlterada(nova);
+      setEditandoIgreja(false);
+      setCriandoIgreja(false);
+      setTermoIgreja('');
+      setNovoCodigo('');
+      setNovaCidade('');
+    } catch (e) {
+      setErroIgreja(e instanceof Error ? e.message : 'Falha ao criar igreja. O código pode já estar em uso.');
+    } finally {
+      setSalvandoIgreja(false);
+    }
+  }
+
+  async function desvincular() {
+    setSalvandoIgreja(true);
+    try {
+      await definirIgrejaDoMinisterio(ministerioId, null);
+      onIgrejaAlterada(null);
+    } finally {
+      setSalvandoIgreja(false);
+    }
+  }
 
   const podeSair = !souAdmin || qtdAdmins > 1;
 
@@ -149,6 +222,138 @@ export function ConfiguracoesMinisterioTela({
             </div>
             {copiado && <p className="mt-1 text-xs text-[var(--accent)]">Copiado!</p>}
             <p className="mt-1 text-xs text-[var(--muted)]">Gerar novo código invalida o anterior.</p>
+          </div>
+        )}
+
+        {souAdmin && (
+          <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5">
+            <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+              Igreja vinculada
+            </p>
+            <p className="mt-0.5 text-xs text-[var(--muted)]">
+              A assembleia acessa o repertório da missa buscando por essa igreja, sem login.
+            </p>
+
+            {igreja && !editandoIgreja && (
+              <div className="mt-2 flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Church size={16} className="text-[var(--accent)]" />
+                  <span>
+                    <span className="block text-sm font-semibold">{igreja.nome}</span>
+                    <span className="block font-mono text-xs text-[var(--muted)]">{igreja.codigo}</span>
+                  </span>
+                </span>
+                <button
+                  onClick={() => setEditandoIgreja(true)}
+                  className="text-xs font-semibold text-[var(--accent)]"
+                >
+                  Trocar
+                </button>
+              </div>
+            )}
+
+            {!igreja && !editandoIgreja && (
+              <button
+                onClick={() => setEditandoIgreja(true)}
+                className="mt-2 flex items-center gap-2 text-sm font-semibold text-[var(--accent)]"
+              >
+                <Church size={16} /> Vincular igreja
+              </button>
+            )}
+
+            {editandoIgreja && (
+              <div className="mt-2 space-y-2">
+                <input
+                  autoFocus
+                  value={termoIgreja}
+                  onChange={(e) => {
+                    setTermoIgreja(e.target.value);
+                    setCriandoIgreja(false);
+                  }}
+                  placeholder="Nome da igreja"
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+                />
+
+                {!criandoIgreja && resultadosIgreja.length > 0 && (
+                  <ul className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)]">
+                    {resultadosIgreja.map((i) => (
+                      <li key={i.id}>
+                        <button
+                          onClick={() => vincular(i)}
+                          disabled={salvandoIgreja}
+                          className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-[var(--bg)]"
+                        >
+                          <span>{i.nome}</span>
+                          <span className="font-mono text-xs text-[var(--muted)]">{i.codigo}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {!criandoIgreja && termoIgreja.trim().length >= 2 && resultadosIgreja.length === 0 && (
+                  <button
+                    onClick={() => setCriandoIgreja(true)}
+                    className="text-xs font-semibold text-[var(--accent)]"
+                  >
+                    Não encontrei — cadastrar "{termoIgreja.trim()}" como nova igreja
+                  </button>
+                )}
+
+                {criandoIgreja && (
+                  <div className="space-y-2 rounded-lg border border-[var(--border)] p-3">
+                    <input
+                      value={novoCodigo}
+                      onChange={(e) => setNovoCodigo(e.target.value.toUpperCase())}
+                      placeholder="Código (ex: SAOJOSE)"
+                      maxLength={20}
+                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 font-mono text-sm outline-none focus:border-[var(--accent)]"
+                    />
+                    <input
+                      value={novaCidade}
+                      onChange={(e) => setNovaCidade(e.target.value)}
+                      placeholder="Cidade (opcional)"
+                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+                    />
+                    <p className="text-xs text-[var(--muted)]">
+                      O código é o que a assembleia digita pra achar a igreja — só letras e números.
+                    </p>
+                    <button
+                      onClick={criarEVincular}
+                      disabled={salvandoIgreja || !termoIgreja.trim() || !novoCodigo.trim()}
+                      className="w-full rounded-lg bg-[var(--accent)] py-2 text-xs font-semibold text-[var(--accent-fg)] disabled:opacity-50"
+                    >
+                      Cadastrar e vincular
+                    </button>
+                  </div>
+                )}
+
+                {erroIgreja && <p className="text-xs text-red-500">{erroIgreja}</p>}
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setEditandoIgreja(false);
+                      setCriandoIgreja(false);
+                      setTermoIgreja('');
+                      setErroIgreja(null);
+                    }}
+                    className="text-xs font-semibold text-[var(--muted)]"
+                  >
+                    Cancelar
+                  </button>
+                  {igreja && (
+                    <button
+                      onClick={desvincular}
+                      disabled={salvandoIgreja}
+                      className="text-xs font-semibold text-red-500"
+                    >
+                      Desvincular igreja atual
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
