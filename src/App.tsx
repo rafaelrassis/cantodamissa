@@ -6,6 +6,7 @@ import { TopMusicasTela } from './components/TopMusicasTela';
 import { TopArtistasTela } from './components/TopArtistasTela';
 import { RepertorioDetalheTela } from './components/RepertorioDetalheTela';
 import { IgrejaPublicaTela } from './components/IgrejaPublicaTela';
+import { BuscarMinisterioTela } from './components/BuscarMinisterioTela';
 import { obterRepertorioPublico } from './lib/igrejas';
 import type { Repertorio } from './lib/repertorios';
 import { CantorTela } from './components/CantorTela';
@@ -55,7 +56,8 @@ type Tela =
   | 'artista'
   | 'busca'
   | 'ministerio'
-  | 'igreja-publica';
+  | 'igreja-publica'
+  | 'buscar-ministerio';
 
 function App() {
   const [tela, setTela] = useState<Tela>('home');
@@ -179,6 +181,7 @@ function App() {
   async function abrirRepertorioPublico(id: string) {
     const rep = await obterRepertorioPublico(id);
     setRepertorioPublico(rep);
+    setTela('igreja-publica');
   }
 
   // Alerta global: admin do ministério com solicitação de ingresso
@@ -334,7 +337,10 @@ function App() {
     return (
       <RepertorioDetalheTela
         repertorio={repertorioPublico}
-        onBack={() => setRepertorioPublico(null)}
+        onBack={() => {
+          setRepertorioPublico(null);
+          if (!igrejaCodigoInicial) setTela('home');
+        }}
         onSelectMusica={(m, tom) => abrirMusica(m, null, tom)}
         removerMusica={() => {}}
         moverMusicaParaRito={() => {}}
@@ -357,6 +363,17 @@ function App() {
           setTela('home');
         }}
         onAbrirRepertorio={abrirRepertorioPublico}
+      />
+    );
+  }
+
+  if (tela === 'buscar-ministerio') {
+    return (
+      <BuscarMinisterioTela
+        isLoggedIn={isLoggedIn}
+        onBack={() => setTela('home')}
+        onEntrar={() => setLoginParaMinisterioAberto(true)}
+        onFavoritosAlterados={() => {}}
       />
     );
   }
@@ -385,6 +402,8 @@ function App() {
         onAbrirCalendario={() => setTela('calendario')}
         onAbrirBusca={() => setTela('busca')}
         onAbrirMinisterio={abrirMinisterio}
+        onAbrirBuscarMinisterio={() => setTela('buscar-ministerio')}
+        onAbrirRepertorioPublico={abrirRepertorioPublico}
         onAbrirAreaAdmin={() => setTela('admin')}
         isAdmin={isAdmin}
         onAbrirTopMusicas={() => setTela('top-musicas')}

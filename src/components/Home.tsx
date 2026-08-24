@@ -13,6 +13,7 @@ import { getCantoresPopulares } from '../lib/cantoresApi';
 import { useDebounce } from '../lib/useDebounce';
 import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
 import { useProximosRepertoriosHome } from '../lib/useProximosRepertoriosHome';
+import { useFavoritosMinisterioHome } from '../lib/useFavoritosMinisterioHome';
 import { useQtdRepertoriosHome } from '../lib/preferenciaRepertoriosHome';
 import { proximoDomingoCalculado, diasAte } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
@@ -29,6 +30,7 @@ import { HeaderUsuario } from './HeaderUsuario';
 import { MusicaCard } from './MusicaCard';
 import { PaginatedCarousel } from './PaginatedCarousel';
 import { PainelRepertorios } from './PainelRepertorios';
+import { FavoritosMinisterioSection } from './FavoritosMinisterioSection';
 import { PersonalizarTela } from './PersonalizarTela';
 import { SubmissaoForm } from './SubmissaoForm';
 import { UserLoginModal } from './UserLoginModal';
@@ -39,6 +41,8 @@ interface Props {
   onAbrirCalendario?: () => void;
   onAbrirBusca?: () => void;
   onAbrirMinisterio?: () => void;
+  onAbrirBuscarMinisterio?: () => void;
+  onAbrirRepertorioPublico: (id: string) => void;
   onAbrirAreaAdmin?: () => void;
   isAdmin?: boolean;
   onAbrirTopMusicas?: () => void;
@@ -82,6 +86,8 @@ export function Home({
   onAbrirCalendario,
   onAbrirBusca,
   onAbrirMinisterio,
+  onAbrirBuscarMinisterio,
+  onAbrirRepertorioPublico,
   onAbrirAreaAdmin,
   isAdmin,
   onAbrirTopMusicas,
@@ -144,6 +150,10 @@ export function Home({
     ministerio.meuMembroId,
     qtdRepertoriosHome
   );
+
+  // Ministérios favoritados (não membro) — repertório da próxima escala
+  // de cada um, ver useFavoritosMinisterioHome.ts / migration 0021.
+  const { itens: favoritosMinisterio } = useFavoritosMinisterioHome(isLoggedIn);
 
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get('rep');
@@ -223,6 +233,7 @@ export function Home({
               <NavItemDesktop label="Calendário" onClick={onAbrirCalendario} />
               <NavItemDesktop label="Repertórios" onClick={() => setRepertorioSheetAberto(true)} />
               <NavItemDesktop label="Ministério" onClick={onAbrirMinisterio} />
+              <NavItemDesktop label="Favoritos" onClick={onAbrirBuscarMinisterio} />
             </nav>
           </div>
           <div className="flex shrink-0 items-center gap-3">
@@ -358,6 +369,16 @@ export function Home({
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {isLoggedIn && (favoritosMinisterio.length > 0 || onAbrirBuscarMinisterio) && (
+            <div className="px-4 py-3 md:px-0">
+              <FavoritosMinisterioSection
+                itens={favoritosMinisterio}
+                onAbrirBuscar={onAbrirBuscarMinisterio}
+                onAbrirRepertorio={onAbrirRepertorioPublico}
+              />
             </div>
           )}
 
