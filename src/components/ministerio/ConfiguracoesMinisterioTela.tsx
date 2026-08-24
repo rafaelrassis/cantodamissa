@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, ChevronLeft, Church, Copy, LogOut, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import { buscarIgrejas, criarIgreja, definirIgrejaDoMinisterio, type Igreja } from '../../lib/igrejas';
+import { ESTADOS, listarCidades } from '../../lib/ibge';
 
 interface Props {
   nome: string;
@@ -56,7 +57,10 @@ export function ConfiguracoesMinisterioTela({
   const [resultadosIgreja, setResultadosIgreja] = useState<Igreja[]>([]);
   const [criandoIgreja, setCriandoIgreja] = useState(false);
   const [novoCodigo, setNovoCodigo] = useState('');
+  const [novoEstado, setNovoEstado] = useState('');
   const [novaCidade, setNovaCidade] = useState('');
+  const [cidadesDoEstado, setCidadesDoEstado] = useState<string[]>([]);
+  const [carregandoCidades, setCarregandoCidades] = useState(false);
   const [salvandoIgreja, setSalvandoIgreja] = useState(false);
   const [erroIgreja, setErroIgreja] = useState<string | null>(null);
 
@@ -68,6 +72,21 @@ export function ConfiguracoesMinisterioTela({
     const id = setTimeout(() => buscarIgrejas(termoIgreja).then(setResultadosIgreja), 250);
     return () => clearTimeout(id);
   }, [termoIgreja]);
+
+  // Cidades dependem do estado escolhido — recarrega (e limpa a cidade
+  // já selecionada) toda vez que o estado muda.
+  useEffect(() => {
+    setNovaCidade('');
+    if (!novoEstado) {
+      setCidadesDoEstado([]);
+      return;
+    }
+    setCarregandoCidades(true);
+    listarCidades(novoEstado)
+      .then(setCidadesDoEstado)
+      .catch(() => setErroIgreja('Não deu pra carregar as cidades desse estado agora.'))
+      .finally(() => setCarregandoCidades(false));
+  }, [novoEstado]);
 
   async function vincular(igrejaEscolhida: Igreja) {
     setSalvandoIgreja(true);
@@ -86,17 +105,18 @@ export function ConfiguracoesMinisterioTela({
   }
 
   async function criarEVincular() {
-    if (!termoIgreja.trim() || !novoCodigo.trim()) return;
+    if (!termoIgreja.trim() || !novoCodigo.trim() || !novoEstado || !novaCidade) return;
     setSalvandoIgreja(true);
     setErroIgreja(null);
     try {
-      const nova = await criarIgreja(termoIgreja, novoCodigo, novaCidade);
+      const nova = await criarIgreja(termoIgreja, novoCodigo, novaCidade, novoEstado);
       await definirIgrejaDoMinisterio(ministerioId, nova.id);
       onIgrejaAlterada(nova);
       setEditandoIgreja(false);
       setCriandoIgreja(false);
       setTermoIgreja('');
       setNovoCodigo('');
+      setNovoEstado('');
       setNovaCidade('');
     } catch (e) {
       setErroIgreja(e instanceof Error ? e.message : 'Falha ao criar igreja. O código pode já estar em uso.');
@@ -240,7 +260,9 @@ export function ConfiguracoesMinisterioTela({
                   <Church size={16} className="text-[var(--accent)]" />
                   <span>
                     <span className="block text-sm font-semibold">{igreja.nome}</span>
-                    <span className="block font-mono text-xs text-[var(--muted)]">{igreja.codigo}</span>
+                    <span className="block font-mono text-xs text-[var(--muted)]">
+                      {igreja.codigo} · {igreja.cidade}/{igreja.estado}
+                    </span>
                   </span>
                 </span>
                 <button
@@ -284,7 +306,9 @@ export function ConfiguracoesMinisterioTela({
                           className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-[var(--bg)]"
                         >
                           <span>{i.nome}</span>
-                          <span className="font-mono text-xs text-[var(--muted)]">{i.codigo}</span>
+                          <span className="font-mono text-xs text-[var(--muted)]">
+                            {i.codigo} · {i.cidade}/{i.estado}
+                          </span>
                         </button>
                       </li>
                     ))}
@@ -309,18 +333,43 @@ export function ConfiguracoesMinisterioTela({
                       maxLength={20}
                       className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 font-mono text-sm outline-none focus:border-[var(--accent)]"
                     />
-                    <input
-                      value={novaCidade}
-                      onChange={(e) => setNovaCidade(e.target.value)}
-                      placeholder="Cidade (opcional)"
-                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-                    />
+                    <div className="flex gap-2">
+                      <select
+                        value={novoEstado}
+                        onChange={(e) => setNovoEstado(e.target.value)}
+                        className="w-28 shrink-0 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2 py-2 text-sm outline-none focus:border-[var(--accent)]"
+                      >
+                        <option value="">Estado</option>
+                        {ESTADOS.map((e) => (
+                          <option key={e.sigla} value={e.sigla}>
+                            {e.sigla}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={novaCidade}
+                        onChange={(e) => setNovaCidade(e.target.value)}
+                        disabled={!novoEstado || carregandoCidades}
+                        className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)] disabled:opacity-50"
+                      >
+                        <option value="">
+                          {carregandoCidades ? 'Carregando…' : 'Cidade'}
+                        </option>
+                        {cidadesDoEstado.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     <p className="text-xs text-[var(--muted)]">
                       O código é o que a assembleia digita pra achar a igreja — só letras e números.
                     </p>
                     <button
                       onClick={criarEVincular}
-                      disabled={salvandoIgreja || !termoIgreja.trim() || !novoCodigo.trim()}
+                      disabled={
+                        salvandoIgreja || !termoIgreja.trim() || !novoCodigo.trim() || !novoEstado || !novaCidade
+                      }
                       className="w-full rounded-lg bg-[var(--accent)] py-2 text-xs font-semibold text-[var(--accent-fg)] disabled:opacity-50"
                     >
                       Cadastrar e vincular
@@ -336,6 +385,9 @@ export function ConfiguracoesMinisterioTela({
                       setEditandoIgreja(false);
                       setCriandoIgreja(false);
                       setTermoIgreja('');
+                      setNovoCodigo('');
+                      setNovoEstado('');
+                      setNovaCidade('');
                       setErroIgreja(null);
                     }}
                     className="text-xs font-semibold text-[var(--muted)]"

@@ -14,9 +14,11 @@ create table if not exists public.igrejas (
   id uuid primary key default gen_random_uuid(),
   nome text not null,
   codigo text not null unique,          -- escolhido pelo admin, ex: 'SAOJOSE'
-  cidade text,
+  cidade text not null,
+  estado text not null,                 -- sigla UF, ex: 'SP' — lista fechada em src/lib/ibge.ts
   criado_em timestamptz not null default now(),
-  constraint codigo_formato check (codigo ~ '^[A-Z0-9]{3,20}$')
+  constraint codigo_formato check (codigo ~ '^[A-Z0-9]{3,20}$'),
+  constraint estado_formato check (estado ~ '^[A-Z]{2}$')
 );
 create unique index if not exists idx_igrejas_codigo on public.igrejas (upper(codigo));
 

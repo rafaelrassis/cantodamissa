@@ -12,7 +12,8 @@ export interface Igreja {
   id: string;
   nome: string;
   codigo: string;
-  cidade: string | null;
+  cidade: string;
+  estado: string;
 }
 
 export interface RepertorioAbertoResumo {
@@ -27,9 +28,10 @@ function mapearIgreja(row: {
   id: string;
   nome: string;
   codigo: string;
-  cidade: string | null;
+  cidade: string;
+  estado: string;
 }): Igreja {
-  return { id: row.id, nome: row.nome, codigo: row.codigo, cidade: row.cidade };
+  return { id: row.id, nome: row.nome, codigo: row.codigo, cidade: row.cidade, estado: row.estado };
 }
 
 /** Autocomplete por nome ou código — mínimo 2 caracteres. */
@@ -41,9 +43,9 @@ export async function buscarIgrejas(termo: string): Promise<Igreja[]> {
     console.error('buscarIgrejas:', error.message);
     return [];
   }
-  return ((data ?? []) as Array<{ id: string; nome: string; codigo: string; cidade: string | null }>).map(
-    mapearIgreja
-  );
+  return (
+    (data ?? []) as Array<{ id: string; nome: string; codigo: string; cidade: string; estado: string }>
+  ).map(mapearIgreja);
 }
 
 /** Repertórios abertos (escala publicada, data >= hoje) de uma igreja por código exato. */
@@ -93,15 +95,16 @@ export async function obterRepertorioPublico(repertorioId: string): Promise<Repe
 export async function obterIgrejaDoMinisterio(ministerioId: string): Promise<Igreja | null> {
   const { data, error } = await supabase
     .from('ministerios')
-    .select('igreja:igrejas(id, nome, codigo, cidade)')
+    .select('igreja:igrejas(id, nome, codigo, cidade, estado)')
     .eq('id', ministerioId)
     .maybeSingle();
   if (error) {
     console.error('obterIgrejaDoMinisterio:', error.message);
     return null;
   }
-  const igreja = (data as { igreja: { id: string; nome: string; codigo: string; cidade: string | null } | null } | null)
-    ?.igreja;
+  const igreja = (
+    data as { igreja: { id: string; nome: string; codigo: string; cidade: string; estado: string } | null } | null
+  )?.igreja;
   return igreja ? mapearIgreja(igreja) : null;
 }
 
@@ -117,13 +120,18 @@ export async function definirIgrejaDoMinisterio(
   if (error) throw new Error(`definirIgrejaDoMinisterio: ${error.message}`);
 }
 
-/** Cria uma igreja nova — código único, normalizado pra maiúsculas. */
-export async function criarIgreja(nome: string, codigo: string, cidade: string): Promise<Igreja> {
+/** Cria uma igreja nova — código único, cidade e estado obrigatórios. */
+export async function criarIgreja(
+  nome: string,
+  codigo: string,
+  cidade: string,
+  estado: string
+): Promise<Igreja> {
   const codigoNormalizado = codigo.trim().toUpperCase();
   const { data, error } = await supabase
     .from('igrejas')
-    .insert({ nome: nome.trim(), codigo: codigoNormalizado, cidade: cidade.trim() || null })
-    .select('id, nome, codigo, cidade')
+    .insert({ nome: nome.trim(), codigo: codigoNormalizado, cidade: cidade.trim(), estado })
+    .select('id, nome, codigo, cidade, estado')
     .single();
   if (error) throw new Error(`criarIgreja: ${error.message}`);
   return mapearIgreja(data);

@@ -45,7 +45,7 @@ export function IgrejaPublicaTela({ codigoInicial, onBack, onAbrirRepertorio }: 
     if (!codigoInicial) return;
     setCarregando(true);
     listarRepertoriosAbertosPorIgreja(codigoInicial).then((lista) => {
-      setIgrejaAtiva({ id: '', nome: codigoInicial, codigo: codigoInicial, cidade: null });
+      setIgrejaAtiva({ id: '', nome: codigoInicial, codigo: codigoInicial, cidade: '', estado: '' });
       setRepertorios(lista);
       setCarregando(false);
     });
@@ -104,8 +104,7 @@ export function IgrejaPublicaTela({ codigoInicial, onBack, onAbrirRepertorio }: 
                         {igreja.nome}
                       </span>
                       <span className="block text-sm text-neutral-500">
-                        {igreja.codigo}
-                        {igreja.cidade ? ` · ${igreja.cidade}` : ''}
+                        {igreja.codigo} · {igreja.cidade}/{igreja.estado}
                       </span>
                     </span>
                   </button>
