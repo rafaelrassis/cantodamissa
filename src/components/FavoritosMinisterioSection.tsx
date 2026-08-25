@@ -3,6 +3,7 @@ import type { ProximoRepertorioFavorito } from '../lib/favoritosMinisterio';
 
 interface Props {
   itens: ProximoRepertorioFavorito[];
+  isLoggedIn: boolean;
   onAbrirBuscar?: () => void;
   onAbrirRepertorio: (id: string) => void;
 }
@@ -10,7 +11,7 @@ interface Props {
 /** "Favoritos" na Início — ministérios que o usuário segue sem ser membro,
  * com o repertório da próxima escala publicada de cada um (se houver).
  * Ver BuscarMinisterioTela / useFavoritosMinisterioHome. */
-export function FavoritosMinisterioSection({ itens, onAbrirBuscar, onAbrirRepertorio }: Props) {
+export function FavoritosMinisterioSection({ itens, isLoggedIn, onAbrirBuscar, onAbrirRepertorio }: Props) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
@@ -24,7 +25,9 @@ export function FavoritosMinisterioSection({ itens, onAbrirBuscar, onAbrirRepert
 
       {itens.length === 0 && (
         <div className="rounded-xl bg-[var(--accent-soft)] p-3 text-xs text-[var(--muted)]">
-          Favorite um ministério pra ver aqui o repertório da próxima escala.
+          {isLoggedIn
+            ? 'Favorite um ministério pra ver aqui o repertório da próxima escala.'
+            : 'Entre e favorite um ministério pra ver aqui o repertório da próxima escala.'}
         </div>
       )}
 

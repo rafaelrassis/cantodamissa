@@ -372,10 +372,11 @@ export function Home({
             </div>
           )}
 
-          {isLoggedIn && (favoritosMinisterio.length > 0 || onAbrirBuscarMinisterio) && (
+          {(favoritosMinisterio.length > 0 || onAbrirBuscarMinisterio) && (
             <div className="px-4 py-3 md:px-0">
               <FavoritosMinisterioSection
                 itens={favoritosMinisterio}
+                isLoggedIn={isLoggedIn}
                 onAbrirBuscar={onAbrirBuscarMinisterio}
                 onAbrirRepertorio={onAbrirRepertorioPublico}
               />
