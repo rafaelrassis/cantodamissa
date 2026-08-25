@@ -41,6 +41,8 @@ interface Props {
   filtroInicial?: TempoLiturgico;
   onAbrirCalendario?: () => void;
   onAbrirBusca?: () => void;
+  onAbrirPrivacidade?: () => void;
+  onAbrirTermos?: () => void;
   onAbrirMinisterio?: () => void;
   onAbrirBuscarMinisterio?: () => void;
   onAbrirRepertorioPublico: (id: string) => void;
@@ -86,6 +88,8 @@ export function Home({
   filtroInicial,
   onAbrirCalendario,
   onAbrirBusca,
+  onAbrirPrivacidade,
+  onAbrirTermos,
   onAbrirMinisterio,
   onAbrirBuscarMinisterio,
   onAbrirRepertorioPublico,
@@ -571,6 +575,21 @@ export function Home({
       >
         espaço reservado para anúncio
       </footer>
+
+      {(onAbrirPrivacidade || onAbrirTermos) && (
+        <div className="flex items-center justify-center gap-3 border-t border-[var(--border)] py-2 text-[11px] text-[var(--muted)]">
+          {onAbrirPrivacidade && (
+            <button onClick={onAbrirPrivacidade} className="underline-offset-2 hover:underline">
+              Política de Privacidade
+            </button>
+          )}
+          {onAbrirTermos && (
+            <button onClick={onAbrirTermos} className="underline-offset-2 hover:underline">
+              Termos de Uso
+            </button>
+          )}
+        </div>
+      )}
 
       {isAdmin && onAbrirAreaAdmin && (
         <button

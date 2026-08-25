@@ -1,24 +1,34 @@
 import { useState } from 'react';
-import { ChevronLeft, ClipboardList, Music, Mic2, ListMusic } from 'lucide-react';
+import { ChevronLeft, ClipboardList, Music, Mic2, ListMusic, ShieldAlert } from 'lucide-react';
 import { ModeracaoSubmissoes } from './ModeracaoSubmissoes';
+import { ModeracaoRemocoes } from './ModeracaoRemocoes';
 import { MusicasAdmin } from './MusicasAdmin';
 import { CantoresAdmin } from './CantoresAdmin';
 import { useSubmissoes } from '../lib/useSubmissoes';
+import { useSolicitacoesRemocao } from '../lib/useSolicitacoesRemocao';
 
 interface Props {
   onBack: () => void;
   onLogout: () => void;
 }
 
-type Aba = 'sugestoes' | 'musicas' | 'cantores' | 'repertorios';
+type Aba = 'sugestoes' | 'remocoes' | 'musicas' | 'cantores' | 'repertorios';
 
 export function AdminPanel({ onBack, onLogout }: Props) {
   const [aba, setAba] = useState<Aba>('sugestoes');
   const { submissoes } = useSubmissoes();
+  const { solicitacoes } = useSolicitacoesRemocao();
   const pendentes = submissoes.filter((s) => s.status === 'pendente').length;
+  const pedidosRemocaoPendentes = solicitacoes.filter((s) => s.status === 'pendente').length;
 
   const abas: { id: Aba; label: string; icon: typeof ClipboardList; badge?: number }[] = [
     { id: 'sugestoes', label: 'Sugestões', icon: ClipboardList, badge: pendentes || undefined },
+    {
+      id: 'remocoes',
+      label: 'Remoções',
+      icon: ShieldAlert,
+      badge: pedidosRemocaoPendentes || undefined,
+    },
     { id: 'musicas', label: 'Músicas', icon: Music },
     { id: 'cantores', label: 'Cantores', icon: Mic2 },
     { id: 'repertorios', label: 'Repertórios', icon: ListMusic },
@@ -63,6 +73,8 @@ export function AdminPanel({ onBack, onLogout }: Props) {
       {aba === 'sugestoes' && (
         <ModeracaoSubmissoesEmbed />
       )}
+
+      {aba === 'remocoes' && <ModeracaoRemocoes />}
 
       {aba === 'musicas' && <MusicasAdmin />}
 

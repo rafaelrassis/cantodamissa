@@ -125,6 +125,22 @@ select teste.espera_bloqueio($$
   update public.submissoes set status = 'aprovada'
 $$, 'usuário aprovando a própria sugestão');
 
+-- Solicitações de remoção (notice-and-takedown, ver 0029)
+select teste.espera_ok($$
+  insert into public.solicitacoes_remocao
+    (alvo_tipo, musica_id, alvo_descricao, solicitante_nome, solicitante_email, motivo, autor_auth_uid)
+  values
+    ('musica', 'dddd0000-0000-0000-0000-00000000000d', 'Eis-me aqui', 'Detentor dos direitos',
+     'detentor@exemplo.com', 'Uso não autorizado', 'bbbb0000-0000-0000-0000-00000000000b')
+$$, 'usuário enviando pedido de remoção');
+
+select teste.espera_linhas($$ select 1 from public.solicitacoes_remocao $$, 0,
+  'quem pediu a remoção não enxerga a própria solicitação (não é crédito público)');
+
+select teste.espera_bloqueio($$
+  update public.solicitacoes_remocao set status = 'concluida'
+$$, 'usuário concluindo a própria solicitação de remoção');
+
 -- ==========================================================
 -- 2. Admin de verdade (e-mail na tabela admins)
 -- ==========================================================
@@ -149,6 +165,12 @@ $$, 'admin editando música');
 select teste.espera_linhas($$ select 1 from public.submissoes $$, 1, 'admin vendo as submissões pra moderar');
 
 select teste.espera_ok($$ update public.submissoes set status = 'aprovada' $$, 'admin moderando submissão');
+
+select teste.espera_linhas($$ select 1 from public.solicitacoes_remocao $$, 1,
+  'admin vendo os pedidos de remoção pra moderar');
+select teste.espera_ok($$
+  update public.solicitacoes_remocao set status = 'concluida', resposta_admin = 'Removida'
+$$, 'admin concluindo pedido de remoção');
 
 -- ==========================================================
 -- 3. Repertórios: dono por auth_uid, link por token

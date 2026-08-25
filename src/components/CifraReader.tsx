@@ -21,6 +21,7 @@ import { useRepertorios } from '../lib/repertoriosContext';
 import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
 import { useSubmissoes } from '../lib/useSubmissoes';
 import { SubmissaoForm } from './SubmissaoForm';
+import { SolicitarRemocaoLink } from './SolicitarRemocaoLink';
 import { AddToRepertorioMenu } from './AddToRepertorioMenu';
 import { TomSeletor } from './TomSeletor';
 import { LABEL_MOMENTO, LABEL_TEMPO } from '../lib/labels';
@@ -500,6 +501,12 @@ export function CifraReader({
                 >
                   <Flag size={13} /> sugerir correção
                 </button>
+
+                <SolicitarRemocaoLink
+                  alvoTipo="musica"
+                  alvoDescricao={`${musica.title}${musica.artist ? ` - ${musica.artist}` : ''}`}
+                  musicaId={musica.id}
+                />
 
                 {colaboradores.length > 0 && (
                   <button

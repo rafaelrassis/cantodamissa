@@ -1,12 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Home } from './components/Home';
 import { CifraReader } from './components/CifraReader';
-import { CalendarioLiturgico } from './components/CalendarioLiturgico';
-import { TopMusicasTela } from './components/TopMusicasTela';
-import { TopArtistasTela } from './components/TopArtistasTela';
-import { RepertorioDetalheTela } from './components/RepertorioDetalheTela';
-import { IgrejaPublicaTela } from './components/IgrejaPublicaTela';
-import { BuscarMinisterioTela } from './components/BuscarMinisterioTela';
 import { obterRepertorioPublico } from './lib/igrejas';
 import {
   listarIdsFavoritos,
@@ -14,8 +8,6 @@ import {
   desfavoritarMinisterio,
 } from './lib/favoritosMinisterio';
 import type { Repertorio } from './lib/repertorios';
-import { CantorTela } from './components/CantorTela';
-import { ArtistaTela } from './components/ArtistaTela';
 import { BuscaTela } from './components/BuscaTela';
 import { UserLoginModal } from './components/UserLoginModal';
 import { CompletarPerfilModal } from './components/CompletarPerfilModal';
@@ -46,6 +38,38 @@ const MinisterioTela = lazy(() =>
   import('./components/ministerio/MinisterioTela').then((m) => ({ default: m.MinisterioTela }))
 );
 
+// Telas secundárias (um clique a mais que Home/busca/leitor de cifra, que
+// ficam eager pra abrir sem flash de "carregando…"): cada uma só é
+// visitada por uma fração de quem abre o app, então não faz sentido
+// pesar no bundle inicial de quem só quer ver uma cifra no domingo.
+const CalendarioLiturgico = lazy(() =>
+  import('./components/CalendarioLiturgico').then((m) => ({ default: m.CalendarioLiturgico }))
+);
+const TopMusicasTela = lazy(() =>
+  import('./components/TopMusicasTela').then((m) => ({ default: m.TopMusicasTela }))
+);
+const TopArtistasTela = lazy(() =>
+  import('./components/TopArtistasTela').then((m) => ({ default: m.TopArtistasTela }))
+);
+const RepertorioDetalheTela = lazy(() =>
+  import('./components/RepertorioDetalheTela').then((m) => ({ default: m.RepertorioDetalheTela }))
+);
+const IgrejaPublicaTela = lazy(() =>
+  import('./components/IgrejaPublicaTela').then((m) => ({ default: m.IgrejaPublicaTela }))
+);
+const BuscarMinisterioTela = lazy(() =>
+  import('./components/BuscarMinisterioTela').then((m) => ({ default: m.BuscarMinisterioTela }))
+);
+const CantorTela = lazy(() =>
+  import('./components/CantorTela').then((m) => ({ default: m.CantorTela }))
+);
+const ArtistaTela = lazy(() =>
+  import('./components/ArtistaTela').then((m) => ({ default: m.ArtistaTela }))
+);
+const LegalTela = lazy(() =>
+  import('./components/LegalTela').then((m) => ({ default: m.LegalTela }))
+);
+
 const MIN_FONT = 15;
 const MAX_FONT = 34;
 const DEFAULT_FONT = 21;
@@ -62,7 +86,9 @@ type Tela =
   | 'busca'
   | 'ministerio'
   | 'igreja-publica'
-  | 'buscar-ministerio';
+  | 'buscar-ministerio'
+  | 'privacidade'
+  | 'termos';
 
 function App() {
   const [tela, setTela] = useState<Tela>('home');
@@ -304,7 +330,20 @@ function App() {
 
   if (tela === 'calendario') {
     return comAlerta(
-      <CalendarioLiturgico onBack={() => setTela('home')} onFiltrarTempo={irParaHomeComFiltro} />
+      <Suspense fallback={<TelaCarregando />}>
+        <CalendarioLiturgico onBack={() => setTela('home')} onFiltrarTempo={irParaHomeComFiltro} />
+      </Suspense>
+    );
+  }
+
+  if (tela === 'privacidade' || tela === 'termos') {
+    return (
+      <Suspense fallback={<TelaCarregando />}>
+        <LegalTela
+          documento={tela === 'privacidade' ? 'privacidade' : 'termos'}
+          onBack={() => setTela('home')}
+        />
+      </Suspense>
     );
   }
 
@@ -335,12 +374,18 @@ function App() {
 
   if (tela === 'top-musicas') {
     return comAlerta(
-      <TopMusicasTela onBack={() => setTela('home')} onSelectMusica={(m) => abrirMusica(m)} />
+      <Suspense fallback={<TelaCarregando />}>
+        <TopMusicasTela onBack={() => setTela('home')} onSelectMusica={(m) => abrirMusica(m)} />
+      </Suspense>
     );
   }
 
   if (tela === 'top-artistas') {
-    return comAlerta(<TopArtistasTela onBack={() => setTela('home')} onSelectArtista={abrirArtista} />);
+    return comAlerta(
+      <Suspense fallback={<TelaCarregando />}>
+        <TopArtistasTela onBack={() => setTela('home')} onSelectArtista={abrirArtista} />
+      </Suspense>
+    );
   }
 
   if (tela === 'busca') {
@@ -370,19 +415,23 @@ function App() {
 
   if (tela === 'cantor' && cantorSlug) {
     return comAlerta(
-      <CantorTela slug={cantorSlug} onBack={() => setTela('home')} onSelectMusica={(m) => abrirMusica(m)} />
+      <Suspense fallback={<TelaCarregando />}>
+        <CantorTela slug={cantorSlug} onBack={() => setTela('home')} onSelectMusica={(m) => abrirMusica(m)} />
+      </Suspense>
     );
   }
 
   if (tela === 'artista' && artistaNome) {
     return comAlerta(
-      <ArtistaTela artista={artistaNome} onBack={() => setTela('home')} onSelectMusica={(m) => abrirMusica(m)} />
+      <Suspense fallback={<TelaCarregando />}>
+        <ArtistaTela artista={artistaNome} onBack={() => setTela('home')} onSelectMusica={(m) => abrirMusica(m)} />
+      </Suspense>
     );
   }
 
   if (tela === 'igreja-publica' && repertorioPublico) {
     return (
-      <>
+      <Suspense fallback={<TelaCarregando />}>
         <RepertorioDetalheTela
           repertorio={repertorioPublico}
           onBack={() => {
@@ -413,26 +462,28 @@ function App() {
             onClose={() => setLoginParaMinisterioAberto(false)}
           />
         )}
-      </>
+      </Suspense>
     );
   }
 
   if (tela === 'igreja-publica') {
     return (
-      <IgrejaPublicaTela
-        codigoInicial={igrejaCodigoInicial}
-        onBack={() => {
-          setIgrejaCodigoInicial(null);
-          setTela('home');
-        }}
-        onAbrirRepertorio={abrirRepertorioPublico}
-      />
+      <Suspense fallback={<TelaCarregando />}>
+        <IgrejaPublicaTela
+          codigoInicial={igrejaCodigoInicial}
+          onBack={() => {
+            setIgrejaCodigoInicial(null);
+            setTela('home');
+          }}
+          onAbrirRepertorio={abrirRepertorioPublico}
+        />
+      </Suspense>
     );
   }
 
   if (tela === 'buscar-ministerio') {
     return (
-      <>
+      <Suspense fallback={<TelaCarregando />}>
         <BuscarMinisterioTela
           isLoggedIn={isLoggedIn}
           onBack={() => setTela('home')}
@@ -449,23 +500,25 @@ function App() {
             onClose={() => setLoginParaMinisterioAberto(false)}
           />
         )}
-      </>
+      </Suspense>
     );
   }
 
   if (tela === 'repertorio-detalhe' && repertorioAtual) {
     return comAlerta(
-      <RepertorioDetalheTela
-        repertorio={repertorioAtual}
-        onBack={() => setTela('home')}
-        onSelectMusica={(m, tom) => abrirMusica(m, repertorioAtual.id, tom)}
-        removerMusica={repertoriosApi.removerMusica}
-        moverMusicaParaRito={repertoriosApi.moverMusicaParaRito}
-        adicionarRito={repertoriosApi.adicionarRito}
-        removerRito={repertoriosApi.removerRito}
-        reordenarRitos={repertoriosApi.reordenarRitos}
-        onExcluirRepertorio={repertoriosApi.remover}
-      />
+      <Suspense fallback={<TelaCarregando />}>
+        <RepertorioDetalheTela
+          repertorio={repertorioAtual}
+          onBack={() => setTela('home')}
+          onSelectMusica={(m, tom) => abrirMusica(m, repertorioAtual.id, tom)}
+          removerMusica={repertoriosApi.removerMusica}
+          moverMusicaParaRito={repertoriosApi.moverMusicaParaRito}
+          adicionarRito={repertoriosApi.adicionarRito}
+          removerRito={repertoriosApi.removerRito}
+          reordenarRitos={repertoriosApi.reordenarRitos}
+          onExcluirRepertorio={repertoriosApi.remover}
+        />
+      </Suspense>
     );
   }
 
@@ -476,6 +529,8 @@ function App() {
         filtroInicial={filtroTempo}
         onAbrirCalendario={() => setTela('calendario')}
         onAbrirBusca={() => setTela('busca')}
+        onAbrirPrivacidade={() => setTela('privacidade')}
+        onAbrirTermos={() => setTela('termos')}
         onAbrirMinisterio={abrirMinisterio}
         onAbrirBuscarMinisterio={() => setTela('buscar-ministerio')}
         onAbrirRepertorioPublico={abrirRepertorioPublico}

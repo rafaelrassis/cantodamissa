@@ -4,6 +4,12 @@
 -- abrir sem precisar favoritar nem logar (ver BuscarMinisterioTela).
 -- ==========================================================
 
+-- `create or replace function` não aceita mudar as colunas de retorno de
+-- uma função table-returning (Postgres: "cannot change return type of
+-- existing function" quando os OUT params mudam) — precisa dropar a versão
+-- de 0021 antes de recriar com a coluna `proximo` a mais.
+drop function if exists public.buscar_ministerios_publicos(text, text, text, text);
+
 create or replace function public.buscar_ministerios_publicos(
   p_codigo text default null,
   p_igreja text default null,

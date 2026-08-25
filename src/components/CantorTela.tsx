@@ -5,6 +5,7 @@ import type { Cantor } from '../types/cantor';
 import { getCantorBySlug, getTop10PorCantor, getTodasAlfabeticoPorCantor } from '../lib/cantoresApi';
 import { useRepertorios } from '../lib/repertoriosContext';
 import { MusicaCard } from './MusicaCard';
+import { SolicitarRemocaoLink } from './SolicitarRemocaoLink';
 
 type Aba = 'top' | 'todas';
 
@@ -105,6 +106,12 @@ export function CantorTela({ slug, onBack, onSelectMusica }: Props) {
           </span>
         )}
         <h1 className="text-xl font-extrabold tracking-tight">{cantor.nome}</h1>
+        <SolicitarRemocaoLink
+          alvoTipo="cantor"
+          alvoDescricao={cantor.nome}
+          cantorId={cantor.id}
+          className="mt-1 flex items-center gap-1 text-xs text-[var(--accent-fg)] opacity-70 hover:opacity-100 hover:underline"
+        />
       </header>
 
       <div className="mx-auto flex max-w-3xl border-b border-[var(--border)]">
