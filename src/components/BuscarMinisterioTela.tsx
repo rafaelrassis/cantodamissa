@@ -120,7 +120,11 @@ export function BuscarMinisterioTela({
   }
 
   const podeBuscar =
-    modo === 'codigo' ? codigo.trim().length >= 3 : modo === 'nome' ? nome.trim().length >= 2 : Boolean(estado);
+    modo === 'codigo'
+      ? codigo.trim().length >= 3
+      : modo === 'nome'
+        ? nome.trim().length >= 2
+        : Boolean(estado) && Boolean(cidade);
   const totalPaginas = Math.max(1, Math.ceil(totalCount / POR_PAGINA));
 
   return (
@@ -194,7 +198,7 @@ export function BuscarMinisterioTela({
               disabled={!estado}
               className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-2.5 text-sm outline-none focus:border-[var(--accent)] disabled:opacity-50"
             >
-              <option value="">Todas as cidades</option>
+              <option value="">Cidade</option>
               {cidades.map((c) => (
                 <option key={c} value={c}>
                   {c}
