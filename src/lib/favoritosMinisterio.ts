@@ -60,10 +60,11 @@ function mapearMinisterio(row: {
 }
 
 /** Busca por código exato OU por igreja+UF+cidade (combináveis). */
-/** Busca por nome (parte do nome do ministério) OU por UF + cidade
- * (cidade opcional, filtra o estado inteiro) — exclusivos entre si,
- * sempre paginada. */
+/** Busca por código de convite exato, por nome (parte do nome do
+ * ministério) ou por UF + cidade (cidade opcional, filtra o estado
+ * inteiro) — mutuamente exclusivos, sempre paginada. */
 export async function buscarMinisteriosPublicos(filtros: {
+  codigo?: string;
   nome?: string;
   estado?: string;
   cidade?: string;
@@ -71,12 +72,14 @@ export async function buscarMinisteriosPublicos(filtros: {
   limit?: number;
 }): Promise<{ itens: MinisterioPublico[]; totalCount: number }> {
   if (!isSupabaseConfigured) return { itens: [], totalCount: 0 };
-  const temNome = Boolean(filtros.nome?.trim());
-  if (!temNome && !filtros.estado?.trim()) return { itens: [], totalCount: 0 };
+  const temCodigo = Boolean(filtros.codigo?.trim());
+  const temNome = !temCodigo && Boolean(filtros.nome?.trim());
+  if (!temCodigo && !temNome && !filtros.estado?.trim()) return { itens: [], totalCount: 0 };
   const { data, error } = await supabase.rpc('buscar_ministerios_publicos', {
+    p_codigo: temCodigo ? filtros.codigo!.trim() : null,
     p_nome: temNome ? filtros.nome!.trim() : null,
-    p_estado: temNome ? null : filtros.estado?.trim() || null,
-    p_cidade: temNome ? null : filtros.cidade?.trim() || null,
+    p_estado: temCodigo || temNome ? null : filtros.estado?.trim() || null,
+    p_cidade: temCodigo || temNome ? null : filtros.cidade?.trim() || null,
     p_offset: filtros.offset ?? 0,
     p_limit: filtros.limit ?? 20,
   });
