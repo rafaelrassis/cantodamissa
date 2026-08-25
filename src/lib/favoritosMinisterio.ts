@@ -60,24 +60,37 @@ function mapearMinisterio(row: {
 }
 
 /** Busca por código exato OU por igreja+UF+cidade (combináveis). */
+/** Busca por nome (parte do nome do ministério) OU por UF + cidade
+ * (cidade opcional, filtra o estado inteiro) — exclusivos entre si,
+ * sempre paginada. */
 export async function buscarMinisteriosPublicos(filtros: {
-  codigo?: string;
-  igreja?: string;
+  nome?: string;
   estado?: string;
   cidade?: string;
-}): Promise<MinisterioPublico[]> {
-  if (!isSupabaseConfigured) return [];
+  offset?: number;
+  limit?: number;
+}): Promise<{ itens: MinisterioPublico[]; totalCount: number }> {
+  if (!isSupabaseConfigured) return { itens: [], totalCount: 0 };
+  const temNome = Boolean(filtros.nome?.trim());
+  if (!temNome && !filtros.estado?.trim()) return { itens: [], totalCount: 0 };
   const { data, error } = await supabase.rpc('buscar_ministerios_publicos', {
-    p_codigo: filtros.codigo?.trim() || null,
-    p_igreja: filtros.igreja?.trim() || null,
-    p_estado: filtros.estado?.trim() || null,
-    p_cidade: filtros.cidade?.trim() || null,
+    p_nome: temNome ? filtros.nome!.trim() : null,
+    p_estado: temNome ? null : filtros.estado?.trim() || null,
+    p_cidade: temNome ? null : filtros.cidade?.trim() || null,
+    p_offset: filtros.offset ?? 0,
+    p_limit: filtros.limit ?? 20,
   });
   if (error) {
     console.error('buscarMinisteriosPublicos:', error.message);
-    return [];
+    return { itens: [], totalCount: 0 };
   }
-  return (data ?? []).map(mapearMinisterio);
+  const linhas = (data ?? []) as Array<
+    Parameters<typeof mapearMinisterio>[0] & { total_count: number }
+  >;
+  return {
+    itens: linhas.map(mapearMinisterio),
+    totalCount: linhas[0]?.total_count ?? 0,
+  };
 }
 
 /** Ids dos ministérios já favoritados pelo usuário logado. */

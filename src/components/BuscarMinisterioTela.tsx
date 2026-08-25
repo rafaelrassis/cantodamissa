@@ -17,12 +17,14 @@ interface Props {
   onAbrirRepertorio: (repertorioId: string) => void;
 }
 
-type Modo = 'codigo' | 'igreja';
+type Modo = 'nome' | 'uf';
 
-/** Buscar ministério (por código de convite, ou por igreja+UF+cidade) e
+const POR_PAGINA = 20;
+
+/** Buscar ministério por nome (parte do nome) ou por UF+cidade, e
  * favoritar sem pedir ingresso — pra acompanhar o repertório da próxima
  * escala na Início. Ver AdicionarMinisterioTela pro fluxo de ingressar
- * de verdade (que exige aprovação do admin). */
+ * de verdade (que exige aprovação do admin, via código de convite). */
 export function BuscarMinisterioTela({
   isLoggedIn,
   onBack,
@@ -30,15 +32,16 @@ export function BuscarMinisterioTela({
   onFavoritosAlterados,
   onAbrirRepertorio,
 }: Props) {
-  const [modo, setModo] = useState<Modo>('igreja');
+  const [modo, setModo] = useState<Modo>('nome');
 
-  const [codigo, setCodigo] = useState('');
-  const [igreja, setIgreja] = useState('');
+  const [nome, setNome] = useState('');
   const [estado, setEstado] = useState('');
   const [cidade, setCidade] = useState('');
   const [cidades, setCidades] = useState<string[]>([]);
 
   const [resultados, setResultados] = useState<MinisterioPublico[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pagina, setPagina] = useState(0);
   const [buscando, setBuscando] = useState(false);
   const [jaBuscou, setJaBuscou] = useState(false);
   const [favoritos, setFavoritos] = useState<Set<string>>(new Set());
@@ -57,14 +60,20 @@ export function BuscarMinisterioTela({
     listarCidades(estado).then(setCidades);
   }, [estado]);
 
-  async function buscar() {
+  async function buscar(novaPagina = 0) {
     setBuscando(true);
     setJaBuscou(true);
     try {
-      const lista = await buscarMinisteriosPublicos(
-        modo === 'codigo' ? { codigo } : { igreja, estado, cidade }
-      );
-      setResultados(lista);
+      const { itens, totalCount } = await buscarMinisteriosPublicos({
+        nome: modo === 'nome' ? nome : undefined,
+        estado: modo === 'uf' ? estado : undefined,
+        cidade: modo === 'uf' ? cidade : undefined,
+        offset: novaPagina * POR_PAGINA,
+        limit: POR_PAGINA,
+      });
+      setResultados(itens);
+      setTotalCount(totalCount);
+      setPagina(novaPagina);
     } finally {
       setBuscando(false);
     }
@@ -94,8 +103,15 @@ export function BuscarMinisterioTela({
     }
   }
 
-  const podeBuscar =
-    modo === 'codigo' ? codigo.trim().length >= 3 : Boolean(igreja.trim() || estado || cidade);
+  function trocarModo(novoModo: Modo) {
+    setModo(novoModo);
+    setResultados([]);
+    setTotalCount(0);
+    setJaBuscou(false);
+  }
+
+  const podeBuscar = modo === 'nome' ? nome.trim().length >= 2 : Boolean(estado);
+  const totalPaginas = Math.max(1, Math.ceil(totalCount / POR_PAGINA));
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
@@ -109,67 +125,59 @@ export function BuscarMinisterioTela({
       <div className="mx-auto max-w-lg px-4 py-6">
         <div className="flex gap-2 rounded-xl bg-[var(--surface)] p-1">
           <button
-            onClick={() => setModo('igreja')}
-            className={`flex-1 rounded-lg py-2 text-sm font-semibold ${modo === 'igreja' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'}`}
+            onClick={() => trocarModo('nome')}
+            className={`flex-1 rounded-lg py-2 text-sm font-semibold ${modo === 'nome' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'}`}
           >
-            Igreja / cidade
+            Nome
           </button>
           <button
-            onClick={() => setModo('codigo')}
-            className={`flex-1 rounded-lg py-2 text-sm font-semibold ${modo === 'codigo' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'}`}
+            onClick={() => trocarModo('uf')}
+            className={`flex-1 rounded-lg py-2 text-sm font-semibold ${modo === 'uf' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'}`}
           >
-            Código
+            UF / cidade
           </button>
         </div>
 
-        {modo === 'codigo' ? (
+        {modo === 'nome' ? (
           <input
             autoFocus
-            value={codigo}
-            onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-            placeholder="Código do ministério"
-            className="mt-4 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm tracking-wide outline-none focus:border-[var(--accent)]"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="Nome do ministério"
+            className="mt-4 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
           />
         ) : (
-          <div className="mt-4 flex flex-col gap-2.5">
-            <input
-              value={igreja}
-              onChange={(e) => setIgreja(e.target.value)}
-              placeholder="Nome da igreja"
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
-            />
-            <div className="flex gap-2.5">
-              <select
-                value={estado}
-                onChange={(e) => setEstado(e.target.value)}
-                className="w-28 shrink-0 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
-              >
-                <option value="">UF</option>
-                {ESTADOS.map((e) => (
-                  <option key={e.sigla} value={e.sigla}>
-                    {e.sigla}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={cidade}
-                onChange={(e) => setCidade(e.target.value)}
-                disabled={!estado}
-                className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-2.5 text-sm outline-none focus:border-[var(--accent)] disabled:opacity-50"
-              >
-                <option value="">Cidade</option>
-                {cidades.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="mt-4 flex gap-2.5">
+            <select
+              value={estado}
+              onChange={(e) => setEstado(e.target.value)}
+              className="w-28 shrink-0 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
+            >
+              <option value="">UF</option>
+              {ESTADOS.map((e) => (
+                <option key={e.sigla} value={e.sigla}>
+                  {e.sigla}
+                </option>
+              ))}
+            </select>
+            <select
+              value={cidade}
+              onChange={(e) => setCidade(e.target.value)}
+              disabled={!estado}
+              className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-2.5 text-sm outline-none focus:border-[var(--accent)] disabled:opacity-50"
+            >
+              <option value="">Todas as cidades</option>
+              {cidades.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
           </div>
         )}
 
         <button
-          onClick={buscar}
+          onClick={() => buscar(0)}
           disabled={!podeBuscar || buscando}
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-50"
         >
@@ -232,6 +240,28 @@ export function BuscarMinisterioTela({
 
         {jaBuscou && !buscando && resultados.length === 0 && (
           <p className="mt-4 text-sm text-[var(--muted)]">Nenhum ministério encontrado.</p>
+        )}
+
+        {totalCount > POR_PAGINA && (
+          <div className="mt-4 flex items-center justify-between text-sm">
+            <button
+              onClick={() => buscar(pagina - 1)}
+              disabled={pagina === 0 || buscando}
+              className="rounded-lg border border-[var(--border)] px-3 py-1.5 font-semibold disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <span className="text-xs text-[var(--muted)]">
+              Página {pagina + 1} de {totalPaginas}
+            </span>
+            <button
+              onClick={() => buscar(pagina + 1)}
+              disabled={pagina + 1 >= totalPaginas || buscando}
+              className="rounded-lg border border-[var(--border)] px-3 py-1.5 font-semibold disabled:opacity-40"
+            >
+              Próxima
+            </button>
+          </div>
         )}
       </div>
     </div>
