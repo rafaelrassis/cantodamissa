@@ -166,24 +166,30 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
       <div className="mx-auto max-w-2xl px-4 py-6 md:px-10">
         {passo === 'opcoes' && (
           <>
-            <h2 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-              Adicionar ministério
-            </h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              Você ainda não participa de nenhum ministério. Selecione uma opção para continuar:
-            </p>
+            <div className="rounded-2xl bg-[var(--accent-soft)] p-5">
+              <span className="inline-flex items-center rounded-full bg-[var(--accent)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-fg)]">
+                Primeiro acesso
+              </span>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--text)]">
+                Sua conta ainda não está vinculada a um ministério. Escolha uma das opções abaixo
+                para começar.
+              </p>
+            </div>
 
-            <div className="mt-6 flex flex-col gap-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <OpcaoCard
-                icon={<LogIn size={20} />}
+                icon={<LogIn size={18} />}
                 titulo="Ingressar em um ministério"
-                descricao="Entre com o código de convite de um ministério."
+                descricao="Já tem um código de acesso? Entre com ele aqui."
+                acao="Ingressar"
                 onClick={() => setPasso('ingressar')}
               />
               <OpcaoCard
-                icon={<Plus size={20} />}
+                icon={<Plus size={18} />}
                 titulo="Cadastrar novo ministério"
-                descricao="Crie um novo ministério para começar a organizar sua equipe."
+                descricao="Comece do zero e monte a estrutura da sua equipe."
+                acao="Cadastrar"
+                destaque
                 onClick={() => setPasso('cadastrar')}
               />
             </div>
@@ -193,9 +199,9 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
         {passo === 'ingressar' && !solicitacaoEnviada && (
           <>
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
-              <h2 className="text-base font-bold">Informe o código do convite</h2>
+              <h2 className="text-base font-bold">Código de acesso</h2>
               <p className="mt-1 text-sm text-[var(--muted)]">
-                Peça o código de convite ao administrador do ministério e digite abaixo.
+                Peça o código a um administrador do ministério que deseja acessar.
               </p>
 
               <input
@@ -234,12 +240,12 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
                 <ol className="mt-4 flex flex-col gap-4">
                   {[
                     {
-                      titulo: 'Peça o código',
-                      texto: 'Peça ao administrador do ministério o código de convite para novos membros.',
+                      titulo: 'Obtenha o código',
+                      texto: 'Solicite ao administrador do ministério o código de acesso para novos membros.',
                     },
                     {
-                      titulo: 'Envie o pedido',
-                      texto: 'Digite o código recebido nesta tela e envie seu pedido de ingresso.',
+                      titulo: 'Informe o código',
+                      texto: 'Insira o código recebido nesta tela para enviar seu pedido de ingresso.',
                     },
                     {
                       titulo: 'Aguarde a liberação',
@@ -265,7 +271,7 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
         {passo === 'ingressar' && solicitacaoEnviada && (
           <div className="flex flex-col items-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center shadow-[var(--shadow)]">
             <CheckCircle2 size={40} className="text-[var(--accent)]" />
-            <h2 className="mt-3 text-base font-bold">Pedido enviado</h2>
+            <h2 className="mt-3 text-base font-bold">Solicitação enviada</h2>
             <p className="mt-1 text-sm text-[var(--muted)]">
               Aguarde um administrador do ministério aprovar sua entrada. Você poderá tentar novamente
               a qualquer momento com um novo código.
@@ -345,26 +351,44 @@ function OpcaoCard({
   icon,
   titulo,
   descricao,
+  acao,
+  destaque,
   onClick,
 }: {
   icon: React.ReactNode;
   titulo: string;
   descricao: string;
+  acao: string;
+  destaque?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-start gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left shadow-[var(--shadow)] transition hover:shadow-md"
+      className={`flex flex-col rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 ${
+        destaque
+          ? 'border-transparent bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)]'
+          : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-[var(--shadow)]'
+      }`}
     >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-fg)]">
+      <span
+        className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+          destaque ? 'bg-white/15' : 'bg-[var(--accent-soft)] text-[var(--accent)]'
+        }`}
+      >
         {icon}
       </span>
-      <span className="flex-1">
-        <span className="block text-base font-semibold text-[var(--text)]">{titulo}</span>
-        <span className="mt-0.5 block text-sm text-[var(--muted)]">{descricao}</span>
+      <span className="mt-3 text-base font-semibold">{titulo}</span>
+      <span className={`mt-1 text-sm ${destaque ? 'text-white/80' : 'text-[var(--muted)]'}`}>
+        {descricao}
       </span>
-      <ChevronRight size={18} className="mt-3 shrink-0 text-[var(--muted)]" />
+      <span
+        className={`mt-4 inline-flex items-center gap-1 text-sm font-semibold ${
+          destaque ? 'text-white' : 'text-[var(--accent)]'
+        }`}
+      >
+        {acao} <ChevronRight size={15} />
+      </span>
     </button>
   );
 }
