@@ -23,7 +23,9 @@ export interface MinisterioPublico {
   igrejaNome: string | null;
   igrejaCidade: string | null;
   igrejaEstado: string | null;
-  proximo: ProximoRepertorio | null;
+  /** Escalas publicadas da data mais próxima — pode ter mais de uma
+   * (ex: Missa das 10 e Missa das 18 no mesmo domingo). Ver migration 0028. */
+  proximos: ProximoRepertorio[];
 }
 
 export interface ProximoRepertorioFavorito {
@@ -49,7 +51,7 @@ function mapearMinisterio(row: {
   igreja_nome: string | null;
   igreja_cidade: string | null;
   igreja_estado: string | null;
-  proximo: { repertorio_id: string; nome: string; data: string; hora: string } | null;
+  proximos: Array<{ repertorio_id: string; nome: string; data: string; hora: string }>;
 }): MinisterioPublico {
   return {
     ministerioId: row.ministerio_id,
@@ -58,7 +60,7 @@ function mapearMinisterio(row: {
     igrejaNome: row.igreja_nome,
     igrejaCidade: row.igreja_cidade,
     igrejaEstado: row.igreja_estado,
-    proximo: mapearProximo(row.proximo),
+    proximos: (row.proximos ?? []).map((p) => mapearProximo(p)!),
   };
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChevronLeft, Church, Search, Star } from 'lucide-react';
+import { ChevronLeft, Church, Search, Star, X } from 'lucide-react';
 import {
   buscarMinisteriosPublicos,
   favoritarMinisterio,
@@ -51,6 +51,9 @@ export function BuscarMinisterioTela({
   const [jaBuscou, setJaBuscou] = useState(false);
   const [favoritos, setFavoritos] = useState<Set<string>>(new Set());
   const [alterando, setAlterando] = useState<string | null>(null);
+  // Ministério cuja lista de próximas missas está aberta pra escolha —
+  // só entra em jogo quando há mais de uma escala na mesma data.
+  const [escolhendoDe, setEscolhendoDe] = useState<MinisterioPublico | null>(null);
 
   useEffect(() => {
     if (isLoggedIn) listarIdsFavoritos().then(setFavoritos);
@@ -109,6 +112,14 @@ export function BuscarMinisterioTela({
       onFavoritosAlterados();
     } finally {
       setAlterando(null);
+    }
+  }
+
+  function abrir(m: MinisterioPublico) {
+    if (m.proximos.length === 1) {
+      onAbrirRepertorio(m.proximos[0].repertorioId);
+    } else if (m.proximos.length > 1) {
+      setEscolhendoDe(m);
     }
   }
 
@@ -223,52 +234,90 @@ export function BuscarMinisterioTela({
         )}
 
         <ul className="mt-5 flex flex-col gap-2">
-          {resultados.map((m) => (
-            <li
-              key={m.ministerioId}
-              className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3"
-            >
-              <button
-                onClick={() => m.proximo && onAbrirRepertorio(m.proximo.repertorioId)}
-                disabled={!m.proximo}
-                className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:cursor-default"
+          {resultados.map((m) => {
+            const [primeiro] = m.proximos;
+            return (
+              <li
+                key={m.ministerioId}
+                className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3"
               >
-                <Church size={18} className="shrink-0 text-[var(--accent)]" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{m.nome}</p>
-                  <p className="truncate text-xs text-[var(--muted)]">
-                    {m.igrejaNome
-                      ? `${m.igrejaNome} · ${m.igrejaCidade}/${m.igrejaEstado}`
-                      : 'Sem igreja vinculada'}
-                  </p>
-                  {m.proximo ? (
-                    <p className="truncate text-xs font-semibold text-[var(--accent)]">
-                      {m.proximo.nome} ·{' '}
-                      {new Date(`${m.proximo.data}T00:00:00`).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'long',
-                      })}{' '}
-                      · {m.proximo.hora}
+                <button
+                  onClick={() => abrir(m)}
+                  disabled={m.proximos.length === 0}
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:cursor-default"
+                >
+                  <Church size={18} className="shrink-0 text-[var(--accent)]" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{m.nome}</p>
+                    <p className="truncate text-xs text-[var(--muted)]">
+                      {m.igrejaNome
+                        ? `${m.igrejaNome} · ${m.igrejaCidade}/${m.igrejaEstado}`
+                        : 'Sem igreja vinculada'}
                     </p>
-                  ) : (
-                    <p className="truncate text-xs text-[var(--muted)]">Nenhuma escala aberta</p>
-                  )}
-                </div>
-              </button>
-              <button
-                onClick={() => alternarFavorito(m)}
-                disabled={alterando === m.ministerioId}
-                aria-label={favoritos.has(m.ministerioId) ? 'Desfavoritar' : 'Favoritar'}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--bg)] disabled:opacity-50"
-              >
-                <Star
-                  size={18}
-                  className={favoritos.has(m.ministerioId) ? 'fill-[var(--accent)] text-[var(--accent)]' : ''}
-                />
-              </button>
-            </li>
-          ))}
+                    {primeiro ? (
+                      <p className="truncate text-xs font-semibold text-[var(--accent)]">
+                        {m.proximos.length > 1 ? `${m.proximos.length} missas` : primeiro.nome} ·{' '}
+                        {new Date(`${primeiro.data}T00:00:00`).toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: 'long',
+                        })}
+                        {m.proximos.length === 1 && ` · ${primeiro.hora}`}
+                      </p>
+                    ) : (
+                      <p className="truncate text-xs text-[var(--muted)]">Nenhuma escala aberta</p>
+                    )}
+                  </div>
+                </button>
+                <button
+                  onClick={() => alternarFavorito(m)}
+                  disabled={alterando === m.ministerioId}
+                  aria-label={favoritos.has(m.ministerioId) ? 'Desfavoritar' : 'Favoritar'}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--bg)] disabled:opacity-50"
+                >
+                  <Star
+                    size={18}
+                    className={favoritos.has(m.ministerioId) ? 'fill-[var(--accent)] text-[var(--accent)]' : ''}
+                  />
+                </button>
+              </li>
+            );
+          })}
         </ul>
+
+        {escolhendoDe && (
+          <div
+            onClick={() => setEscolhendoDe(null)}
+            className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 font-sans md:items-center"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm rounded-t-2xl bg-[var(--bg)] p-5 text-[var(--text)] md:rounded-2xl"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-base font-bold">{escolhendoDe.nome}</h2>
+                <button onClick={() => setEscolhendoDe(null)} aria-label="Fechar" className="text-[var(--muted)]">
+                  <X size={18} />
+                </button>
+              </div>
+              <p className="mb-3 text-xs text-[var(--muted)]">Mais de uma missa nessa data — escolha qual repertório abrir.</p>
+              <div className="flex flex-col gap-1">
+                {escolhendoDe.proximos.map((p) => (
+                  <button
+                    key={p.repertorioId}
+                    onClick={() => {
+                      onAbrirRepertorio(p.repertorioId);
+                      setEscolhendoDe(null);
+                    }}
+                    className="flex flex-col rounded-xl border border-[var(--border)] px-3 py-2.5 text-left hover:bg-[var(--accent-soft)]"
+                  >
+                    <span className="text-sm font-semibold">{p.nome}</span>
+                    <span className="text-xs text-[var(--muted)]">{p.hora}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {jaBuscou && !buscando && resultados.length === 0 && (
           <p className="mt-4 text-sm text-[var(--muted)]">Nenhum ministério encontrado.</p>
