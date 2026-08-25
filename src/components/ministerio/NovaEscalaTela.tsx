@@ -195,7 +195,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
               <span className="flex-1">
                 <span className="block text-sm font-semibold">Visibilidade</span>
                 <span className="mt-0.5 block text-xs text-[var(--accent)]">
-                  {publicada ? 'Publicada, visível para todos os membros.' : 'Rascunho, visível só para você.'}
+                  {publicada ? 'Ativa, aparece para toda a equipe.' : 'Rascunho, ainda não compartilhado.'}
                 </span>
               </span>
               <ToggleBtn ativo={publicada} onClick={() => setPublicada((v) => !v)} />

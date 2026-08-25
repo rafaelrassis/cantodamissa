@@ -53,7 +53,7 @@ export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala, souAdmin }:
 
       {lista.length === 0 ? (
         <p className="mt-10 px-4 text-center text-sm text-[var(--muted)]">
-          Lista vazia. Toque em ( + ) para cadastrar uma escala.
+          Nenhuma escala por aqui ainda. Use o botão ( + ) para criar a primeira.
         </p>
       ) : (
         <ul className="mt-4 space-y-2 px-4">

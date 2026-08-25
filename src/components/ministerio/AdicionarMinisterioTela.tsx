@@ -234,16 +234,16 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
                 <ol className="mt-4 flex flex-col gap-4">
                   {[
                     {
-                      titulo: 'Receba um convite',
-                      texto: 'Peça ao administrador do ministério o código de convite gerado para entrada.',
+                      titulo: 'Obtenha o código',
+                      texto: 'Solicite ao administrador do ministério o código de acesso para novos membros.',
                     },
                     {
-                      titulo: 'Envie sua solicitação',
-                      texto: 'Digite o código nesta tela para registrar seu pedido de participação.',
+                      titulo: 'Informe o código',
+                      texto: 'Insira o código recebido nesta tela para enviar seu pedido de ingresso.',
                     },
                     {
-                      titulo: 'Aguarde a aprovação',
-                      texto: 'Após o envio, um administrador do grupo precisará aprovar sua entrada no ministério.',
+                      titulo: 'Aguarde a liberação',
+                      texto: 'Um administrador vai analisar e liberar sua entrada no ministério em breve.',
                     },
                   ].map((p, i) => (
                     <li key={p.titulo} className="flex gap-3">
