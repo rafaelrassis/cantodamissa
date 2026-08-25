@@ -8,6 +8,11 @@
 -- ex: 'SAOJOSE') — não o codigo_convite do ministério (0009),
 -- que é só pra pedir ingresso como membro. Ministério sem igreja
 -- vinculada não aparece nessa busca.
+--
+-- Nome passa a casar tanto com o nome do ministério quanto com o
+-- da igreja vinculada: quem busca em geral conhece o nome da
+-- igreja ("Cristo Ressuscitado"), não necessariamente o nome
+-- interno do ministério ("Coral Jovem", "Teste" etc.).
 -- ==========================================================
 
 drop function if exists public.buscar_ministerios_publicos(text, text, text, int, int);
@@ -60,7 +65,7 @@ as $$
        when p_codigo is not null and length(trim(p_codigo)) > 0 then
          upper(i.codigo) = upper(trim(p_codigo))
        when p_nome is not null and length(trim(p_nome)) >= 2 then
-         m.nome ilike '%' || trim(p_nome) || '%'
+         m.nome ilike '%' || trim(p_nome) || '%' or i.nome ilike '%' || trim(p_nome) || '%'
        else
          p_estado is not null and length(trim(p_estado)) = 2
          and i.estado = upper(trim(p_estado))

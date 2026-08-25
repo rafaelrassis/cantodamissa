@@ -60,9 +60,9 @@ function mapearMinisterio(row: {
 }
 
 /** Busca por código da igreja vinculada (exato — ministério sem igreja
- * não aparece), por nome (parte do nome do ministério) ou por UF +
- * cidade (cidade opcional, filtra o estado inteiro) — mutuamente
- * exclusivos, sempre paginada. */
+ * não aparece), por nome (parte do nome do ministério OU da igreja
+ * vinculada) ou por UF + cidade — mutuamente exclusivos, sempre
+ * paginada. */
 export async function buscarMinisteriosPublicos(filtros: {
   codigo?: string;
   nome?: string;
