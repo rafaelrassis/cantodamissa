@@ -8,6 +8,11 @@ import { RepertorioDetalheTela } from './components/RepertorioDetalheTela';
 import { IgrejaPublicaTela } from './components/IgrejaPublicaTela';
 import { BuscarMinisterioTela } from './components/BuscarMinisterioTela';
 import { obterRepertorioPublico } from './lib/igrejas';
+import {
+  listarIdsFavoritos,
+  favoritarMinisterio,
+  desfavoritarMinisterio,
+} from './lib/favoritosMinisterio';
 import type { Repertorio } from './lib/repertorios';
 import { CantorTela } from './components/CantorTela';
 import { ArtistaTela } from './components/ArtistaTela';
@@ -63,6 +68,7 @@ function App() {
   const [tela, setTela] = useState<Tela>('home');
   const [musicaAtual, setMusicaAtual] = useState<Musica | null>(null);
   const [repertorioId, setRepertorioId] = useState<string | null>(null);
+  const [musicaPublica, setMusicaPublica] = useState(false);
   const [tomForcado, setTomForcado] = useState<string | null>(null);
   const [filtroTempo, setFiltroTempo] = useState<TempoLiturgico | undefined>();
   const [cantorSlug, setCantorSlug] = useState<string | null>(null);
@@ -75,6 +81,9 @@ function App() {
   // sem login, sem edição. Ver lib/igrejas.ts.
   const [igrejaCodigoInicial, setIgrejaCodigoInicial] = useState<string | null>(null);
   const [repertorioPublico, setRepertorioPublico] = useState<Repertorio | null>(null);
+  const [favoritoRepertorioPublico, setFavoritoRepertorioPublico] = useState(false);
+  const [alternandoFavoritoPublico, setAlternandoFavoritoPublico] = useState(false);
+
   const { theme, toggleTheme, corPersonalizada, definirCorPersonalizada } = useTheme();
   const [fontSize, setFontSize] = useState(DEFAULT_FONT);
   const {
@@ -134,13 +143,47 @@ function App() {
     }
   }
 
+  // Estado do favorito do ministério do repertório público aberto — só
+  // busca se tiver ministerio_id (repertório da assembleia) e usuário logado.
+  useEffect(() => {
+    const ministerioId = repertorioPublico?.ministerioId;
+    if (!ministerioId || !isLoggedIn) {
+      setFavoritoRepertorioPublico(false);
+      return;
+    }
+    listarIdsFavoritos().then((ids) => setFavoritoRepertorioPublico(ids.has(ministerioId)));
+  }, [repertorioPublico?.ministerioId, isLoggedIn]);
+
+  async function alternarFavoritoRepertorioPublico() {
+    const ministerioId = repertorioPublico?.ministerioId;
+    if (!ministerioId) return;
+    setAlternandoFavoritoPublico(true);
+    try {
+      if (favoritoRepertorioPublico) {
+        await desfavoritarMinisterio(ministerioId);
+        setFavoritoRepertorioPublico(false);
+      } else {
+        await favoritarMinisterio(ministerioId);
+        setFavoritoRepertorioPublico(true);
+      }
+    } finally {
+      setAlternandoFavoritoPublico(false);
+    }
+  }
+
   const repertoriosApi = useRepertorios();
   const repertorioAtual = repertoriosApi.repertorios.find((r) => r.id === repertorioId) ?? null;
 
-  function abrirMusica(musica: Musica, deRepertorioId: string | null = null, tom: string | null = null) {
+  function abrirMusica(
+    musica: Musica,
+    deRepertorioId: string | null = null,
+    tom: string | null = null,
+    publico = false
+  ) {
     setMusicaAtual(musica);
     setRepertorioId(deRepertorioId);
     setTomForcado(tom);
+    setMusicaPublica(publico);
   }
 
   function irParaHomeComFiltro(tempo: TempoLiturgico) {
@@ -249,8 +292,9 @@ function App() {
         onIncFont={() => setFontSize((f) => Math.min(MAX_FONT, f + 2))}
         onDecFont={() => setFontSize((f) => Math.max(MIN_FONT, f - 2))}
         repertorioId={repertorioId}
+        publico={musicaPublica}
         tomForcado={tomForcado}
-        onSelectMusica={(m) => abrirMusica(m, repertorioId)}
+        onSelectMusica={(m) => abrirMusica(m, repertorioId, null, musicaPublica)}
         onAbrirCantor={abrirCantor}
         onAbrirArtista={abrirArtista}
       />,
@@ -338,22 +382,38 @@ function App() {
 
   if (tela === 'igreja-publica' && repertorioPublico) {
     return (
-      <RepertorioDetalheTela
-        repertorio={repertorioPublico}
-        onBack={() => {
-          setRepertorioPublico(null);
-          if (!igrejaCodigoInicial) setTela(telaOrigemRepertorioPublico);
-        }}
-        onSelectMusica={(m, tom) => abrirMusica(m, null, tom)}
-        removerMusica={() => {}}
-        moverMusicaParaRito={() => {}}
-        adicionarRito={() => {}}
-        removerRito={() => {}}
-        reordenarRitos={() => {}}
-        onExcluirRepertorio={async () => {}}
-        podeEditar={false}
-        abaInicial="letra"
-      />
+      <>
+        <RepertorioDetalheTela
+          repertorio={repertorioPublico}
+          onBack={() => {
+            setRepertorioPublico(null);
+            if (!igrejaCodigoInicial) setTela(telaOrigemRepertorioPublico);
+          }}
+          onSelectMusica={(m, tom) => abrirMusica(m, repertorioPublico.id, tom, true)}
+          removerMusica={() => {}}
+          moverMusicaParaRito={() => {}}
+          adicionarRito={() => {}}
+          removerRito={() => {}}
+          reordenarRitos={() => {}}
+          onExcluirRepertorio={async () => {}}
+          podeEditar={false}
+          abaInicial="letra"
+          isLoggedIn={isLoggedIn}
+          favorito={favoritoRepertorioPublico}
+          alternandoFavorito={alternandoFavoritoPublico}
+          onAlternarFavorito={alternarFavoritoRepertorioPublico}
+          onEntrarParaFavoritar={() => setLoginParaMinisterioAberto(true)}
+        />
+        {loginParaMinisterioAberto && (
+          <UserLoginModal
+            onLogin={() => {
+              loginUsuario();
+              setLoginParaMinisterioAberto(false);
+            }}
+            onClose={() => setLoginParaMinisterioAberto(false)}
+          />
+        )}
+      </>
     );
   }
 

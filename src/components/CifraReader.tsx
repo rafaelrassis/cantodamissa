@@ -14,6 +14,7 @@ import { loadReaderState, saveReaderState } from '../lib/readerState';
 import { useShowChordDiagrams } from '../lib/useShowChordDiagrams';
 import { loadModoExibicao, saveModoExibicao } from '../lib/modoExibicao';
 import { obterRepertorio, RITO_SEM_SECAO, type Repertorio } from '../lib/repertorios';
+import { obterRepertorioPublico } from '../lib/igrejas';
 import { getMusicaById, registrarVisualizacao } from '../lib/musicasApi';
 import { getCantorSlugById } from '../lib/cantoresApi';
 import { useRepertorios } from '../lib/repertoriosContext';
@@ -42,6 +43,10 @@ interface Props {
   onIncFont: () => void;
   onDecFont: () => void;
   repertorioId?: string | null;
+  /** Repertório aberto sem login (assembleia, via igreja) — usa a busca
+   * pública (RPC `repertorio_publico_por_id`) em vez da autenticada, pra
+   * arrastar/avançar entre as músicas funcionar também deslogado. */
+  publico?: boolean;
   onSelectMusica?: (musica: Musica) => void;
   onAbrirCantor?: (slug: string) => void;
   onAbrirArtista?: (artista: string) => void;
@@ -57,6 +62,7 @@ export function CifraReader({
   onIncFont,
   onDecFont,
   repertorioId = null,
+  publico = false,
   onSelectMusica,
   onAbrirCantor,
   onAbrirArtista,
@@ -146,14 +152,16 @@ export function CifraReader({
     if (autoScroll.playing) setSheetOpen(false);
   }, [autoScroll.playing]);
 
-  // carrega o repertório real (se a música foi aberta a partir de um)
+  // carrega o repertório real (se a música foi aberta a partir de um) —
+  // repertório público (assembleia, sem login) usa a busca por RPC, que
+  // não esbarra em RLS pra anônimo (ver Props.publico)
   useEffect(() => {
     if (repertorioId) {
-      obterRepertorio(repertorioId).then(setRepertorio);
+      (publico ? obterRepertorioPublico(repertorioId) : obterRepertorio(repertorioId)).then(setRepertorio);
     } else {
       setRepertorio(null);
     }
-  }, [repertorioId, musica.id]);
+  }, [repertorioId, musica.id, publico]);
 
   async function trocarParaMusicaDoRepertorio(musicaId: string) {
     if (!onSelectMusica) return;

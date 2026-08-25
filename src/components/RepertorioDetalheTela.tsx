@@ -11,6 +11,7 @@ import {
   Music,
   Plus,
   Share2,
+  Star,
   Trash2,
   X,
 } from 'lucide-react';
@@ -48,6 +49,14 @@ interface Props {
    * (via igreja) abre em 'letra' por padrão — cifra continua disponível
    * no toggle. Default 'cifra' pros demais usos do app. */
   abaInicial?: ModoExibicao;
+  /** Botão de favoritar o ministério (estrela no header) — só aparece
+   * quando `repertorio.ministerioId` vem preenchido (repertório público,
+   * ver migration 0023). Pede login se tentar favoritar deslogado. */
+  isLoggedIn?: boolean;
+  favorito?: boolean;
+  alternandoFavorito?: boolean;
+  onAlternarFavorito?: () => void;
+  onEntrarParaFavoritar?: () => void;
 }
 
 /**
@@ -72,6 +81,11 @@ export function RepertorioDetalheTela({
   onAplicarTemplate,
   souAdmin,
   abaInicial = 'cifra',
+  isLoggedIn,
+  favorito,
+  alternandoFavorito,
+  onAlternarFavorito,
+  onEntrarParaFavoritar,
 }: Props) {
   const [novoRito, setNovoRito] = useState('');
   const [ordem, setOrdem] = useState<string[]>(repertorio.ritos);
@@ -214,6 +228,17 @@ export function RepertorioDetalheTela({
             </p>
           </div>
           <div className="flex shrink-0 gap-2">
+            {repertorio.ministerioId && onAlternarFavorito && (
+              <button
+                onClick={() => (isLoggedIn ? onAlternarFavorito() : onEntrarParaFavoritar?.())}
+                disabled={alternandoFavorito}
+                aria-label={favorito ? 'Desfavoritar ministério' : 'Favoritar ministério'}
+                title={favorito ? 'Desfavoritar ministério' : 'Favoritar ministério'}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/16 disabled:opacity-50"
+              >
+                <Star size={16} className={favorito ? 'fill-white' : ''} />
+              </button>
+            )}
             <button
               onClick={() => setAjudaAberta(true)}
               aria-label="Ajuda sobre o repertório"

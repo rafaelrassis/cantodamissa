@@ -56,6 +56,11 @@ export interface Repertorio {
   escalaId: string | null; // vínculo com a Escala do Ministério que o criou
   ritos: string[]; // ordenados
   itens: ItemRepertorio[];
+  /** Só vem preenchido no repertório público (ver repertorio_publico_por_id,
+   * migration 0023) — usado pro botão de favoritar ministério na tela da
+   * assembleia. */
+  ministerioId?: string;
+  ministerioNome?: string;
 }
 
 export function getDeviceKey(): string {
@@ -119,6 +124,8 @@ export interface LinhaRepertorioSupabase {
   created_at: string;
   share_token: string | null;
   escala_id: string | null;
+  ministerio_id?: string;
+  ministerio_nome?: string;
   repertorio_ritos: { nome: string; ordem: number }[];
   repertorio_musicas: {
     musica_id: string;
@@ -155,6 +162,8 @@ export function mapearRepertorio(row: LinhaRepertorioSupabase): Repertorio {
     escalaId: row.escala_id,
     ritos,
     itens,
+    ministerioId: row.ministerio_id,
+    ministerioNome: row.ministerio_nome,
   };
 }
 
