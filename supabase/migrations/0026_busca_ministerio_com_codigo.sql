@@ -1,8 +1,13 @@
 -- ==========================================================
--- Adiciona busca por código de convite do ministério como
--- terceiro modo, junto de nome (0025) e UF/cidade. Mutuamente
--- exclusivos: código > nome > UF/cidade, por ordem de prioridade
--- se mais de um vier preenchido. Continua paginada.
+-- Adiciona busca por código da igreja vinculada como terceiro
+-- modo, junto de nome (0025) e UF/cidade. Mutuamente exclusivos:
+-- código > nome > UF/cidade, por ordem de prioridade se mais de
+-- um vier preenchido. Continua paginada.
+--
+-- É o código de `igrejas.codigo` (0019, escolhido pelo admin,
+-- ex: 'SAOJOSE') — não o codigo_convite do ministério (0009),
+-- que é só pra pedir ingresso como membro. Ministério sem igreja
+-- vinculada não aparece nessa busca.
 -- ==========================================================
 
 drop function if exists public.buscar_ministerios_publicos(text, text, text, int, int);
@@ -53,7 +58,7 @@ as $$
    where
      case
        when p_codigo is not null and length(trim(p_codigo)) > 0 then
-         upper(m.codigo_convite) = upper(trim(p_codigo))
+         upper(i.codigo) = upper(trim(p_codigo))
        when p_nome is not null and length(trim(p_nome)) >= 2 then
          m.nome ilike '%' || trim(p_nome) || '%'
        else

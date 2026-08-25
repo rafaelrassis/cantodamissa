@@ -22,10 +22,12 @@ type Modo = 'codigo' | 'nome' | 'uf';
 
 const POR_PAGINA = 20;
 
-/** Buscar ministério por nome (parte do nome) ou por UF+cidade, e
- * favoritar sem pedir ingresso — pra acompanhar o repertório da próxima
- * escala na Início. Ver AdicionarMinisterioTela pro fluxo de ingressar
- * de verdade (que exige aprovação do admin, via código de convite). */
+/** Buscar ministério por código da igreja vinculada, por nome (parte do
+ * nome) ou por UF+cidade, e favoritar sem pedir ingresso — pra
+ * acompanhar o repertório da próxima escala na Início. Ver
+ * AdicionarMinisterioTela pro fluxo de ingressar de verdade (que exige
+ * aprovação do admin, via código de convite do ministério — diferente
+ * do código da igreja usado aqui). */
 export function BuscarMinisterioTela({
   isLoggedIn,
   onBack,
@@ -157,7 +159,7 @@ export function BuscarMinisterioTela({
             autoFocus
             value={codigo}
             onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-            placeholder="Código do ministério"
+            placeholder="Código da igreja"
             className="mt-4 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm tracking-wide outline-none focus:border-[var(--accent)]"
           />
         )}
