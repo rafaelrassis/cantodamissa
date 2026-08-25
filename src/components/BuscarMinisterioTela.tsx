@@ -8,6 +8,7 @@ import {
   type MinisterioPublico,
 } from '../lib/favoritosMinisterio';
 import { ESTADOS, listarCidades } from '../lib/ibge';
+import { useCanalErro } from '../lib/erroContext';
 
 interface Props {
   isLoggedIn: boolean;
@@ -17,7 +18,7 @@ interface Props {
   onAbrirRepertorio: (repertorioId: string) => void;
 }
 
-type Modo = 'nome' | 'uf';
+type Modo = 'codigo' | 'nome' | 'uf';
 
 const POR_PAGINA = 20;
 
@@ -32,8 +33,10 @@ export function BuscarMinisterioTela({
   onFavoritosAlterados,
   onAbrirRepertorio,
 }: Props) {
+  const { reportar: reportarErro } = useCanalErro();
   const [modo, setModo] = useState<Modo>('nome');
 
+  const [codigo, setCodigo] = useState('');
   const [nome, setNome] = useState('');
   const [estado, setEstado] = useState('');
   const [cidade, setCidade] = useState('');
@@ -65,6 +68,7 @@ export function BuscarMinisterioTela({
     setJaBuscou(true);
     try {
       const { itens, totalCount } = await buscarMinisteriosPublicos({
+        codigo: modo === 'codigo' ? codigo : undefined,
         nome: modo === 'nome' ? nome : undefined,
         estado: modo === 'uf' ? estado : undefined,
         cidade: modo === 'uf' ? cidade : undefined,
@@ -74,6 +78,9 @@ export function BuscarMinisterioTela({
       setResultados(itens);
       setTotalCount(totalCount);
       setPagina(novaPagina);
+    } catch (e) {
+      reportarErro(e, 'Não foi possível buscar. Tenta de novo.');
+      setJaBuscou(false);
     } finally {
       setBuscando(false);
     }
@@ -110,7 +117,8 @@ export function BuscarMinisterioTela({
     setJaBuscou(false);
   }
 
-  const podeBuscar = modo === 'nome' ? nome.trim().length >= 2 : Boolean(estado);
+  const podeBuscar =
+    modo === 'codigo' ? codigo.trim().length >= 3 : modo === 'nome' ? nome.trim().length >= 2 : Boolean(estado);
   const totalPaginas = Math.max(1, Math.ceil(totalCount / POR_PAGINA));
 
   return (
@@ -125,6 +133,12 @@ export function BuscarMinisterioTela({
       <div className="mx-auto max-w-lg px-4 py-6">
         <div className="flex gap-2 rounded-xl bg-[var(--surface)] p-1">
           <button
+            onClick={() => trocarModo('codigo')}
+            className={`flex-1 rounded-lg py-2 text-sm font-semibold ${modo === 'codigo' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'}`}
+          >
+            Código
+          </button>
+          <button
             onClick={() => trocarModo('nome')}
             className={`flex-1 rounded-lg py-2 text-sm font-semibold ${modo === 'nome' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'}`}
           >
@@ -138,7 +152,17 @@ export function BuscarMinisterioTela({
           </button>
         </div>
 
-        {modo === 'nome' ? (
+        {modo === 'codigo' && (
+          <input
+            autoFocus
+            value={codigo}
+            onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+            placeholder="Código do ministério"
+            className="mt-4 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm tracking-wide outline-none focus:border-[var(--accent)]"
+          />
+        )}
+
+        {modo === 'nome' && (
           <input
             autoFocus
             value={nome}
@@ -146,7 +170,9 @@ export function BuscarMinisterioTela({
             placeholder="Nome do ministério"
             className="mt-4 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
           />
-        ) : (
+        )}
+
+        {modo === 'uf' && (
           <div className="mt-4 flex gap-2.5">
             <select
               value={estado}
