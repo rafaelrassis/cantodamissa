@@ -10,11 +10,13 @@ import {
   Move,
   Music,
   Plus,
+  QrCode,
   Share2,
   Star,
   Trash2,
   X,
 } from 'lucide-react';
+import { toDataURL as gerarQrCodeDataUrl } from 'qrcode';
 import type { Musica } from '../types/musica';
 import type { Repertorio } from '../lib/repertorios';
 import { RITO_SEM_SECAO } from '../lib/repertorios';
@@ -92,6 +94,8 @@ export function RepertorioDetalheTela({
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [menuCompartilharAberto, setMenuCompartilharAberto] = useState(false);
+  const [qrCodeAberto, setQrCodeAberto] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
   const [ajudaAberta, setAjudaAberta] = useState(false);
   const [escolhendoTemplate, setEscolhendoTemplate] = useState(false);
   const [aplicandoTemplate, setAplicandoTemplate] = useState(false);
@@ -132,6 +136,14 @@ export function RepertorioDetalheTela({
     const texto = `${repertorio.nome} · Canto da Missa\n${url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
     setMenuCompartilharAberto(false);
+  }
+
+  async function abrirQrCode() {
+    const url = linkCompartilhavel();
+    if (!url) return;
+    setMenuCompartilharAberto(false);
+    setQrCodeAberto(true);
+    setQrCodeDataUrl(await gerarQrCodeDataUrl(url, { width: 256, margin: 1 }));
   }
 
   // ressincroniza a ordem local quando o repertório recarrega (ex: depois
@@ -276,6 +288,12 @@ export function RepertorioDetalheTela({
                       >
                         <Copy size={15} /> Copiar link
                       </button>
+                      <button
+                        onClick={abrirQrCode}
+                        className="flex w-full items-center gap-2 border-t border-[var(--border)] px-3 py-2.5 text-left text-sm font-medium hover:bg-[var(--accent-soft)]"
+                      >
+                        <QrCode size={15} /> Gerar QR Code
+                      </button>
                     </div>
                   </>
                 )}
@@ -345,6 +363,41 @@ export function RepertorioDetalheTela({
                   abas Cifra/Letra pra definir com qual modo cada música abre.
                 </p>
               </div>
+            </div>
+          </div>
+        )}
+
+        {qrCodeAberto && (
+          <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/50 md:items-center">
+            <button
+              aria-hidden
+              tabIndex={-1}
+              onClick={() => setQrCodeAberto(false)}
+              className="fixed inset-0 cursor-default"
+            />
+            <div className="relative z-10 w-full max-w-xs rounded-t-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow)] md:rounded-2xl">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-base font-bold">QR Code do repertório</h2>
+                <button onClick={() => setQrCodeAberto(false)} aria-label="Fechar">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="flex justify-center">
+                {qrCodeDataUrl ? (
+                  <img
+                    src={qrCodeDataUrl}
+                    alt={`QR Code para ${repertorio.nome}`}
+                    className="h-56 w-56 rounded-lg bg-white p-2"
+                  />
+                ) : (
+                  <div className="flex h-56 w-56 items-center justify-center text-sm text-[var(--muted)]">
+                    Gerando...
+                  </div>
+                )}
+              </div>
+              <p className="mt-3 text-center text-xs text-[var(--muted)]">
+                Aponte a câmera pra abrir o repertório.
+              </p>
             </div>
           </div>
         )}

@@ -26,6 +26,7 @@ import { RepertorioDetalheTela } from '../RepertorioDetalheTela';
 import { SeletorMinisterioSheet } from './SeletorMinisterioSheet';
 import { useRepertorioTemplatesGlobais } from '../../lib/repertorioTemplatesContext';
 import { obterIgrejaDoMinisterio, type Igreja } from '../../lib/igrejas';
+import { listarIdsFavoritos, favoritarMinisterio, desfavoritarMinisterio } from '../../lib/favoritosMinisterio';
 
 interface Props {
   onBack: () => void;
@@ -94,6 +95,36 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
   const [templateAbertoId, setTemplateAbertoId] = useState<string | null>(null);
   const [adicionandoMusicaTemplate, setAdicionandoMusicaTemplate] = useState(false);
   const { reportar: reportarErro } = useCanalErro();
+
+  // Favoritar o próprio ministério a partir da tela de repertório aberta
+  // por aqui — mesmo botão/comportamento da tela de repertório público
+  // (App.tsx), ver favoritosMinisterio.ts / migration 0021.
+  const [favoritoMinisterio, setFavoritoMinisterio] = useState(false);
+  const [alternandoFavoritoMinisterio, setAlternandoFavoritoMinisterio] = useState(false);
+
+  useEffect(() => {
+    const id = ministerio.id;
+    if (!id) return;
+    listarIdsFavoritos().then((ids) => setFavoritoMinisterio(ids.has(id)));
+  }, [ministerio.id]);
+
+  async function alternarFavoritoMinisterio() {
+    if (!ministerio.id) return;
+    setAlternandoFavoritoMinisterio(true);
+    try {
+      if (favoritoMinisterio) {
+        await desfavoritarMinisterio(ministerio.id);
+        setFavoritoMinisterio(false);
+      } else {
+        await favoritarMinisterio(ministerio.id);
+        setFavoritoMinisterio(true);
+      }
+    } catch (e) {
+      reportarErro(e instanceof Error ? e.message : String(e));
+    } finally {
+      setAlternandoFavoritoMinisterio(false);
+    }
+  }
 
   /**
    * Roda uma gravação do módulo mostrando a falha pro usuário em vez de
@@ -259,6 +290,10 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
         onExcluirRepertorio={repertoriosApi.remover}
         podeEditar={ministerio.souAdmin}
         ocultarExcluir
+        isLoggedIn
+        favorito={favoritoMinisterio}
+        alternandoFavorito={alternandoFavoritoMinisterio}
+        onAlternarFavorito={alternarFavoritoMinisterio}
         souAdmin={ministerio.souAdmin}
         templatesDisponiveis={templatesApi.templates}
         onAplicarTemplate={async (templateId) => {
