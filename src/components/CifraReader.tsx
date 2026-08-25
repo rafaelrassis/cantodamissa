@@ -192,6 +192,8 @@ export function CifraReader({
     indiceAtual >= 0 && indiceAtual < itensOrdenados.length - 1
       ? itensOrdenados[indiceAtual + 1]
       : null;
+  // Nome do rito dessa música dentro do repertório aberto (ex: "Entrada", "Comunhão").
+  const ritoAtual = indiceAtual >= 0 ? itensOrdenados[indiceAtual]?.momento || null : null;
 
   // ---------- arrastar pra trocar de música (swipe horizontal) ----------
   const touchInicio = useRef<{ x: number; y: number } | null>(null);
@@ -311,6 +313,11 @@ export function CifraReader({
             <ChevronLeft size={18} />
           </button>
           <div className="min-w-0">
+            {ritoAtual && (
+              <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wide opacity-70">
+                {ritoAtual}
+              </p>
+            )}
             <h1 className="truncate text-xl font-extrabold tracking-tight">{musica.title}</h1>
             <p className="truncate text-[13px] opacity-80">
               {artistaClicavel ? (
@@ -460,6 +467,11 @@ export function CifraReader({
                 <button onClick={onClose} className="mb-1 text-xs opacity-80">
                   {repertorio ? `← Repertório · ${repertorio.nome}` : '← Voltar'}
                 </button>
+                {ritoAtual && (
+                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wide opacity-70">
+                    {ritoAtual}
+                  </p>
+                )}
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <h1 className="truncate text-lg font-extrabold">{musica.title}</h1>
