@@ -184,7 +184,7 @@ function CantorFormModal({
 
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-[var(--muted)]">
-              URL da foto (ex: Vercel Blob)
+              URL da foto
             </span>
             <input
               value={form.fotoUrl ?? ''}
