@@ -195,7 +195,7 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
               <h2 className="text-base font-bold">Informe o código do convite</h2>
               <p className="mt-1 text-sm text-[var(--muted)]">
-                Digite o código compartilhado pelo administrador do ministério.
+                Peça o código de convite ao administrador do ministério e digite abaixo.
               </p>
 
               <input
@@ -214,7 +214,7 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
                 disabled={!codigo.trim() || enviandoCodigo}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-50"
               >
-                <Send size={15} /> Solicitar entrada
+                <Send size={15} /> Enviar pedido
               </button>
             </div>
 
@@ -234,12 +234,12 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
                 <ol className="mt-4 flex flex-col gap-4">
                   {[
                     {
-                      titulo: 'Obtenha o código',
-                      texto: 'Solicite ao administrador do ministério o código de acesso para novos membros.',
+                      titulo: 'Peça o código',
+                      texto: 'Peça ao administrador do ministério o código de convite para novos membros.',
                     },
                     {
-                      titulo: 'Informe o código',
-                      texto: 'Insira o código recebido nesta tela para enviar seu pedido de ingresso.',
+                      titulo: 'Envie o pedido',
+                      texto: 'Digite o código recebido nesta tela e envie seu pedido de ingresso.',
                     },
                     {
                       titulo: 'Aguarde a liberação',
@@ -265,7 +265,7 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
         {passo === 'ingressar' && solicitacaoEnviada && (
           <div className="flex flex-col items-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center shadow-[var(--shadow)]">
             <CheckCircle2 size={40} className="text-[var(--accent)]" />
-            <h2 className="mt-3 text-base font-bold">Solicitação enviada</h2>
+            <h2 className="mt-3 text-base font-bold">Pedido enviado</h2>
             <p className="mt-1 text-sm text-[var(--muted)]">
               Aguarde um administrador do ministério aprovar sua entrada. Você poderá tentar novamente
               a qualquer momento com um novo código.

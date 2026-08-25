@@ -224,11 +224,11 @@ export function EscalaDetalheTela({
             <InfoRow label="Observações" valor={escala.observacoes || '—'} />
             <InfoRow
               label="Visibilidade"
-              valor={escala.publicada ? 'Ativa, aparece para toda a equipe' : 'Rascunho'}
+              valor={escala.publicada ? 'Publicada, visível para toda a equipe' : 'Rascunho, ainda não visível para a equipe'}
             />
             <InfoRow
               label="Confirmação de presença"
-              valor={escala.solicitarConfirmacao ? 'Solicitada aos participantes' : 'Não solicitada'}
+              valor={escala.solicitarConfirmacao ? 'Pedida aos participantes' : 'Não solicitada'}
             />
           </div>
         )}

@@ -44,7 +44,7 @@
   --accent-soft: #e6f2e7;
   --accent-fg: #ffffff;
   --chord: #157a2a;
-  --shadow: 0 24px 60px rgba(15, 63, 20, 0.14);
+  --shadow: 0 12px 32px rgba(15, 63, 20, 0.1);
 }
 
 :root[data-theme='dark'] {
@@ -58,7 +58,7 @@
   --accent-soft: #16301b;
   --accent-fg: #f2fff4;
   --chord: #6ee787;
-  --shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
 }
 
 html, body, #root {
@@ -70,6 +70,10 @@ html, body, #root {
 body {
   background: var(--bg);
   color: var(--text);
+}
+
+button, input, textarea, select {
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 /* Fonte da cifra: desktop usa --font-cifra, mobile é 3px menor (mín. 15px). */

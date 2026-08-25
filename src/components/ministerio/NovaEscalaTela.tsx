@@ -195,7 +195,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
               <span className="flex-1">
                 <span className="block text-sm font-semibold">Visibilidade</span>
                 <span className="mt-0.5 block text-xs text-[var(--accent)]">
-                  {publicada ? 'Ativa, aparece para toda a equipe.' : 'Rascunho, ainda não compartilhado.'}
+                  {publicada ? 'Publicada, visível para toda a equipe.' : 'Rascunho, ainda não visível para a equipe.'}
                 </span>
               </span>
               <ToggleBtn ativo={publicada} onClick={() => setPublicada((v) => !v)} />
@@ -233,7 +233,7 @@ export function NovaEscalaTela({ membros, funcoes, equipes, indisponibilidades, 
                 </div>
               )}
               <div className="flex items-center gap-3 border-t border-[var(--border)] px-4 py-3.5">
-                <span className="flex-1 text-sm font-semibold">Solicitar confirmação dos participantes</span>
+                <span className="flex-1 text-sm font-semibold">Pedir confirmação de presença</span>
                 <ToggleBtn ativo={solicitarConfirmacao} onClick={() => setSolicitarConfirmacao((v) => !v)} />
               </div>
             </div>
