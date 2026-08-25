@@ -14,6 +14,7 @@ import { useDebounce } from '../lib/useDebounce';
 import { useHistoricoMusicas } from '../lib/useHistoricoMusicas';
 import { useProximosRepertoriosHome } from '../lib/useProximosRepertoriosHome';
 import { useFavoritosMinisterioHome } from '../lib/useFavoritosMinisterioHome';
+import { desfavoritarMinisterio } from '../lib/favoritosMinisterio';
 import { useQtdRepertoriosHome } from '../lib/preferenciaRepertoriosHome';
 import { proximoDomingoCalculado, diasAte } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
@@ -153,7 +154,18 @@ export function Home({
 
   // Ministérios favoritados (não membro) — repertório da próxima escala
   // de cada um, ver useFavoritosMinisterioHome.ts / migration 0021.
-  const { itens: favoritosMinisterio } = useFavoritosMinisterioHome(isLoggedIn);
+  const { itens: favoritosMinisterio, recarregar: recarregarFavoritosMinisterio } =
+    useFavoritosMinisterioHome(isLoggedIn);
+  const [removendoFavoritoMinisterio, setRemovendoFavoritoMinisterio] = useState<string | null>(null);
+  async function removerFavoritoMinisterio(ministerioId: string) {
+    setRemovendoFavoritoMinisterio(ministerioId);
+    try {
+      await desfavoritarMinisterio(ministerioId);
+      await recarregarFavoritosMinisterio();
+    } finally {
+      setRemovendoFavoritoMinisterio(null);
+    }
+  }
 
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get('rep');
@@ -377,8 +389,10 @@ export function Home({
               <FavoritosMinisterioSection
                 itens={favoritosMinisterio}
                 isLoggedIn={isLoggedIn}
+                removendo={removendoFavoritoMinisterio}
                 onAbrirBuscar={onAbrirBuscarMinisterio}
                 onAbrirRepertorio={onAbrirRepertorioPublico}
+                onRemover={removerFavoritoMinisterio}
               />
             </div>
           )}

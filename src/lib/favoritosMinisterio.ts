@@ -9,6 +9,13 @@ import { supabase, isSupabaseConfigured } from './supabase';
  * 0021_favoritos_ministerio.sql).
  */
 
+export interface ProximoRepertorio {
+  repertorioId: string;
+  nome: string;
+  data: string;
+  hora: string;
+}
+
 export interface MinisterioPublico {
   ministerioId: string;
   nome: string;
@@ -16,18 +23,20 @@ export interface MinisterioPublico {
   igrejaNome: string | null;
   igrejaCidade: string | null;
   igrejaEstado: string | null;
+  proximo: ProximoRepertorio | null;
 }
 
 export interface ProximoRepertorioFavorito {
   ministerioId: string;
   ministerioNome: string;
   igrejaNome: string | null;
-  proximo: {
-    repertorioId: string;
-    nome: string;
-    data: string;
-    hora: string;
-  } | null;
+  proximo: ProximoRepertorio | null;
+}
+
+function mapearProximo(
+  p: { repertorio_id: string; nome: string; data: string; hora: string } | null
+): ProximoRepertorio | null {
+  return p ? { repertorioId: p.repertorio_id, nome: p.nome, data: p.data, hora: p.hora } : null;
 }
 
 function mapearMinisterio(row: {
@@ -37,6 +46,7 @@ function mapearMinisterio(row: {
   igreja_nome: string | null;
   igreja_cidade: string | null;
   igreja_estado: string | null;
+  proximo: { repertorio_id: string; nome: string; data: string; hora: string } | null;
 }): MinisterioPublico {
   return {
     ministerioId: row.ministerio_id,
@@ -45,6 +55,7 @@ function mapearMinisterio(row: {
     igrejaNome: row.igreja_nome,
     igrejaCidade: row.igreja_cidade,
     igrejaEstado: row.igreja_estado,
+    proximo: mapearProximo(row.proximo),
   };
 }
 
@@ -111,8 +122,6 @@ export async function listarFavoritosComProximoRepertorio(): Promise<ProximoRepe
     ministerioId: l.ministerio_id,
     ministerioNome: l.ministerio_nome,
     igrejaNome: l.igreja_nome,
-    proximo: l.proximo
-      ? { repertorioId: l.proximo.repertorio_id, nome: l.proximo.nome, data: l.proximo.data, hora: l.proximo.hora }
-      : null,
+    proximo: mapearProximo(l.proximo),
   }));
 }

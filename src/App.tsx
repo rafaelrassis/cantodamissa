@@ -178,7 +178,10 @@ function App() {
     }
   }, []);
 
+  const [telaOrigemRepertorioPublico, setTelaOrigemRepertorioPublico] = useState<Tela>('home');
+
   async function abrirRepertorioPublico(id: string) {
+    setTelaOrigemRepertorioPublico(tela === 'buscar-ministerio' ? 'buscar-ministerio' : 'home');
     const rep = await obterRepertorioPublico(id);
     setRepertorioPublico(rep);
     setTela('igreja-publica');
@@ -339,7 +342,7 @@ function App() {
         repertorio={repertorioPublico}
         onBack={() => {
           setRepertorioPublico(null);
-          if (!igrejaCodigoInicial) setTela('home');
+          if (!igrejaCodigoInicial) setTela(telaOrigemRepertorioPublico);
         }}
         onSelectMusica={(m, tom) => abrirMusica(m, null, tom)}
         removerMusica={() => {}}
@@ -369,12 +372,24 @@ function App() {
 
   if (tela === 'buscar-ministerio') {
     return (
-      <BuscarMinisterioTela
-        isLoggedIn={isLoggedIn}
-        onBack={() => setTela('home')}
-        onEntrar={() => setLoginParaMinisterioAberto(true)}
-        onFavoritosAlterados={() => {}}
-      />
+      <>
+        <BuscarMinisterioTela
+          isLoggedIn={isLoggedIn}
+          onBack={() => setTela('home')}
+          onEntrar={() => setLoginParaMinisterioAberto(true)}
+          onFavoritosAlterados={() => {}}
+          onAbrirRepertorio={abrirRepertorioPublico}
+        />
+        {loginParaMinisterioAberto && (
+          <UserLoginModal
+            onLogin={() => {
+              loginUsuario();
+              setLoginParaMinisterioAberto(false);
+            }}
+            onClose={() => setLoginParaMinisterioAberto(false)}
+          />
+        )}
+      </>
     );
   }
 

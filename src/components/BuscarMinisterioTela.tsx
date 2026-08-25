@@ -14,6 +14,7 @@ interface Props {
   onBack: () => void;
   onEntrar: () => void;
   onFavoritosAlterados: () => void;
+  onAbrirRepertorio: (repertorioId: string) => void;
 }
 
 type Modo = 'codigo' | 'igreja';
@@ -22,7 +23,13 @@ type Modo = 'codigo' | 'igreja';
  * favoritar sem pedir ingresso — pra acompanhar o repertório da próxima
  * escala na Início. Ver AdicionarMinisterioTela pro fluxo de ingressar
  * de verdade (que exige aprovação do admin). */
-export function BuscarMinisterioTela({ isLoggedIn, onBack, onEntrar, onFavoritosAlterados }: Props) {
+export function BuscarMinisterioTela({
+  isLoggedIn,
+  onBack,
+  onEntrar,
+  onFavoritosAlterados,
+  onAbrirRepertorio,
+}: Props) {
   const [modo, setModo] = useState<Modo>('igreja');
 
   const [codigo, setCodigo] = useState('');
@@ -181,15 +188,33 @@ export function BuscarMinisterioTela({ isLoggedIn, onBack, onEntrar, onFavoritos
               key={m.ministerioId}
               className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3"
             >
-              <Church size={18} className="shrink-0 text-[var(--accent)]" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{m.nome}</p>
-                <p className="truncate text-xs text-[var(--muted)]">
-                  {m.igrejaNome
-                    ? `${m.igrejaNome} · ${m.igrejaCidade}/${m.igrejaEstado}`
-                    : 'Sem igreja vinculada'}
-                </p>
-              </div>
+              <button
+                onClick={() => m.proximo && onAbrirRepertorio(m.proximo.repertorioId)}
+                disabled={!m.proximo}
+                className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:cursor-default"
+              >
+                <Church size={18} className="shrink-0 text-[var(--accent)]" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{m.nome}</p>
+                  <p className="truncate text-xs text-[var(--muted)]">
+                    {m.igrejaNome
+                      ? `${m.igrejaNome} · ${m.igrejaCidade}/${m.igrejaEstado}`
+                      : 'Sem igreja vinculada'}
+                  </p>
+                  {m.proximo ? (
+                    <p className="truncate text-xs font-semibold text-[var(--accent)]">
+                      {m.proximo.nome} ·{' '}
+                      {new Date(`${m.proximo.data}T00:00:00`).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: 'long',
+                      })}{' '}
+                      · {m.proximo.hora}
+                    </p>
+                  ) : (
+                    <p className="truncate text-xs text-[var(--muted)]">Nenhuma escala aberta</p>
+                  )}
+                </div>
+              </button>
               <button
                 onClick={() => alternarFavorito(m)}
                 disabled={alterando === m.ministerioId}
