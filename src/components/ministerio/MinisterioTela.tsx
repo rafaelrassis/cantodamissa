@@ -333,30 +333,36 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
-      <header className="bg-[var(--accent)] px-4 py-4 text-[var(--accent-fg)] md:px-10">
-        <div className="mb-2 flex items-center justify-between">
-          <button onClick={onBack} className="flex items-center gap-1 text-xs opacity-80">
-            <ChevronLeft size={14} /> Voltar
+      <header className="rounded-b-3xl bg-[var(--accent)] px-4 pb-5 pt-4 text-[var(--accent-fg)] shadow-[var(--shadow)] md:px-10">
+        <div className="mb-3 flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10"
+            aria-label="Voltar"
+          >
+            <ChevronLeft size={16} />
           </button>
           <button
             onClick={() => setConfiguracoesAbertas(true)}
             aria-label="Configurações do ministério"
-            className="text-xs opacity-80"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10"
           >
-            <Settings size={16} />
+            <Settings size={15} />
           </button>
         </div>
         <button
           onClick={() => setSeletorMinisterioAberto(true)}
           className="flex w-full items-center gap-3 text-left"
         >
-          {ministerio.foto && <span className="text-2xl">{ministerio.foto}</span>}
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-xl">
+            {ministerio.foto || ministerio.nome.charAt(0).toUpperCase()}
+          </span>
           <div className="min-w-0 flex-1">
             <span className="flex items-center gap-1">
-              <h1 className="truncate text-xl font-extrabold tracking-tight">{ministerio.nome}</h1>
-              <ChevronDown size={18} className="shrink-0 opacity-80" />
+              <h1 className="truncate text-lg font-extrabold tracking-tight">{ministerio.nome}</h1>
+              <ChevronDown size={16} className="shrink-0 opacity-70" />
             </span>
-            <p className="mt-0.5 text-sm opacity-80">{ministerio.membros.length} membros · área restrita</p>
+            <p className="mt-0.5 text-xs opacity-70">{ministerio.membros.length} membros</p>
           </div>
         </button>
       </header>
@@ -370,15 +376,15 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
         onAdicionar={() => setAdicionandoMinisterio(true)}
       />
 
-      <nav className="mx-auto flex max-w-2xl overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)]">
+      <nav className="mx-auto flex max-w-2xl gap-1.5 overflow-x-auto px-3 py-3">
         {ABAS.map((a) => (
           <button
             key={a.id}
             onClick={() => setSubTela(a.id)}
-            className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-3 py-3 text-xs font-semibold ${
+            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold transition ${
               subTela === a.id
-                ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]'
-                : 'text-[var(--muted)]'
+                ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
+                : 'bg-[var(--surface)] text-[var(--muted)]'
             }`}
           >
             {a.icon}

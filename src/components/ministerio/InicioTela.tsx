@@ -55,16 +55,10 @@ export function InicioTela({
     <div className="px-4 py-5 md:px-10">
       <div className="rounded-2xl bg-[var(--accent)] p-4 text-[var(--accent-fg)]">
         <p className="text-base font-bold">{nomeMinisterio}</p>
-        <div className="mt-2 flex items-center gap-4 text-xs opacity-90">
-          <span className="flex items-center gap-1">
-            <CalendarDays size={14} /> {escalas.filter((e) => e.publicada).length}/{escalas.length}
-          </span>
-          <span className="flex items-center gap-1">
-            <Music2 size={14} /> {totalMusicas}
-          </span>
-          <span className="flex items-center gap-1">
-            <Users size={14} /> {membros.length}
-          </span>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <StatChip icon={<CalendarDays size={14} />} valor={`${escalas.filter((e) => e.publicada).length}/${escalas.length}`} label="escalas" />
+          <StatChip icon={<Music2 size={14} />} valor={String(totalMusicas)} label="músicas" />
+          <StatChip icon={<Users size={14} />} valor={String(membros.length)} label="membros" />
         </div>
       </div>
 
@@ -97,9 +91,9 @@ export function InicioTela({
         </div>
       )}
 
-      <Secao titulo="Avisos" contagem={`${avisosDestaque.length}`} subtitulo="Em destaque" onVerTodos={onVerAvisos}>
+      <Secao titulo="Avisos em destaque" contagem={`${avisosDestaque.length}`} onVerTodos={onVerAvisos}>
         {avisosDestaque.length === 0 ? (
-          <ItemVazio icon={<Megaphone size={16} />} />
+          <ItemVazio icon={<Megaphone size={20} />} texto="Nenhum aviso em destaque no momento." />
         ) : (
           avisosDestaque.map((a) => (
             <li key={a.id} className="flex items-center gap-3 px-3 py-3">
@@ -110,9 +104,9 @@ export function InicioTela({
         )}
       </Secao>
 
-      <Secao titulo="Minhas Escalas" contagem={`${proximasEscalas.length}`} subtitulo="Próximas" onVerTodos={onVerEscalas}>
+      <Secao titulo="Próximas escalas" contagem={`${proximasEscalas.length}`} onVerTodos={onVerEscalas}>
         {proximasEscalas.length === 0 ? (
-          <ItemVazio icon={<CalendarDays size={16} />} />
+          <ItemVazio icon={<CalendarDays size={20} />} texto="Você ainda não está em nenhuma escala futura." />
         ) : (
           proximasEscalas.map((e) => (
             <li key={e.id}>
@@ -134,9 +128,9 @@ export function InicioTela({
         )}
       </Secao>
 
-      <Secao titulo="Aniversariantes" contagem={`${aniversariantes.length}`} subtitulo={MESES[mesAtual]}>
+      <Secao titulo={`Aniversariantes de ${MESES[mesAtual]}`} contagem={`${aniversariantes.length}`}>
         {aniversariantes.length === 0 ? (
-          <ItemVazio icon={<Cake size={16} />} />
+          <ItemVazio icon={<Cake size={20} />} texto="Ninguém faz aniversário este mês." />
         ) : (
           aniversariantes.map((m) => (
             <li key={m.id} className="flex items-center gap-3 px-3 py-3">
@@ -154,24 +148,34 @@ export function InicioTela({
   );
 }
 
+function StatChip({ icon, valor, label }: { icon: React.ReactNode; valor: string; label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-0.5 rounded-xl bg-white/10 py-2">
+      <span className="flex items-center gap-1 text-sm font-bold">
+        {icon} {valor}
+      </span>
+      <span className="text-[10px] uppercase tracking-wide opacity-70">{label}</span>
+    </div>
+  );
+}
+
 function Secao({
   titulo,
   contagem,
-  subtitulo,
   onVerTodos,
   children,
 }: {
   titulo: string;
   contagem: string;
-  subtitulo: string;
   onVerTodos?: () => void;
   children: React.ReactNode;
 }) {
   return (
     <div className="mt-6">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-          {titulo} <span className="ml-1 rounded-full bg-[var(--surface)] px-1.5 py-0.5 text-[10px]">{contagem}</span>
+      <div className="flex items-center justify-between">
+        <h2 className="flex items-center gap-1.5 text-sm font-bold text-[var(--text)]">
+          {titulo}
+          <span className="rounded-full bg-[var(--surface)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--muted)]">{contagem}</span>
         </h2>
         {onVerTodos && (
           <button onClick={onVerTodos} className="flex items-center gap-0.5 text-xs font-semibold text-[var(--accent)]">
@@ -179,7 +183,6 @@ function Secao({
           </button>
         )}
       </div>
-      <p className="mt-0.5 text-xs text-[var(--muted)]">{subtitulo}</p>
       <ul className="mt-2 divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] bg-[var(--surface)]">
         {children}
       </ul>
@@ -187,11 +190,13 @@ function Secao({
   );
 }
 
-function ItemVazio({ icon }: { icon: React.ReactNode }) {
+function ItemVazio({ icon, texto }: { icon: React.ReactNode; texto: string }) {
   return (
-    <li className="flex items-center gap-3 px-3 py-4">
-      <span className="shrink-0 text-[var(--muted)]">{icon}</span>
-      <span className="text-sm text-[var(--muted)]">Lista vazia.</span>
+    <li className="flex flex-col items-center gap-2 px-4 py-6 text-center">
+      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+        {icon}
+      </span>
+      <span className="text-xs text-[var(--muted)]">{texto}</span>
     </li>
   );
 }

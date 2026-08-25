@@ -124,9 +124,9 @@ export function EquipeTela({
               className="mb-4 flex w-full items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
             >
               <span className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
-                <UserPlus size={16} /> Convidar membros
+                <UserPlus size={16} /> Adicionar à equipe
               </span>
-              <span className="text-xs text-[var(--muted)]">Ver código</span>
+              <span className="text-xs text-[var(--muted)]">Gerar código</span>
             </button>
           )}
 
@@ -345,7 +345,9 @@ export function EquipeTela({
           </div>
 
           {indisponibilidades.length === 0 ? (
-            <p className="py-8 text-center text-sm text-[var(--muted)]">Lista vazia.</p>
+            <p className="py-8 text-center text-sm text-[var(--muted)]">
+              Nenhuma indisponibilidade registrada nesta data.
+            </p>
           ) : (
             <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
               {indisponibilidades.map((i) => (

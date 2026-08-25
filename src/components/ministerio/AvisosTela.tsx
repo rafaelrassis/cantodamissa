@@ -28,7 +28,12 @@ export function AvisosTela({ avisos, onCriar, souAdmin }: Props) {
   return (
     <div className="px-4 pb-24 pt-4">
       {ativos.length === 0 ? (
-        <p className="mt-8 text-center text-sm text-[var(--muted)]">Lista vazia.</p>
+        <div className="mt-10 flex flex-col items-center gap-2 text-center">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+            <Megaphone size={20} />
+          </span>
+          <p className="text-sm text-[var(--muted)]">Nenhum aviso publicado ainda.</p>
+        </div>
       ) : (
         <ul className="space-y-2">
           {ativos.map((a) => (

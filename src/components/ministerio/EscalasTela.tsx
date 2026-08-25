@@ -52,9 +52,14 @@ export function EscalasTela({ escalas, onAbrirEscala, onCriarEscala, souAdmin }:
       </div>
 
       {lista.length === 0 ? (
-        <p className="mt-10 px-4 text-center text-sm text-[var(--muted)]">
-          Nenhuma escala por aqui ainda. Use o botão ( + ) para criar a primeira.
-        </p>
+        <div className="mt-10 flex flex-col items-center gap-2 px-4 text-center">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+            <Plus size={20} />
+          </span>
+          <p className="text-sm text-[var(--muted)]">
+            Nenhuma escala por aqui ainda. Toque em ( + ) para criar a primeira.
+          </p>
+        </div>
       ) : (
         <ul className="mt-4 space-y-2 px-4">
           {lista.map((e) => {

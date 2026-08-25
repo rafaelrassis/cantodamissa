@@ -60,8 +60,8 @@ export function PanoramaTela({ escalas, repertorios, indisponibilidades, totalMe
 
 function Card({ titulo, valor, sub }: { titulo: string; valor: string; sub?: string }) {
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-      <p className="text-2xl font-extrabold text-[var(--text)]">{valor}</p>
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow)]">
+      <p className="text-2xl font-extrabold text-[var(--accent)]">{valor}</p>
       <p className="mt-1 text-xs font-semibold text-[var(--text)]">{titulo}</p>
       {sub && <p className="text-[10px] text-[var(--muted)]">{sub}</p>}
     </div>
