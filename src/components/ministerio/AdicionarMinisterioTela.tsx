@@ -166,33 +166,27 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
       <div className="mx-auto max-w-2xl px-4 py-6 md:px-10">
         {passo === 'opcoes' && (
           <>
-            <div className="rounded-2xl bg-[var(--accent-soft)] p-5">
-              <span className="inline-flex items-center rounded-full bg-[var(--accent)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-fg)]">
-                Primeiro acesso
-              </span>
-              <p className="mt-3 text-sm leading-relaxed text-[var(--text)]">
-                Sua conta ainda não está vinculada a um ministério. Escolha uma das opções abaixo
-                para começar.
-              </p>
-            </div>
+            <p className="text-sm leading-relaxed text-[var(--muted)]">
+              Sua conta ainda não está em nenhum ministério. Toque em uma opção para continuar.
+            </p>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <OpcaoCard
-                icon={<LogIn size={18} />}
-                titulo="Ingressar em um ministério"
-                descricao="Já tem um código de acesso? Entre com ele aqui."
-                acao="Ingressar"
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <TileOpcao
+                icon={<LogIn size={24} />}
+                titulo="Ingressar"
                 onClick={() => setPasso('ingressar')}
               />
-              <OpcaoCard
-                icon={<Plus size={18} />}
-                titulo="Cadastrar novo ministério"
-                descricao="Comece do zero e monte a estrutura da sua equipe."
-                acao="Cadastrar"
+              <TileOpcao
+                icon={<Plus size={24} />}
+                titulo="Cadastrar"
                 destaque
                 onClick={() => setPasso('cadastrar')}
               />
             </div>
+
+            <p className="mt-4 text-center text-xs text-[var(--muted)]">
+              Ingressar exige um código de acesso · Cadastrar cria um ministério novo
+            </p>
           </>
         )}
 
@@ -347,48 +341,28 @@ export function AdicionarMinisterioTela({ onBack, onConcluir, validarCodigo, err
   );
 }
 
-function OpcaoCard({
+function TileOpcao({
   icon,
   titulo,
-  descricao,
-  acao,
   destaque,
   onClick,
 }: {
   icon: React.ReactNode;
   titulo: string;
-  descricao: string;
-  acao: string;
   destaque?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 ${
+      className={`flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl transition hover:-translate-y-0.5 ${
         destaque
-          ? 'border-transparent bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)]'
-          : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-[var(--shadow)]'
+          ? 'bg-[var(--accent)] text-[var(--accent-fg)] shadow-[var(--shadow)]'
+          : 'border-2 border-dashed border-[var(--border)] text-[var(--text)]'
       }`}
     >
-      <span
-        className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-          destaque ? 'bg-white/15' : 'bg-[var(--accent-soft)] text-[var(--accent)]'
-        }`}
-      >
-        {icon}
-      </span>
-      <span className="mt-3 text-base font-semibold">{titulo}</span>
-      <span className={`mt-1 text-sm ${destaque ? 'text-white/80' : 'text-[var(--muted)]'}`}>
-        {descricao}
-      </span>
-      <span
-        className={`mt-4 inline-flex items-center gap-1 text-sm font-semibold ${
-          destaque ? 'text-white' : 'text-[var(--accent)]'
-        }`}
-      >
-        {acao} <ChevronRight size={15} />
-      </span>
+      {icon}
+      <span className="text-sm font-bold">{titulo}</span>
     </button>
   );
 }

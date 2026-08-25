@@ -34,6 +34,7 @@
  * Consumidos via Tailwind arbitrary values: bg-[var(--surface)] etc.
  */
 :root {
+  color-scheme: light;
   --bg: #ffffff;
   --surface: #f5faf5;
   --surface2: #e9f3ea;
@@ -48,6 +49,7 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
   --bg: #071008;
   --surface: #0d1e11;
   --surface2: #16301b;
