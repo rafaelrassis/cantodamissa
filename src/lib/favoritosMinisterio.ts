@@ -30,7 +30,10 @@ export interface ProximoRepertorioFavorito {
   ministerioId: string;
   ministerioNome: string;
   igrejaNome: string | null;
-  proximo: ProximoRepertorio | null;
+  /** Escalas publicadas da data mais próxima — pode ter mais de uma
+   * (ex: Missa das 10 e Missa das 18 no mesmo domingo). A Início deixa a
+   * pessoa escolher quando houver mais de uma (ver migration 0027). */
+  proximos: ProximoRepertorio[];
 }
 
 function mapearProximo(
@@ -121,7 +124,7 @@ export async function desfavoritarMinisterio(ministerioId: string): Promise<void
   if (error) throw new Error(`desfavoritarMinisterio: ${error.message}`);
 }
 
-/** Favoritos do usuário + repertório da próxima escala publicada de cada um. */
+/** Favoritos do usuário + escalas publicadas da próxima data de cada um. */
 export async function listarFavoritosComProximoRepertorio(): Promise<ProximoRepertorioFavorito[]> {
   if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase.rpc('meus_favoritos_com_proximo_repertorio');
@@ -133,12 +136,12 @@ export async function listarFavoritosComProximoRepertorio(): Promise<ProximoRepe
     ministerio_id: string;
     ministerio_nome: string;
     igreja_nome: string | null;
-    proximo: { repertorio_id: string; nome: string; data: string; hora: string } | null;
+    proximos: Array<{ repertorio_id: string; nome: string; data: string; hora: string }>;
   }>;
   return linhas.map((l) => ({
     ministerioId: l.ministerio_id,
     ministerioNome: l.ministerio_nome,
     igrejaNome: l.igreja_nome,
-    proximo: mapearProximo(l.proximo),
+    proximos: (l.proximos ?? []).map((p) => mapearProximo(p)!),
   }));
 }
