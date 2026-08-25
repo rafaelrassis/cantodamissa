@@ -5,6 +5,9 @@ import App from './App.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ErroProvider } from './lib/ErroProvider'
 import { RepertoriosProvider } from './lib/RepertoriosProvider'
+import { iniciarSentry } from './lib/sentry'
+
+iniciarSentry()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
