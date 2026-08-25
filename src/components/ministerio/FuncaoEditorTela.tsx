@@ -44,10 +44,10 @@ export function FuncaoEditorTela({ titulo, nomeInicial, iconeInicial, onVoltar, 
           onClick={() => setPickerAberto(true)}
           className="mt-6 flex w-full items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--bg)] text-xl">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-xl">
             {icone}
           </span>
-          <span className="flex-1 text-sm font-medium">Ícone</span>
+          <span className="flex-1 text-sm font-medium">Ícone da função</span>
           <ChevronRight size={16} className="text-[var(--muted)]" />
         </button>
       </div>

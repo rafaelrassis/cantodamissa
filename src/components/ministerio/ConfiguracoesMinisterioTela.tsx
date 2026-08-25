@@ -146,10 +146,10 @@ export function ConfiguracoesMinisterioTela({
   return (
     <div className="min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]">
       <header className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4 md:px-10">
-        <button onClick={onBack} aria-label="Voltar">
-          <ChevronLeft size={20} />
+        <button onClick={onBack} aria-label="Voltar" className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface)]">
+          <ChevronLeft size={16} />
         </button>
-        <h1 className="text-lg font-extrabold tracking-tight">Configurações do ministério</h1>
+        <h1 className="text-lg font-extrabold tracking-tight">Ajustes do ministério</h1>
       </header>
 
       <div className="mx-auto max-w-2xl px-4 py-5 md:px-10">
@@ -421,7 +421,7 @@ export function ConfiguracoesMinisterioTela({
             disabled={!podeSair}
             className="flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] py-3 text-sm font-semibold disabled:opacity-40"
           >
-            <LogOut size={16} /> {confirmandoSaida ? 'Confirmar saída' : 'Sair do ministério'}
+            <LogOut size={16} /> {confirmandoSaida ? 'Confirmar saída' : 'Deixar este ministério'}
           </button>
 
           {souAdmin && (
@@ -431,7 +431,7 @@ export function ConfiguracoesMinisterioTela({
                 confirmandoExclusao ? 'bg-red-600 text-white' : 'border border-red-500/40 text-red-500'
               }`}
             >
-              <Trash2 size={16} /> {confirmandoExclusao ? 'Confirmar exclusão (irreversível)' : 'Excluir ministério'}
+              <Trash2 size={16} /> {confirmandoExclusao ? 'Confirmar exclusão (irreversível)' : 'Apagar este ministério'}
             </button>
           )}
         </div>

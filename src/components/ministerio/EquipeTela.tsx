@@ -369,13 +369,13 @@ export function EquipeTela({
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 md:items-center">
           <div className="w-full max-w-sm rounded-t-2xl bg-[var(--bg)] p-6 md:rounded-2xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[var(--text)]">Convidar membros</h2>
+              <h2 className="text-lg font-bold text-[var(--text)]">Código de acesso</h2>
               <button onClick={() => setConvidarAberto(false)} aria-label="Fechar" className="text-[var(--muted)]">
                 <X size={20} />
               </button>
             </div>
             <p className="mb-3 text-sm text-[var(--muted)]">
-              Compartilhe este código com quem você quer convidar para o ministério.
+              Compartilhe este código para que novas pessoas possam entrar no ministério.
             </p>
             <div className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
               <span className="font-mono text-lg font-bold tracking-wider text-[var(--text)]">
