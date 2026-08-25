@@ -52,7 +52,7 @@ export function CifraBottomBar(props: Props) {
             aria-label="Abrir seletor de tom"
             className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--accent-soft)]"
           >
-            <span className="font-mono text-sm font-bold leading-none text-[var(--accent)]">
+            <span data-testid="tom-atual" className="font-mono text-sm font-bold leading-none text-[var(--accent)]">
               {props.currentTone}
             </span>
             <span className="text-[8px] font-semibold uppercase tracking-wide text-[var(--accent)]">

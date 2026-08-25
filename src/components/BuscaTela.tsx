@@ -83,6 +83,7 @@ export function BuscaTela({
           <Search size={18} className="shrink-0 opacity-70" />
           <input
             ref={inputRef}
+            data-testid="busca-input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar por título, letra ou artista..."
@@ -109,7 +110,7 @@ export function BuscaTela({
             </div>
 
             {!carregando && resultados.length === 0 && (
-              <div className="px-4 py-10 text-center text-[var(--muted)]">
+              <div data-testid="busca-empty-state" className="px-4 py-10 text-center text-[var(--muted)]">
                 Nenhuma música encontrada. Tente outro termo.
               </div>
             )}

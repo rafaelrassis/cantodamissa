@@ -51,6 +51,7 @@ export function MusicaCard({
     <div
       role="button"
       tabIndex={0}
+      data-testid="musica-card"
       onClick={onClick}
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
       className="flex w-full items-center gap-3 border-b border-[var(--border)] px-4 py-3 text-left transition-colors hover:bg-[var(--surface)]"

@@ -12,6 +12,7 @@
     "android:open": "npx cap open android",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "smoke": "node e2e/smoke.mjs"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@capacitor/android": "^8.5.0",
     "@capacitor/cli": "^8.5.0",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.13.3",
     "@types/qrcode": "^1.5.6",
