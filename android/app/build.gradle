@@ -1,5 +1,28 @@
 apply plugin: 'com.android.application'
 
+import java.util.Properties
+
+// Credenciais de assinatura do upload key ficam fora do repo: em
+// android/keystore.properties (gitignored, gerado a partir do
+// keystore.properties.example) para builds locais, ou nas mesmas variáveis
+// de ambiente para builds em CI. Sem nenhuma das duas, o bundleRelease
+// gera um .aab sem assinatura (não pode ser publicado na Play Store).
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def resolveSigningProp = { propName, envName ->
+    keystoreProperties.getProperty(propName) ?: System.getenv(envName)
+}
+
+def uploadStoreFile = resolveSigningProp('storeFile', 'UPLOAD_STORE_FILE')
+def uploadStorePassword = resolveSigningProp('storePassword', 'UPLOAD_STORE_PASSWORD')
+def uploadKeyAlias = resolveSigningProp('keyAlias', 'UPLOAD_KEY_ALIAS')
+def uploadKeyPassword = resolveSigningProp('keyPassword', 'UPLOAD_KEY_PASSWORD')
+def hasUploadSigningConfig = uploadStoreFile && uploadStorePassword && uploadKeyAlias && uploadKeyPassword
+
 android {
     namespace = "app.cantodamissa.mobile"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,10 +39,23 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (hasUploadSigningConfig) {
+            release {
+                storeFile rootProject.file(uploadStoreFile)
+                storePassword uploadStorePassword
+                keyAlias uploadKeyAlias
+                keyPassword uploadKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (hasUploadSigningConfig) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }

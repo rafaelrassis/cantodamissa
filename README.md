@@ -78,6 +78,35 @@ ferramenta só roda de vez em quando):
 npx @capacitor/assets generate --android
 ```
 
+### Gerando um .aab assinado (release)
+
+1. Gere a upload key uma única vez (o keytool pede senha e alguns dados -
+   preencher e **guardar a senha**, ela não pode ser recuperada depois):
+
+   ```bash
+   cd android
+   keytool -genkeypair -v -keystore upload-keystore.jks \
+     -alias upload -keyalg RSA -keysize 2048 -validity 10000
+   ```
+
+2. Copie `android/keystore.properties.example` para
+   `android/keystore.properties` e preencha `storePassword` e `keyPassword`
+   com a senha escolhida acima. Esse arquivo (e a keystore) são gitignored -
+   nunca commitar. Em CI, use as variáveis de ambiente `UPLOAD_STORE_FILE`,
+   `UPLOAD_STORE_PASSWORD`, `UPLOAD_KEY_ALIAS` e `UPLOAD_KEY_PASSWORD` em vez
+   do arquivo.
+
+3. Build do web + sync do Capacitor, depois gera o bundle assinado:
+
+   ```bash
+   npm run build
+   npx cap sync android
+   cd android
+   ./gradlew bundleRelease
+   ```
+
+   O `.aab` sai em `android/app/build/outputs/bundle/release/app-release.aab`.
+
 O login Google usa PKCE e volta pro app por deep link
 (`app.cantodamissa.mobile://login-callback`) — o esquema precisa estar
 registrado como Redirect URL no dashboard do Supabase.
