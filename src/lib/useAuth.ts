@@ -9,7 +9,7 @@ import { supabase, isSupabaseConfigured } from './supabase';
 // (intent-filter, ver android/app/src/main/AndroidManifest.xml) e
 // cadastrado como Redirect URL no Supabase Dashboard. appId vem de
 // capacitor.config.ts.
-const REDIRECT_NATIVO = 'com.cantodamissa.app://login-callback';
+const REDIRECT_NATIVO = 'app.cantodamissa.mobile://login-callback';
 
 /**
  * Sessão real de usuário via Supabase Auth (Google OAuth) — login único do

@@ -108,5 +108,5 @@ npx @capacitor/assets generate --android
    O `.aab` sai em `android/app/build/outputs/bundle/release/app-release.aab`.
 
 O login Google usa PKCE e volta pro app por deep link
-(`com.cantodamissa.app://login-callback`) — o esquema precisa estar
+(`app.cantodamissa.mobile://login-callback`) — o esquema precisa estar
 registrado como Redirect URL no dashboard do Supabase.

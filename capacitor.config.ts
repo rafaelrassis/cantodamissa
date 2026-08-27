@@ -1,10 +1,11 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 // appId: identificador reverso-DNS único da Play Store — não dá pra trocar
-// depois de publicar. Precisa bater com o nome de pacote cadastrado no
-// Play Console (Configuração do app > Detalhes do app).
+// depois de publicar. "app.cantodamissa" segue o domínio de produção
+// (canto-da-missa.vercel.app); ajuste antes do primeiro upload na Play
+// Console se preferir outro pacote.
 const config: CapacitorConfig = {
-  appId: 'com.cantodamissa.app',
+  appId: 'app.cantodamissa.mobile',
   appName: 'Canto da Missa',
   webDir: 'dist',
   server: {

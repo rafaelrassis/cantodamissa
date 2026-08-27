@@ -18,7 +18,7 @@ if (!isSupabaseConfigured) {
 //
 // flowType 'pkce': no fluxo implícito o provider devolve o access_token no
 // fragmento da URL de retorno, e no Android essa URL é um deep link de
-// esquema próprio (com.cantodamissa.app://) que qualquer outro app
+// esquema próprio (app.cantodamissa.mobile://) que qualquer outro app
 // instalado pode declarar também — quem chegasse primeiro ficaria com o
 // token. Com PKCE volta só um código de uso único, que sem o verifier
 // guardado neste app não vale nada.
