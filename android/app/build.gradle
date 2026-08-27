@@ -24,10 +24,10 @@ def uploadKeyPassword = resolveSigningProp('keyPassword', 'UPLOAD_KEY_PASSWORD')
 def hasUploadSigningConfig = uploadStoreFile && uploadStorePassword && uploadKeyAlias && uploadKeyPassword
 
 android {
-    namespace = "app.cantodamissa.mobile"
+    namespace = "com.cantodamissa.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "app.cantodamissa.mobile"
+        applicationId "com.cantodamissa.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

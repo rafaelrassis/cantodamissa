@@ -1,4 +1,4 @@
-package app.cantodamissa.mobile;
+package com.cantodamissa.app;
 
 import com.getcapacitor.BridgeActivity;
 
