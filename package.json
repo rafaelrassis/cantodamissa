@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "smoke": "node e2e/smoke.mjs"
+    "smoke": "node e2e/smoke.mjs",
+    "predeploy-check": "bash scripts/pre-deploy-check.sh"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

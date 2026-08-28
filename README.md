@@ -26,6 +26,7 @@ npm run dev
 - `npm test` — testes unitários (vitest)
 - `npm run smoke` — teste de fumaça num navegador (precisa do `npm run dev` rodando; ver `e2e/smoke.mjs`)
 - `npm run preview` — preview do build de produção
+- `npm run predeploy-check` — type check + build + testes + greps de sanidade (TODO/FIXME, auth nos endpoints de import de cifra, env vars esperadas) antes de subir pra `main` (`scripts/pre-deploy-check.sh`)
 
 ## Banco de dados
 
