@@ -22,6 +22,7 @@ import type { Repertorio } from '../lib/repertorios';
 import { RITO_SEM_SECAO } from '../lib/repertorios';
 import { getMusicaById } from '../lib/musicasApi';
 import { saveModoExibicao, type ModoExibicao } from '../lib/modoExibicao';
+import { getModoExibicaoPadrao } from '../lib/preferenciaModoExibicao';
 import type { RepertorioTemplate } from '../lib/repertorioTemplatesApi';
 
 interface Props {
@@ -82,7 +83,7 @@ export function RepertorioDetalheTela({
   templatesDisponiveis,
   onAplicarTemplate,
   souAdmin,
-  abaInicial = 'cifra',
+  abaInicial = getModoExibicaoPadrao(),
   isLoggedIn,
   favorito,
   alternandoFavorito,

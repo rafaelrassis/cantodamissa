@@ -16,6 +16,7 @@ import { useProximosRepertoriosHome } from '../lib/useProximosRepertoriosHome';
 import { useFavoritosMinisterioHome } from '../lib/useFavoritosMinisterioHome';
 import { desfavoritarMinisterio } from '../lib/favoritosMinisterio';
 import { useQtdRepertoriosHome } from '../lib/preferenciaRepertoriosHome';
+import { useModoExibicaoPadrao } from '../lib/preferenciaModoExibicao';
 import { proximoDomingoCalculado, diasAte } from '../lib/liturgicalCalendar';
 import { LABEL_TEMPO, LABEL_MOMENTO } from '../lib/labels';
 import {
@@ -150,6 +151,7 @@ export function Home({
   // Consulta dedicada e enxuta (não usa useEscalas/useRepertorios
   // completos) — ver useProximosRepertoriosHome.ts.
   const [qtdRepertoriosHome, definirQtdRepertoriosHome] = useQtdRepertoriosHome();
+  const [modoExibicaoPadrao, definirModoExibicaoPadrao] = useModoExibicaoPadrao();
   const { itens: proximosRepertorios } = useProximosRepertoriosHome(
     ministerio.id,
     ministerio.meuMembroId,
@@ -633,6 +635,8 @@ export function Home({
           onDefinirCorPersonalizada={onDefinirCorPersonalizada}
           qtdRepertoriosHome={qtdRepertoriosHome}
           onDefinirQtdRepertoriosHome={definirQtdRepertoriosHome}
+          modoExibicaoPadrao={modoExibicaoPadrao}
+          onDefinirModoExibicaoPadrao={definirModoExibicaoPadrao}
           onSair={() => {
             onLogoutUsuario();
             setPersonalizarAberto(false);
