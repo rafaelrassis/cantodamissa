@@ -118,6 +118,7 @@ function App() {
     userEmail,
     foto,
     dataNascimento,
+    perfilCarregado,
     login: loginUsuario,
     logout: logoutUsuario,
     definirFoto,
@@ -571,7 +572,7 @@ function App() {
         />
       )}
 
-      {isLoggedIn && !dataNascimento && !perfilPulado && (
+      {isLoggedIn && perfilCarregado && !dataNascimento && !perfilPulado && (
         <CompletarPerfilModal
           onSalvar={(iso) => definirDataNascimento(iso)}
           onPular={() => setPerfilPulado(true)}

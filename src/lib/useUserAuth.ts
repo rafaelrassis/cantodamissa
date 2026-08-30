@@ -22,21 +22,28 @@ export function useUserAuth() {
 
   const [foto, setFotoState] = useState<string | null>(null);
   const [dataNascimento, setDataNascimentoState] = useState<string | null>(null);
+  // Só sabemos se falta data de nascimento depois que esse fetch resolve —
+  // antes disso dataNascimento é null "por padrão", não porque falta de
+  // fato. Sem esse flag o CompletarPerfilModal pisca a cada refresh.
+  const [perfilCarregado, setPerfilCarregado] = useState(false);
 
   useEffect(() => {
     if (!user) {
       setFotoState(null);
       setDataNascimentoState(null);
+      setPerfilCarregado(false);
       return;
     }
 
     if (!isSupabaseConfigured) {
       setFotoState(localStorage.getItem(FOTO_KEY_PREFIX + user.id));
       setDataNascimentoState(localStorage.getItem(NASCIMENTO_KEY_PREFIX + user.id));
+      setPerfilCarregado(true);
       return;
     }
 
     let cancelado = false;
+    setPerfilCarregado(false);
     supabase
       .from('perfis_usuario')
       .select('foto_emoji, data_nascimento')
@@ -46,10 +53,12 @@ export function useUserAuth() {
         if (cancelado) return;
         if (error) {
           console.error('perfis_usuario (carregar):', error.message);
+          setPerfilCarregado(true);
           return;
         }
         setFotoState(data?.foto_emoji ?? null);
         setDataNascimentoState(data?.data_nascimento ?? null);
+        setPerfilCarregado(true);
       });
     return () => {
       cancelado = true;
@@ -110,6 +119,7 @@ export function useUserAuth() {
     userEmail: email,
     foto,
     dataNascimento,
+    perfilCarregado,
     login,
     logout,
     definirFoto,
