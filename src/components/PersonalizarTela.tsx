@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Cake, Check, ChevronLeft, ChevronRight, ListPlus, LogOut, Mail, Moon, Palette, Sun } from 'lucide-react';
+import { Cake, Check, ChevronLeft, ChevronRight, FileText, ListPlus, LogOut, Mail, Moon, Music, Palette, Sun } from 'lucide-react';
 import type { Theme } from '../lib/useTheme';
+import type { ModoExibicao } from '../lib/modoExibicao';
 
 interface Props {
   userName: string;
@@ -14,6 +15,8 @@ interface Props {
   onDefinirCorPersonalizada: (hex: string | null) => void;
   qtdRepertoriosHome: number;
   onDefinirQtdRepertoriosHome: (qtd: number) => void;
+  modoExibicaoPadrao: ModoExibicao;
+  onDefinirModoExibicaoPadrao: (modo: ModoExibicao) => void;
   onSair: () => void;
   onFechar: () => void;
   onCriarCifra: () => void;
@@ -50,6 +53,8 @@ export function PersonalizarTela({
   onDefinirCorPersonalizada,
   qtdRepertoriosHome,
   onDefinirQtdRepertoriosHome,
+  modoExibicaoPadrao,
+  onDefinirModoExibicaoPadrao,
   onSair,
   onFechar,
   onCriarCifra,
@@ -152,6 +157,29 @@ export function PersonalizarTela({
             }`}
           >
             <Moon size={16} /> Escuro
+          </button>
+        </div>
+
+        <h2 className="mt-8 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Modo de exibição</h2>
+        <p className="mt-0.5 text-sm text-[var(--muted)]">
+          Como abrir as músicas por padrão. Não afeta o repertório da assembleia, que sempre abre em letra.
+        </p>
+        <div className="mt-2 flex gap-2 rounded-2xl bg-[var(--surface)] p-1.5">
+          <button
+            onClick={() => onDefinirModoExibicaoPadrao('cifra')}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold ${
+              modoExibicaoPadrao === 'cifra' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
+            }`}
+          >
+            <Music size={16} /> Cifra
+          </button>
+          <button
+            onClick={() => onDefinirModoExibicaoPadrao('letra')}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold ${
+              modoExibicaoPadrao === 'letra' ? 'bg-[var(--accent)] text-[var(--accent-fg)]' : 'text-[var(--muted)]'
+            }`}
+          >
+            <FileText size={16} /> Letra
           </button>
         </div>
 
