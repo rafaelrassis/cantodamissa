@@ -12,14 +12,14 @@ export function CantoresPopularesSection({ cantores, onSelectCantor }: Props) {
   return (
     <section className="py-3">
       <div className="mb-2 flex items-center justify-between px-4 md:px-0">
-        <h2 className="text-sm font-semibold text-[var(--muted)]">Cantores populares</h2>
+        <h2 className="text-sm font-semibold text-[var(--muted)]">Artistas populares</h2>
       </div>
 
       <PaginatedCarousel
         items={cantores}
         pageSize={5}
         renderPage={(pageItems) => (
-          <div className="flex justify-between gap-2 px-4 md:px-0">
+          <div className="flex justify-start gap-4 px-4 md:px-0">
             {pageItems.map((c) => (
               <button
                 key={c.id}
@@ -37,8 +37,8 @@ export function CantoresPopularesSection({ cantores, onSelectCantor }: Props) {
                     {c.nome.charAt(0).toUpperCase()}
                   </span>
                 )}
-                <span className="max-w-[4.5rem] truncate text-center text-xs text-[var(--text)]">
-                  {c.nome}
+                <span className="max-w-[10rem] text-center text-xs text-[var(--text)]">
+                  {c.nome.length > 35 ? `${c.nome.slice(0, 35)}…` : c.nome}
                 </span>
               </button>
             ))}
