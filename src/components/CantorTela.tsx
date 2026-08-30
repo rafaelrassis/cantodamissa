@@ -3,6 +3,7 @@ import { ChevronLeft } from 'lucide-react';
 import type { Musica } from '../types/musica';
 import type { Cantor } from '../types/cantor';
 import { getCantorBySlug, getTop10PorCantor, getTodasAlfabeticoPorCantor } from '../lib/cantoresApi';
+import { getMusicaById } from '../lib/musicasApi';
 import { useRepertorios } from '../lib/repertoriosContext';
 import { MusicaCard } from './MusicaCard';
 import { SolicitarRemocaoLink } from './SolicitarRemocaoLink';
@@ -49,6 +50,14 @@ export function CantorTela({ slug, onBack, onSelectMusica }: Props) {
       ativo = false;
     };
   }, [slug]);
+
+  // as listas dessa tela vêm com uma projeção resumida (id/título/tom/views,
+  // sem chordsContent) — busca a música completa antes de abrir a cifra,
+  // senão o leitor abre com o texto vazio
+  async function abrirMusica(musica: Musica) {
+    const completa = await getMusicaById(musica.id);
+    onSelectMusica(completa ?? musica);
+  }
 
   function adicionar(repertorioId: string, musica: Musica, rito: string) {
     adicionarMusica(repertorioId, {
@@ -143,7 +152,7 @@ export function CantorTela({ slug, onBack, onSelectMusica }: Props) {
             key={musica.id}
             musica={musica}
             posicao={aba === 'top' ? i + 1 : undefined}
-            onClick={() => onSelectMusica(musica)}
+            onClick={() => abrirMusica(musica)}
             repertorios={repertorios}
             onAddToRepertorio={(repertorioId, rito) => adicionar(repertorioId, musica, rito)}
           />
