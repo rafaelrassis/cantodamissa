@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 130" width="1120" height="260" fill="none">
+  <defs>
+    <style>.n{font-family:Georgia,'Times New Roman',serif;font-weight:600;font-size:58px;}</style>
+  </defs>
+  <g transform="translate(10,26) scale(1.125)">
+    <g stroke="#ffffff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 52 L14 30 Q32 8 50 30 L50 52"></path>
+      <path d="M32 6.5 L32 14"></path>
+      <path d="M28.4 10 L35.6 10"></path>
+      <path d="M33.4 41.5 L33.4 26"></path>
+    </g>
+    <ellipse cx="27" cy="44" rx="10.2" ry="8.6" fill="#ffffff" transform="rotate(-18 27 44)"></ellipse>
+    <path d="M14 52 L14 30 Q32 8 50 30 L50 52" stroke="#186420" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+    <path d="M32 6.5 L32 14" stroke="#c9a227" stroke-width="3.4" stroke-linecap="round"></path>
+    <path d="M28.4 10 L35.6 10" stroke="#c9a227" stroke-width="3.4" stroke-linecap="round"></path>
+    <ellipse cx="27" cy="44" rx="7.2" ry="5.6" transform="rotate(-18 27 44)" fill="#186420"></ellipse>
+    <path d="M33.4 41.5 L33.4 26" stroke="#186420" stroke-width="3.4" stroke-linecap="round"></path>
+  </g>
+  <text class="n" x="106" y="80" fill="#186420" stroke="#ffffff" stroke-width="9" stroke-linejoin="round" paint-order="stroke fill">Canto da Missa</text>
+</svg>

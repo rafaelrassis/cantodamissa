@@ -242,8 +242,7 @@ export function Home({
         <div className="hidden items-center justify-between px-10 py-4 md:flex">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
-              <img src="/logo-header.png" alt="" className="h-8 w-8" />
-              Canto da Missa
+              <img src="/logo-header.svg" alt="Canto da Missa" className="h-9 w-auto" />
             </div>
             <nav className="flex items-center gap-1 text-sm font-medium">
               <NavItemDesktop label="Início" ativo />
@@ -271,8 +270,7 @@ export function Home({
         {/* Nav mobile */}
         <div className="flex items-center justify-between px-4 pt-4 md:hidden">
           <div className="flex items-center gap-2 text-base font-extrabold tracking-tight">
-            <img src="/logo-header.png" alt="" className="h-8 w-8" />
-            Canto da Missa
+            <img src="/logo-header.svg" alt="Canto da Missa" className="h-8 w-auto" />
           </div>
           <HeaderUsuario
             isLoggedIn={isLoggedIn}
