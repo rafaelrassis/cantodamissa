@@ -136,6 +136,14 @@ export function MinisterioTela({ onBack, onAbrirMusica, ministerio, escalaInicia
     return promessa.catch((e) => reportarErro(e, padrao));
   }
 
+  if (ministerio.carregando && !adicionandoMinisterio) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg)] text-sm text-[var(--muted)]">
+        Carregando…
+      </div>
+    );
+  }
+
   if (!ministerio.pertence || adicionandoMinisterio) {
     const primeiroMinisterio = !ministerio.pertence;
     return (
