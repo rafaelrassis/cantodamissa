@@ -2,6 +2,7 @@ import type { Musica, MomentoMissa, TempoLiturgico, CicloDominical } from '../ty
 import { mockMusicas } from './mockMusicas';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { extractLyrics } from './chordpro';
+import { capturarErro } from './sentry';
 
 /**
  * Camada de acesso a dados. Usa o Supabase real quando
@@ -139,6 +140,7 @@ export async function getTop50(
 
   if (error) {
     console.error('getTop50:', error.message);
+    capturarErro(new Error(`getTop50: ${error.message}`), { filtro, limite });
     return [];
   }
   return ((data ?? []) as unknown as LinhaMusicaSupabase[]).map(mapearLinha);
@@ -181,6 +183,7 @@ export async function searchMusicas(
 
   if (error) {
     console.error('searchMusicas (textSearch):', error.message);
+    capturarErro(new Error(`searchMusicas (textSearch): ${error.message}`), { termo, filtro });
     // `%` e `,` têm significado na sintaxe de filtro do PostgREST, então o
     // termo precisa ser escapado antes de virar padrão de ilike.
     const termoIlike = termo.replace(/[%_,()]/g, (c) => `\\${c}`);
@@ -189,6 +192,7 @@ export async function searchMusicas(
       .order('views_count', { ascending: false });
     if (errorIlike) {
       console.error('searchMusicas (ilike):', errorIlike.message);
+      capturarErro(new Error(`searchMusicas (ilike): ${errorIlike.message}`), { termo, filtro });
       return [];
     }
     return ((dataIlike ?? []) as unknown as LinhaMusicaSupabase[]).map(mapearLinha);
