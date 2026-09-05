@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { supabase, isSupabaseConfigured } from './supabase';
+import { capturarErro } from './sentry';
 
 // Precisa bater com o esquema/host registrado no AndroidManifest.xml
 // (intent-filter, ver android/app/src/main/AndroidManifest.xml) e
@@ -69,7 +70,10 @@ export function useAuth() {
         const code = query.get('code');
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) console.error('Falha ao concluir login Google (nativo):', error);
+          if (error) {
+            console.error('Falha ao concluir login Google (nativo):', error);
+            capturarErro(error, { etapa: 'exchangeCodeForSession' });
+          }
           return;
         }
 
@@ -100,8 +104,8 @@ export function useAuth() {
         options: { redirectTo: REDIRECT_NATIVO, skipBrowserRedirect: true },
       });
       if (error) {
-        // eslint-disable-next-line no-console
         console.error('Falha ao iniciar login Google (nativo):', error);
+        capturarErro(error, { etapa: 'signInWithOAuth' });
         return;
       }
       if (data.url) await Browser.open({ url: data.url });
