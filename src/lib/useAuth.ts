@@ -61,18 +61,28 @@ export function useAuth() {
     let removerListenerDeepLink: (() => void) | undefined;
     if (Capacitor.isNativePlatform()) {
       const promessaListener = CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
-        if (!url.startsWith(REDIRECT_NATIVO)) return;
+        // TEMP DEBUG (ver sessão "android-empty-ciphers-login"): log
+        // incondicional pra saber, pelo logcat (grep CONSOLE), se o
+        // listener dispara e com que URL — remover depois de achar a causa.
+        console.log('[debug-login] appUrlOpen recebido:', url);
+        if (!url.startsWith(REDIRECT_NATIVO)) {
+          console.log('[debug-login] url não bate com REDIRECT_NATIVO, ignorando');
+          return;
+        }
         await Browser.close().catch(() => {});
 
         // PKCE (ver supabase.ts): a volta traz `?code=`, que só vira
         // sessão em conjunto com o code_verifier guardado neste app.
         const query = new URLSearchParams(url.split('?')[1]?.split('#')[0] ?? '');
         const code = query.get('code');
+        console.log('[debug-login] code extraído?', Boolean(code));
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) {
-            console.error('Falha ao concluir login Google (nativo):', error);
+            console.error('[debug-login] Falha ao concluir login Google (nativo):', error.message, error);
             capturarErro(error, { etapa: 'exchangeCodeForSession' });
+          } else {
+            console.log('[debug-login] exchangeCodeForSession OK, sessão:', Boolean(data.session), data.session?.user?.email);
           }
           return;
         }
@@ -82,6 +92,7 @@ export function useAuth() {
         const params = new URLSearchParams(url.split('#')[1] ?? '');
         const access_token = params.get('access_token');
         const refresh_token = params.get('refresh_token');
+        console.log('[debug-login] fallback implícito, tokens presentes?', Boolean(access_token && refresh_token));
         if (access_token && refresh_token) {
           await supabase.auth.setSession({ access_token, refresh_token });
         }
