@@ -22,6 +22,15 @@ describe('marcarGrupoAlternativo', () => {
   it('não marca acorde colado tipo Am7(9) — não começa com "("', () => {
     expect(marcarGrupoAlternativo(['Am7(9)', 'G'])).toEqual([false, false]);
   });
+
+  it('mantém grupo aberto quando um acorde interno tem parênteses próprios (D7M(6/9))', () => {
+    expect(marcarGrupoAlternativo(['(', 'D7M(6/9)', 'E7(4)', ')'])).toEqual([
+      true,
+      true,
+      true,
+      true,
+    ]);
+  });
 });
 
 describe('pareceLinhaDeAcordes', () => {
@@ -77,5 +86,12 @@ describe('parseCifraClubTexto', () => {
   it('mantém marcador de seção intacto quando é a única coisa na linha', () => {
     const texto = 'Tom: G\n[Refrão]\nG\nletra';
     expect(parseCifraClubTexto(texto)).toBe('[Refrão]\n[G]letra');
+  });
+
+  it('não confunde grupo alternativo seguido de outro grupo com par acorde/letra', () => {
+    const texto = '[Refrão]\n( G#m7(5-)  C#7  F#m7  A/B )\n( D7M(6/9)  E7(4) )\nletra';
+    expect(parseCifraClubTexto(texto)).toBe(
+      '[Refrão]\n( G#m7(5-)  C#7  F#m7  A/B )\n( D7M(6/9)  E7(4) )\nletra'
+    );
   });
 });

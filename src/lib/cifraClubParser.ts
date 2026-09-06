@@ -32,22 +32,23 @@ const TUNING_LINE = /^([A-G](#|b)?\s*){5,7}$/;
  *
  * Tokens já colados como "Am7(9)" ou "Csus4(add9)" não entram aqui: eles
  * começam com uma nota (A-G), não com "(", então nunca abrem grupo.
+ *
+ * Rastreia profundidade de parênteses (não só startsWith/endsWith do
+ * token) porque um acorde com extensão parenteizada dentro do grupo
+ * (ex: "( D7M(6/9)  E7(4) )") tem seu próprio "(...)" balanceado — usar
+ * só endsWith(')') fecharia o grupo externo ali no meio, sobrando
+ * "E7(4)" e ")" como tokens "normais" fora do grupo.
  */
 export function marcarGrupoAlternativo(tokens: string[]): boolean[] {
   const dentroDeGrupo: boolean[] = [];
-  let aberto = false;
+  let profundidade = 0;
   for (const token of tokens) {
-    if (aberto) {
-      dentroDeGrupo.push(true);
-      if (token.endsWith(')')) aberto = false;
-      continue;
+    const profundidadeAntes = profundidade;
+    for (const ch of token) {
+      if (ch === '(') profundidade++;
+      else if (ch === ')') profundidade = Math.max(0, profundidade - 1);
     }
-    if (token.startsWith('(')) {
-      dentroDeGrupo.push(true);
-      if (!token.endsWith(')')) aberto = true; // grupo abre e continua no próximo token
-      continue;
-    }
-    dentroDeGrupo.push(false);
+    dentroDeGrupo.push(profundidadeAntes > 0 || token.startsWith('('));
   }
   return dentroDeGrupo;
 }
