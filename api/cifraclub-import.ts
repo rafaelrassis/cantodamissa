@@ -66,22 +66,39 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
   const $ = cheerio.load(html);
 
+  // fallback via <meta og:title>/<title> ("Música - Artista - Cifra Club"):
+  // o próprio título da música pode conter " - " (ex: "Nome (Ano - Extra)"),
+  // então só a ÚLTIMA parte é confiável pro artista — a primeira parte só
+  // serve de fallback de título se os seletores de h1/h2 abaixo falharem.
+  const metaTitle = (
+    $('meta[property="og:title"]').attr('content') ?? $('title').text()
+  ).replace(/\s*-\s*Cifra Club\s*$/i, '');
+  const metaParts = metaTitle.split(' - ');
+
   const title =
+    $('h1').first().text().trim() ||
     $('h1.t1').first().text().trim() ||
-    $('meta[property="og:title"]').attr('content')?.split(' - ')[0]?.trim() ||
-    $('title').text().split(' - ')[0]?.trim() ||
+    metaParts[0]?.trim() ||
     '';
 
+  // layout ago/2026: <h1>Título</h1><a href="/artista/"><h2>Artista</h2></a>
   const artist =
+    $('h1').first().next('a').find('h2').first().text().trim() ||
     $('h2.t3 a').first().text().trim() ||
     $('h2.t3').first().text().trim() ||
+    (metaParts.length > 1 ? metaParts[metaParts.length - 1]?.trim() : '') ||
     null;
 
-  // tom aparece como "Tom: G" ou num link com classe relacionada a tom;
-  // fallback por regex no texto inteiro da página
-  let originalTone: string | null = null;
-  const tomMatch = $.text().match(/Tom:\s*([A-G](?:#|b)?m?)/);
-  if (tomMatch) originalTone = tomMatch[1];
+  // tom: antes vinha como "Tom: G" em texto puro; no layout ago/2026 é o
+  // valor ao lado do botão "Diminuir tom" (aria-label é semântico e mais
+  // estável que as classes com hash geradas no build do Cifra Club)
+  let originalTone: string | null =
+    $('button[aria-label="Diminuir tom"]').parent().find('p.u-ellipsis').first().text().trim() ||
+    null;
+  if (!originalTone) {
+    const tomMatch = $.text().match(/Tom:\s*([A-G](?:#|b)?m?)/);
+    if (tomMatch) originalTone = tomMatch[1];
+  }
 
   // pega o maior <pre> da página — é onde o Cifra Club renderiza a cifra
   let maiorPre = '';
