@@ -30,3 +30,7 @@ dist-ssr
 /test-results/
 /playwright-report/
 /blob-report/
+
+# Builds Android (gerados, não versionados)
+*.aab
+*.apk
