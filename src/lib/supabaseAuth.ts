@@ -11,6 +11,21 @@ import { supabase, isSupabaseConfigured } from './supabase';
 // agora é o auth_uid vinculado a ele.
 let sessaoPromise: Promise<string | null> | null = null;
 
+// Sem isso, um login/logout que troca o auth.uid() (ex.: entrar com Google
+// depois de já ter uma sessão anônima cacheada) deixava o cache acima
+// apontando pro uid antigo pro resto da vida da aba. Na Web isso passava
+// batido porque o redirect do OAuth recarrega a página e zera esse estado
+// de módulo; no Android (deep link, sem reload nenhum) o cache obsoleto
+// sobrevivia ao login, e as telas do Ministério continuavam resolvendo
+// "quem sou eu" pro uid anônimo de antes de logar.
+if (isSupabaseConfigured) {
+  supabase.auth.onAuthStateChange((evento) => {
+    if (evento === 'SIGNED_IN' || evento === 'SIGNED_OUT' || evento === 'TOKEN_REFRESHED') {
+      sessaoPromise = null;
+    }
+  });
+}
+
 export function garantirSessaoAnonima(): Promise<string | null> {
   if (!isSupabaseConfigured) return Promise.resolve(null);
   if (!sessaoPromise) {
