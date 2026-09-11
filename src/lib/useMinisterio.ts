@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as api from './ministerioApi';
 import { useCanalErro } from './erroContext';
+import { preservarSeIgual, useRevalidarEmFoco } from './useRevalidarEmFoco';
 import type { MinisterioIdentidade, MinisterioResumo } from './ministerioApi';
 import type { SolicitacaoIngresso } from '../types/ministerio';
 
@@ -56,7 +57,7 @@ export function useMinisterio(perfil: PerfilUsuario = {}) {
    */
   const recarregar = useCallback(async (preferirId?: string) => {
     const lista = await api.listarMeusMinisterios();
-    setMeusMinisterios(lista);
+    setMeusMinisterios((prev) => preservarSeIgual(prev, lista));
 
     if (lista.length === 0) {
       localStorage.removeItem(CHAVE_MINISTERIO_ATIVO);
@@ -69,7 +70,10 @@ export function useMinisterio(perfil: PerfilUsuario = {}) {
     localStorage.setItem(CHAVE_MINISTERIO_ATIVO, alvoId);
 
     const m = await api.buscarMinisterioPorId(alvoId);
-    setMinisterio(m);
+    // preservarSeIgual porque isto agora roda em background a cada 30s:
+    // sem ele, cada ciclo trocaria o objeto por uma cópia idêntica e
+    // re-renderizaria (e refaria os efeitos de) todo o módulo Ministério.
+    setMinisterio((prev) => (prev ? preservarSeIgual(prev, m) : m));
     return m;
   }, []);
 
@@ -79,6 +83,11 @@ export function useMinisterio(perfil: PerfilUsuario = {}) {
       .catch((err) => reportar(err, 'Não foi possível carregar o ministério.'))
       .finally(() => setCarregando(false));
   }, [recarregar, reportar]);
+
+  // Mantém a tela em dia sem fechar e abrir o app: solicitação de
+  // ingresso que chega pro admin, e o ministério que aparece pra quem
+  // acabou de ser aprovado. Silencioso — erro aqui não vira alerta.
+  useRevalidarEmFoco(recarregar);
 
   /** Troca qual ministério (dentre os que o device já integra) está ativo. */
   const trocarMinisterio = useCallback(
@@ -252,6 +261,7 @@ export function useMinisterio(perfil: PerfilUsuario = {}) {
 
   return {
     carregando,
+    recarregar,
     pertence,
     meusMinisterios,
     trocarMinisterio,

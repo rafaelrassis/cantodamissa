@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as api from './escalasApi';
+import { preservarSeIgual, useRevalidarEmFoco } from './useRevalidarEmFoco';
 import type { Escala } from '../types/ministerio';
 
 /**
@@ -17,13 +18,17 @@ export function useEscalas(ministerioId: string | null) {
       return;
     }
     const lista = await api.listarEscalas(ministerioId);
-    setEscalas(lista);
+    setEscalas((prev) => preservarSeIgual(prev, lista));
   }, [ministerioId]);
 
   useEffect(() => {
     setCarregando(true);
     recarregar().finally(() => setCarregando(false));
   }, [recarregar]);
+
+  // Escala criada/alterada por outro admin aparece sem precisar fechar o
+  // app (ver useRevalidarEmFoco).
+  useRevalidarEmFoco(recarregar);
 
   const criar = useCallback(
     async (rascunho: Escala) => {

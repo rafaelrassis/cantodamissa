@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as api from './avisosApi';
+import { preservarSeIgual, useRevalidarEmFoco } from './useRevalidarEmFoco';
 import type { Aviso } from '../types/ministerio';
 
 export function useAvisos(ministerioId: string | null) {
@@ -11,13 +12,18 @@ export function useAvisos(ministerioId: string | null) {
       setAvisos([]);
       return;
     }
-    setAvisos(await api.listarAvisos(ministerioId));
+    const lista = await api.listarAvisos(ministerioId);
+    setAvisos((prev) => preservarSeIgual(prev, lista));
   }, [ministerioId]);
 
   useEffect(() => {
     setCarregando(true);
     recarregar().finally(() => setCarregando(false));
   }, [recarregar]);
+
+  // Aviso publicado por outro admin aparece sem precisar fechar o app
+  // (ver useRevalidarEmFoco).
+  useRevalidarEmFoco(recarregar);
 
   const criar = useCallback(
     async (titulo: string, descricao: string, emDestaque: boolean) => {
