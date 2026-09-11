@@ -132,22 +132,10 @@ export function useMinisterio(perfil: PerfilUsuario = {}) {
     recarregarRef.current = recarregar;
   }, [recarregar]);
 
-  useEffect(() => {
-    // Aprovar uma solicitação dispara dois eventos quase juntos (a
-    // solicitação sai, o membro entra); o debounce transforma isso numa
-    // busca só.
-    let timer: number | undefined;
-    const cancelar = api.assinarAtualizacoesMinisterio(id, () => {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        recarregarRef.current().catch(() => {});
-      }, 300);
-    });
-    return () => {
-      window.clearTimeout(timer);
-      cancelar();
-    };
-  }, [id]);
+  useEffect(
+    () => api.assinarAtualizacoesMinisterio(id, () => recarregarRef.current().catch(() => {})),
+    [id]
+  );
 
   const cadastrar = useCallback(
     async (nomeNovo: string, funcoesCustom?: { nome: string; icone: string }[]) => {

@@ -11,11 +11,11 @@
 // security definer, que validam a regra dentro do banco — ver
 // supabase/migrations/0013_ministerio_rls_por_membro.sql.
 
-import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { getDeviceKey } from './repertorios';
 import { garantirSessaoAnonima } from './supabaseAuth';
 import { exigirLinha, exigirLinhas } from './supabaseUtils';
+import { assinarTabelas } from './realtimeSupabase';
 import type { FuncaoMinisterio, MembroMinisterio, SolicitacaoIngresso } from '../types/ministerio';
 
 export const FUNCOES_PADRAO: Omit<FuncaoMinisterio, 'id'>[] = [
@@ -176,47 +176,19 @@ export function assinarAtualizacoesMinisterio(
   ministerioId: string | null,
   aoMudar: () => void
 ): () => void {
-  if (!isSupabaseConfigured) return () => {};
-
-  let canal: RealtimeChannel | null = null;
-  let cancelado = false;
-
-  (async () => {
-    const authUid = await garantirSessaoAnonima();
-    if (cancelado || !authUid) return;
-    // Sem o JWT da sessão o canal entra como anônimo e a RLS não deixa
-    // passar evento nenhum.
-    await supabase.realtime.setAuth();
-
-    const c = supabase
-      .channel(`ministerio:${authUid}:${ministerioId ?? 'nenhum'}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'ministerio_membros', filter: `auth_uid=eq.${authUid}` },
-        aoMudar
-      );
-
-    if (ministerioId) {
-      c.on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'solicitacoes_ingresso', filter: `ministerio_id=eq.${ministerioId}` },
-        aoMudar
-      ).on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'ministerio_membros', filter: `ministerio_id=eq.${ministerioId}` },
-        aoMudar
-      );
-    }
-
-    c.subscribe();
-    if (cancelado) supabase.removeChannel(c);
-    else canal = c;
-  })();
-
-  return () => {
-    cancelado = true;
-    if (canal) supabase.removeChannel(canal);
-  };
+  return assinarTabelas(
+    `ministerio:${ministerioId ?? 'nenhum'}`,
+    (authUid) => [
+      { tabela: 'ministerio_membros', filtro: `auth_uid=eq.${authUid}` },
+      ...(ministerioId
+        ? [
+            { tabela: 'solicitacoes_ingresso', filtro: `ministerio_id=eq.${ministerioId}` },
+            { tabela: 'ministerio_membros', filtro: `ministerio_id=eq.${ministerioId}` },
+          ]
+        : []),
+    ],
+    aoMudar
+  );
 }
 
 /**

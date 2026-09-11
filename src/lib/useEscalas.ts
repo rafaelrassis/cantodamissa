@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import * as api from './escalasApi';
 import { preservarSeIgual, useRevalidarEmFoco } from './useRevalidarEmFoco';
+import { assinarTabelas } from './realtimeSupabase';
 import type { Escala } from '../types/ministerio';
 
 /**
@@ -26,9 +27,28 @@ export function useEscalas(ministerioId: string | null) {
     recarregar().finally(() => setCarregando(false));
   }, [recarregar]);
 
-  // Escala criada/alterada por outro admin aparece sem precisar fechar o
-  // app (ver useRevalidarEmFoco).
-  useRevalidarEmFoco(recarregar);
+  // Fallback do Realtime abaixo (canal caído, volta do multitarefa).
+  useRevalidarEmFoco(recarregar, 5 * 60_000);
+
+  const recarregarRef = useRef(recarregar);
+  useEffect(() => {
+    recarregarRef.current = recarregar;
+  }, [recarregar]);
+
+  // Escala criada/alterada por outro admin, e confirmação de presença de
+  // quem está escalado, aparecem na hora. `escala_participantes` não tem
+  // ministerio_id pra filtrar — a RLS de select é quem restringe (0013).
+  useEffect(() => {
+    if (!ministerioId) return;
+    return assinarTabelas(
+      `escalas:${ministerioId}`,
+      [
+        { tabela: 'escalas', filtro: `ministerio_id=eq.${ministerioId}` },
+        { tabela: 'escala_participantes' },
+      ],
+      () => recarregarRef.current().catch(() => {})
+    );
+  }, [ministerioId]);
 
   const criar = useCallback(
     async (rascunho: Escala) => {

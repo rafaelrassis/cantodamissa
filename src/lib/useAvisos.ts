@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import * as api from './avisosApi';
 import { preservarSeIgual, useRevalidarEmFoco } from './useRevalidarEmFoco';
+import { assinarTabelas } from './realtimeSupabase';
 import type { Aviso } from '../types/ministerio';
 
 export function useAvisos(ministerioId: string | null) {
@@ -21,9 +22,23 @@ export function useAvisos(ministerioId: string | null) {
     recarregar().finally(() => setCarregando(false));
   }, [recarregar]);
 
-  // Aviso publicado por outro admin aparece sem precisar fechar o app
-  // (ver useRevalidarEmFoco).
-  useRevalidarEmFoco(recarregar);
+  // Fallback do Realtime abaixo (canal caído, volta do multitarefa).
+  useRevalidarEmFoco(recarregar, 5 * 60_000);
+
+  const recarregarRef = useRef(recarregar);
+  useEffect(() => {
+    recarregarRef.current = recarregar;
+  }, [recarregar]);
+
+  // Aviso publicado por outro admin aparece na hora.
+  useEffect(() => {
+    if (!ministerioId) return;
+    return assinarTabelas(
+      `avisos:${ministerioId}`,
+      [{ tabela: 'avisos', filtro: `ministerio_id=eq.${ministerioId}` }],
+      () => recarregarRef.current().catch(() => {})
+    );
+  }, [ministerioId]);
 
   const criar = useCallback(
     async (titulo: string, descricao: string, emDestaque: boolean) => {
