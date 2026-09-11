@@ -11,6 +11,7 @@
 // security definer, que validam a regra dentro do banco — ver
 // supabase/migrations/0013_ministerio_rls_por_membro.sql.
 
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { getDeviceKey } from './repertorios';
 import { garantirSessaoAnonima } from './supabaseAuth';
@@ -148,6 +149,73 @@ async function carregarMinisterio(ministerioId: string): Promise<MinisterioIdent
     funcoes: (funcoesRaw ?? []).map((f) => ({ id: f.id, nome: f.nome, icone: f.icone })),
     solicitacoes: (solicitacoesRaw ?? []).map((s) => ({ id: s.id, nome: s.nome, codigoUsado: s.codigo_usado })),
     meuMembroId,
+  };
+}
+
+/**
+ * Avisa quando algo que a tela mostra mudou no banco — solicitação de
+ * ingresso chegando/saindo e entrada/saída de membro — pra não depender
+ * de o usuário fechar e abrir o app (ver useRevalidarEmFoco, que segue
+ * como rede de segurança quando a conexão cai).
+ *
+ * Duas assinaturas, porque os dois lados do fluxo precisam de coisas
+ * diferentes:
+ * - a minha própria linha de membro, em qualquer ministério: é o evento
+ *   de "fui aprovado" (ou removido) pra quem ainda não pertence a nada e
+ *   por isso nem sabe o id do ministério pra filtrar;
+ * - solicitações e membros do ministério ativo: o lado do admin.
+ *
+ * O filtro no servidor evita receber (e pagar por) mudança de ministério
+ * alheio; a RLS de select ainda decide o que chega de fato.
+ *
+ * Retorna a função de cancelamento (síncrona, pra usar direto no cleanup
+ * de useEffect) — a montagem do canal em si é assíncrona porque depende
+ * da sessão.
+ */
+export function assinarAtualizacoesMinisterio(
+  ministerioId: string | null,
+  aoMudar: () => void
+): () => void {
+  if (!isSupabaseConfigured) return () => {};
+
+  let canal: RealtimeChannel | null = null;
+  let cancelado = false;
+
+  (async () => {
+    const authUid = await garantirSessaoAnonima();
+    if (cancelado || !authUid) return;
+    // Sem o JWT da sessão o canal entra como anônimo e a RLS não deixa
+    // passar evento nenhum.
+    await supabase.realtime.setAuth();
+
+    const c = supabase
+      .channel(`ministerio:${authUid}:${ministerioId ?? 'nenhum'}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'ministerio_membros', filter: `auth_uid=eq.${authUid}` },
+        aoMudar
+      );
+
+    if (ministerioId) {
+      c.on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'solicitacoes_ingresso', filter: `ministerio_id=eq.${ministerioId}` },
+        aoMudar
+      ).on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'ministerio_membros', filter: `ministerio_id=eq.${ministerioId}` },
+        aoMudar
+      );
+    }
+
+    c.subscribe();
+    if (cancelado) supabase.removeChannel(c);
+    else canal = c;
+  })();
+
+  return () => {
+    cancelado = true;
+    if (canal) supabase.removeChannel(canal);
   };
 }
 

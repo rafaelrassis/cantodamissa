@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import * as api from './ministerioApi';
 import { useCanalErro } from './erroContext';
 import { preservarSeIgual, useRevalidarEmFoco } from './useRevalidarEmFoco';
@@ -6,6 +6,11 @@ import type { MinisterioIdentidade, MinisterioResumo } from './ministerioApi';
 import type { SolicitacaoIngresso } from '../types/ministerio';
 
 const CHAVE_MINISTERIO_ATIVO = 'cdm_ministerio_ativo_id';
+
+// Com Realtime ligado nas tabelas do ministério (migration 0031), a
+// revalidação por intervalo é só fallback — 5 min basta e evita queimar
+// requisição à toa no plano free.
+const INTERVALO_REVALIDACAO_MS = 5 * 60_000;
 
 /** Dados da conta usados ao entrar num ministério (nome e aniversário do perfil). */
 export type PerfilUsuario = {
@@ -84,10 +89,10 @@ export function useMinisterio(perfil: PerfilUsuario = {}) {
       .finally(() => setCarregando(false));
   }, [recarregar, reportar]);
 
-  // Mantém a tela em dia sem fechar e abrir o app: solicitação de
-  // ingresso que chega pro admin, e o ministério que aparece pra quem
-  // acabou de ser aprovado. Silencioso — erro aqui não vira alerta.
-  useRevalidarEmFoco(recarregar);
+  // Rede de segurança do Realtime abaixo: cobre o canal caído, a volta do
+  // multitarefa e as tabelas que não estão na publication. Silencioso —
+  // erro aqui não vira alerta.
+  useRevalidarEmFoco(recarregar, INTERVALO_REVALIDACAO_MS);
 
   /** Troca qual ministério (dentre os que o device já integra) está ativo. */
   const trocarMinisterio = useCallback(
@@ -119,6 +124,30 @@ export function useMinisterio(perfil: PerfilUsuario = {}) {
   const solicitacoes = ministerio?.solicitacoes ?? [];
   const souAdmin = membros.find((m) => m.id === meuMembroId)?.admin ?? false;
   const qtdAdmins = membros.filter((m) => m.admin).length;
+
+  // Atualização imediata: solicitação de ingresso que chega pro admin, e o
+  // ministério que aparece pra quem acabou de ser aprovado.
+  const recarregarRef = useRef(recarregar);
+  useEffect(() => {
+    recarregarRef.current = recarregar;
+  }, [recarregar]);
+
+  useEffect(() => {
+    // Aprovar uma solicitação dispara dois eventos quase juntos (a
+    // solicitação sai, o membro entra); o debounce transforma isso numa
+    // busca só.
+    let timer: number | undefined;
+    const cancelar = api.assinarAtualizacoesMinisterio(id, () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        recarregarRef.current().catch(() => {});
+      }, 300);
+    });
+    return () => {
+      window.clearTimeout(timer);
+      cancelar();
+    };
+  }, [id]);
 
   const cadastrar = useCallback(
     async (nomeNovo: string, funcoesCustom?: { nome: string; icone: string }[]) => {
