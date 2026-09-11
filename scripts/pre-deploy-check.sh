@@ -31,7 +31,10 @@ echo "== 6. Env vars esperadas (servidor, local) =="
 # opcional (sem ela o app roda normal, só não reporta erro).
 # Não existe mais VITE_ADMIN_EMAILS — quem é admin sai da tabela `admins`
 # no banco (ver README.md, seção Administradores).
-for v in SUPABASE_URL SUPABASE_ANON_KEY VITE_SENTRY_DSN; do
+# As três últimas são do push de solicitação de ingresso: sem elas o
+# endpoint responde "push não configurado" e o app segue igual, só sem
+# notificação (ver api/notificar-solicitacao.ts).
+for v in SUPABASE_URL SUPABASE_ANON_KEY VITE_SENTRY_DSN SUPABASE_SERVICE_ROLE_KEY FIREBASE_SERVICE_ACCOUNT_JSON VITE_API_BASE_URL; do
   if [ -z "${!v}" ]; then
     echo "⚠️  $v não setada no shell local (confira no Vercel Dashboard > Production)"
   else

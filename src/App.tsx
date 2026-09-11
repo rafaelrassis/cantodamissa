@@ -21,6 +21,7 @@ import { useUserAuth } from './lib/useUserAuth';
 import { useMinisterio } from './lib/useMinisterio';
 import { RepertorioTemplatesProvider } from './lib/RepertorioTemplatesProvider';
 import { useServiceWorkerAtualizacao } from './lib/useServiceWorkerAtualizacao';
+import { registrarPush } from './lib/pushNotificacoes';
 import { useCanalErro } from './lib/erroContext';
 import type { Musica, TempoLiturgico } from './types/musica';
 
@@ -144,6 +145,14 @@ function App() {
     sessionStorage.removeItem(CHAVE_POS_LOGIN);
     if (valor !== '1') setEscalaAlvoId(valor);
     setTela('ministerio');
+  }, [isLoggedIn]);
+
+  // Push do ministério (só Android, e só depois do login: o token é
+  // gravado por conta). Falha aqui não aparece na tela — ver
+  // pushNotificacoes.ts.
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    void registrarPush();
   }, [isLoggedIn]);
 
   // Levantado até aqui (em vez de ficar dentro de MinisterioTela) pra

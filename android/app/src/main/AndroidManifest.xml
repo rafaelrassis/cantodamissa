@@ -43,4 +43,8 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Android 13+ exige permissão declarada (e pedida em runtime, ver
+         pushNotificacoes.ts) pra mostrar qualquer notificação. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

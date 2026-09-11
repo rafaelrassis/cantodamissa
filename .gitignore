@@ -34,3 +34,6 @@ dist-ssr
 # Builds Android (gerados, não versionados)
 *.aab
 *.apk
+
+# Chave do Firebase do app Android (push) — cada dev baixa a sua do console
+android/app/google-services.json

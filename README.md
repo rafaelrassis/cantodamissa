@@ -111,3 +111,34 @@ npx @capacitor/assets generate --android
 O login Google usa PKCE e volta pro app por deep link
 (`app.cantodamissa.mobile://login-callback`) — o esquema precisa estar
 registrado como Redirect URL no dashboard do Supabase.
+
+### Notificações push (opcional)
+
+O app avisa os administradores do ministério quando chega uma solicitação
+de ingresso. Sem a configuração abaixo nada quebra: o app roda igual, só
+não notifica (dentro do app o alerta continua aparecendo, por Realtime).
+
+1. Crie um projeto no Firebase, adicione um app Android com o
+   `applicationId` `com.cantodamissa.app` e baixe o `google-services.json`
+   para `android/app/`. O arquivo não vai pro repositório; o Gradle só
+   aplica o plugin do Firebase quando ele existe.
+2. No Firebase, em Configurações > Contas de serviço, gere uma chave
+   privada (JSON).
+3. Na Vercel (Production), configure:
+   - `SUPABASE_SERVICE_ROLE_KEY` — a service role do projeto Supabase; o
+     envio precisa ler tokens que a RLS esconde de todo mundo (ver
+     migration 0033);
+   - `FIREBASE_SERVICE_ACCOUNT_JSON` — o JSON da conta de serviço, colado
+     inteiro;
+   - `VITE_API_BASE_URL` — o domínio de produção (ex.:
+     `https://cantodamissa.com`). No Android o app roda em
+     `https://localhost`, então sem isso a chamada a `/api/...` não sai do
+     WebView.
+
+### Atualização em tempo real
+
+Solicitação de ingresso, aprovação, escalas e avisos chegam por Supabase
+Realtime (migrations 0031/0032 colocam as tabelas na publication
+`supabase_realtime`). Se o canal cair — troca de Wi-Fi pra dados, app
+voltando do multitarefa — `useRevalidarEmFoco` refaz a busca ao voltar
+pro primeiro plano e a cada 5 minutos.

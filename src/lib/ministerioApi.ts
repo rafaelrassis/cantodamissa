@@ -16,6 +16,7 @@ import { getDeviceKey } from './repertorios';
 import { garantirSessaoAnonima } from './supabaseAuth';
 import { exigirLinha, exigirLinhas } from './supabaseUtils';
 import { assinarTabelas } from './realtimeSupabase';
+import { avisarAdminsDeSolicitacao } from './pushNotificacoes';
 import type { FuncaoMinisterio, MembroMinisterio, SolicitacaoIngresso } from '../types/ministerio';
 
 export const FUNCOES_PADRAO: Omit<FuncaoMinisterio, 'id'>[] = [
@@ -238,6 +239,11 @@ export async function solicitarIngresso(
     p_device_key: getDeviceKey(),
   });
   if (error) throw error;
+
+  // Push pros admins: sem aguardar, porque o ingresso já está gravado e
+  // quem pediu não deve esperar o envio pra ver a confirmação na tela.
+  if (data === 'OK') void avisarAdminsDeSolicitacao(codigo);
+
   return data as StatusIngresso;
 }
 
