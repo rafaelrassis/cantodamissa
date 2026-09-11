@@ -89,13 +89,31 @@ async function guardarToken(token: string): Promise<void> {
  * pode virar erro na tela de quem pediu.
  */
 export async function avisarAdminsDeSolicitacao(codigo: string): Promise<void> {
+  await avisar('/api/notificar-solicitacao', { codigo });
+}
+
+/**
+ * Avisa quem foi escalado que a escala saiu. Chamado pelo aparelho do
+ * admin que publicou; quem confere se ele é admin mesmo — e se a escala
+ * já não foi notificada antes — é o servidor (api/notificar-escala.ts).
+ */
+export async function avisarEscalaPublicada(escalaId: string): Promise<void> {
+  await avisar('/api/notificar-escala', { escalaId });
+}
+
+/**
+ * Silencioso de propósito: a ação que originou o aviso (o pedido de
+ * ingresso, a escala publicada) já está gravada, e falhar a notificação
+ * não pode virar erro na tela.
+ */
+async function avisar(rota: string, corpo: Record<string, string>): Promise<void> {
   try {
-    await fetchApi('/api/notificar-solicitacao', {
+    await fetchApi(rota, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ codigo }),
+      body: JSON.stringify(corpo),
     });
   } catch (erro) {
-    console.warn('Push: não foi possível avisar os admins —', erro);
+    console.warn(`Push: ${rota} falhou —`, erro);
   }
 }

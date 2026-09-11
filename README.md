@@ -114,8 +114,8 @@ registrado como Redirect URL no dashboard do Supabase.
 
 ### Notificações push (opcional)
 
-O app avisa os administradores do ministério quando chega uma solicitação
-de ingresso. Sem a configuração abaixo nada quebra: o app roda igual, só
+O app avisa os administradores quando chega uma solicitação de ingresso, e
+quem foi escalado quando a escala é publicada. Sem a configuração abaixo nada quebra: o app roda igual, só
 não notifica (dentro do app o alerta continua aparecendo, por Realtime).
 
 1. Crie um projeto no Firebase, adicione um app Android com o

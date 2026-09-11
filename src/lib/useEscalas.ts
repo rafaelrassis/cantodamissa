@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import * as api from './escalasApi';
 import { preservarSeIgual, useRevalidarEmFoco } from './useRevalidarEmFoco';
 import { assinarTabelas } from './realtimeSupabase';
+import { avisarEscalaPublicada } from './pushNotificacoes';
 import type { Escala } from '../types/ministerio';
 
 /**
@@ -55,6 +56,8 @@ export function useEscalas(ministerioId: string | null) {
       if (!ministerioId) throw new Error('Nenhum ministério ativo.');
       const nova = await api.criarEscala(ministerioId, rascunho);
       setEscalas((prev) => [...prev, nova]);
+      // Escala que já nasce publicada avisa quem está nela.
+      if (nova.publicada) void avisarEscalaPublicada(nova.id);
       return nova;
     },
     [ministerioId]
@@ -62,8 +65,13 @@ export function useEscalas(ministerioId: string | null) {
 
   const atualizar = useCallback(async (escala: Escala) => {
     await api.atualizarEscala(escala);
+    // Só a virada rascunho -> publicada notifica; salvar de novo uma
+    // escala já publicada não deve tocar o celular de ninguém (o
+    // servidor também barra pelo notificacao_enviada_em, ver 0034).
+    const eraRascunho = !escalas.find((e) => e.id === escala.id)?.publicada;
     setEscalas((prev) => prev.map((e) => (e.id === escala.id ? escala : e)));
-  }, []);
+    if (escala.publicada && eraRascunho) void avisarEscalaPublicada(escala.id);
+  }, [escalas]);
 
   const excluir = useCallback(async (escalaId: string) => {
     await api.excluirEscala(escalaId);
