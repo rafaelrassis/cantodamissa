@@ -82,6 +82,18 @@ apply from: 'capacitor.build.gradle'
 
 try {
     def servicesJSON = file('google-services.json')
+    // google-services.json (credencial do Firebase) é gitignored — em
+    // sessão de build efêmera (sem o arquivo local) cai pra variável de
+    // ambiente GOOGLE_SERVICES_JSON com o conteúdo inteiro do arquivo,
+    // mesmo padrão do keystore acima. Sem nenhum dos dois, o build segue
+    // sem o Firebase — e o app já sabe se virar sem push (ver
+    // vite.config.ts / __PUSH_FIREBASE_CONFIGURADO__).
+    if (!servicesJSON.exists()) {
+        def servicesJSONEnv = System.getenv('GOOGLE_SERVICES_JSON')
+        if (servicesJSONEnv) {
+            servicesJSON.write(servicesJSONEnv)
+        }
+    }
     if (servicesJSON.text) {
         apply plugin: 'com.google.gms.google-services'
     }
