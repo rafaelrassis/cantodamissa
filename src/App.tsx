@@ -21,7 +21,6 @@ import { useUserAuth } from './lib/useUserAuth';
 import { useMinisterio } from './lib/useMinisterio';
 import { RepertorioTemplatesProvider } from './lib/RepertorioTemplatesProvider';
 import { useServiceWorkerAtualizacao } from './lib/useServiceWorkerAtualizacao';
-import { useAppUpdate } from './lib/useAppUpdate';
 import { registrarPush } from './lib/pushNotificacoes';
 import { useCanalErro } from './lib/erroContext';
 import type { Musica, TempoLiturgico } from './types/musica';
@@ -128,7 +127,6 @@ function App() {
   } = useUserAuth();
   const { isAdmin } = useAdminAuth(userEmail);
   const { precisaAtualizar, atualizarAgora } = useServiceWorkerAtualizacao();
-  const { precisaAtualizar: appPrecisaAtualizar, atualizarAgora: atualizarApp } = useAppUpdate();
   const { erro, limpar: limparErro } = useCanalErro();
   const [loginParaMinisterioAberto, setLoginParaMinisterioAberto] = useState(false);
   const [escalaAlvoPosLogin, setEscalaAlvoPosLogin] = useState<string | null>(null);
@@ -303,9 +301,6 @@ function App() {
         )}
         {conteudo}
         {precisaAtualizar && <AtualizacaoDisponivelBanner onAtualizar={atualizarAgora} />}
-        {!precisaAtualizar && appPrecisaAtualizar && (
-          <AtualizacaoDisponivelBanner onAtualizar={atualizarApp} />
-        )}
         {!opts?.semNav && (
           <>
             <div className="h-16 md:hidden" aria-hidden />
