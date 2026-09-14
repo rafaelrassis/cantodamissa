@@ -1,9 +1,26 @@
+import { existsSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// android/app/google-services.json é gitignored (credencial do Firebase) —
+// cada máquina que gera o .aab precisa ter sua própria cópia. Quando falta,
+// android/app/build.gradle pula o plugin do Google Services e o Firebase
+// nunca inicializa no app nativo; mas o código JS de push notification
+// (pushNotificacoes.ts) não tinha como saber disso e chamava
+// PushNotifications.register() do mesmo jeito — que crasha o app (não dá
+// pra capturar em try/catch JS: o plugin nativo lança de dentro de uma
+// Runnable no Handler principal, ver Bridge.java#callPluginMethod). Esta
+// flag deixa o build "combinar" com o que foi de fato empacotado.
+const firebaseConfigurado = existsSync(
+  new URL('./android/app/google-services.json', import.meta.url)
+);
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __PUSH_FIREBASE_CONFIGURADO__: JSON.stringify(firebaseConfigurado),
+  },
   plugins: [
     react(),
     VitePWA({

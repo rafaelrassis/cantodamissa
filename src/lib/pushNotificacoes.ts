@@ -12,10 +12,15 @@ import { fetchApi } from './apiClient';
  * entrar no ministério.
  *
  * Tudo aqui é opcional de propósito. Um build sem `google-services.json`
- * (o arquivo do Firebase, que não está no repositório) faz o plugin
- * lançar no `register()` — e o app tem que continuar funcionando igual,
- * só sem push. Por isso cada passo é envolvido em try/catch e nenhuma
- * falha sobe pra tela.
+ * (o arquivo do Firebase, que não está no repositório) faz o Android pular
+ * o plugin do Google Services e o Firebase nunca inicializa — nesse caso
+ * `PushNotifications.register()` chama `FirebaseMessaging.getInstance()`
+ * nativamente e crasha o app de verdade (não é um erro que promise/try-catch
+ * em JS consiga pegar: o plugin lança de dentro do Handler principal do
+ * Capacitor). Por isso `__PUSH_FIREBASE_CONFIGURADO__` (setada em
+ * vite.config.ts a partir da presença do arquivo) barra a chamada antes
+ * de chegar nesse ponto — o resto dos passos segue em try/catch pelo
+ * que ainda pode falhar (rede, permissão negada etc.).
  */
 
 const CANAL_ANDROID = 'ministerio';
@@ -27,6 +32,7 @@ const CANAL_ANDROID = 'ministerio';
  */
 export async function registrarPush(): Promise<void> {
   if (!Capacitor.isNativePlatform() || !isSupabaseConfigured) return;
+  if (Capacitor.getPlatform() === 'android' && !__PUSH_FIREBASE_CONFIGURADO__) return;
 
   try {
     if (Capacitor.getPlatform() === 'android') {
